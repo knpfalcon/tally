@@ -1,0 +1,5 @@
+*.exe
+*.depend
+*.layout
+*.log
+log.txt
