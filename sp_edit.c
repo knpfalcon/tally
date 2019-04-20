@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
 
 
 #define ALLEGRO_USE_CONSOLE
@@ -11,54 +13,50 @@
 #define TILE003 128, 32
 #define TILE_SIZE 16
 
+#define FONT_FILE "fixed_01.ttf"
+
+#define DISPLAY_MULTIPLYER 7
+
 #define MAP_WIDTH 128
 #define MAP_HEIGHT 90
 
-#define FPS 200
+const float FPS = 120;
 
 bool redraw = true;
 
-const int DISPLAY_WIDTH = 1920;
-const int DISPLAY_HEIGHT = 1200;
+const int DISPLAY_WIDTH = 320 * DISPLAY_MULTIPLYER;
+const int DISPLAY_HEIGHT = 200 * DISPLAY_MULTIPLYER;
 
 const int VIEWPORT_WIDTH = 208;
 const int VIEWPORT_HEIGHT = 160;
 
-int CAM_X = 0;
-int CAM_Y = 0;
+float CAM_X = 0;
+float CAM_Y = 0;
 
-enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT};
+int mouse_x = 0;
+int mouse_y = 0;
+
+int mouse_over_tile_x = 0;
+int mouse_over_tile_y = 0;
+
+enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LSHIFT};
 bool key[4] = {false, false, false, false };
 
-int map[MAP_WIDTH * MAP_HEIGHT] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                    1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-                                    1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-                                    1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-                                    1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-                                    1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1,
-                                    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                                    1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1,
-                                    1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                                    1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                                    1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1,
-                                    1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1,
-                                    1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1,
-                                    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                                    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                                    1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1,
-                                    1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
-                                    1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1,
-                                    1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+int map[MAP_WIDTH * MAP_HEIGHT];
 
+ALLEGRO_DISPLAY *display = NULL;
+ALLEGRO_EVENT_QUEUE *event_queue = NULL;
+ALLEGRO_TIMER *FPS_TIMER = NULL;
+
+ALLEGRO_FONT *reg_font = NULL;
 ALLEGRO_BITMAP *view_port = NULL;
 ALLEGRO_BITMAP *stat_border = NULL;
 ALLEGRO_BITMAP *game = NULL;
 ALLEGRO_BITMAP *tile_sheet = NULL;
 
-ALLEGRO_DISPLAY *display = NULL;
-ALLEGRO_EVENT_QUEUE *event_queue = NULL;
-ALLEGRO_TIMER *timer = NULL;
+ALLEGRO_MOUSE_STATE mouse;
+
+
 
 ///////////////////////////////////////////
 //Function to print to console and a FILE
@@ -68,7 +66,7 @@ void jlog(char *format, ...)
    va_list v_ptr;
    FILE *fp;
 
-   fp = fopen("log.txt", "at");
+   fp = fopen("spedit_log.txt", "at");
    if (fp)
    {
       va_start(v_ptr, format);
@@ -99,15 +97,6 @@ int init_game()
    }
    jlog("Allegro initialized.");
 
-   //Create Display
-   display = al_create_display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
-   if(!display)
-   {
-      jlog("Failed to create display!");
-      return -1;
-   }
-   jlog("Display Created.");
-
    event_queue = al_create_event_queue();
    if (!event_queue)
    {
@@ -123,13 +112,13 @@ int init_game()
    }
    jlog("Image addon initialized.");
 
-   timer = al_create_timer(1.0 / FPS);
-   if(!timer)
+   FPS_TIMER = al_create_timer(1.0 / FPS);
+   if(!FPS_TIMER)
    {
-      jlog("Failed to create timer!");
+      jlog("Failed to create FPS timer!");
       return -1;
    }
-   jlog("Timer created.");
+   jlog("FPS timer created.");
 
    if (!al_install_keyboard())
    {
@@ -137,6 +126,38 @@ int init_game()
       return -1;
    }
    jlog("Keyboard installed.");
+
+   if (!al_install_mouse())
+   {
+      jlog("Failed to install mouse!");
+      return -1;
+   }
+   jlog("Mouse installed.");
+
+
+   //Font Addons
+   if(!al_init_font_addon())
+   {
+      jlog("Failed to install fonts addon!");
+      return -1;
+   }
+   jlog("Fonts addon installed.");
+
+   if(!al_init_ttf_addon())
+   {
+      jlog("Failed to install ttf addon!");
+      return -1;
+   }
+   jlog("TTF addon installed.");
+
+   //Create Display
+   display = al_create_display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
+   if(!display)
+   {
+      jlog("Failed to create display!");
+      return -1;
+   }
+   jlog("Display Created.");
 
    //Create viewport bitmap
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
@@ -150,6 +171,14 @@ int init_game()
    jlog("tile_sheet.png loaded.");
 
 
+   reg_font = al_load_ttf_font(FONT_FILE, 8, 0);
+   if(!reg_font)
+   {
+      jlog("Failed to load %s", FONT_FILE);
+      return -1;
+   }
+   jlog("%s loaded.", FONT_FILE);
+
    //Fill with random 1's and 0's
    srand(time(NULL));
    for (int i = 0; i < MAP_WIDTH * MAP_HEIGHT; i++)
@@ -162,12 +191,13 @@ int init_game()
 //   }
 
    al_register_event_source(event_queue, al_get_display_event_source(display));
-   al_register_event_source(event_queue, al_get_timer_event_source(timer));
+   al_register_event_source(event_queue, al_get_timer_event_source(FPS_TIMER));
    al_register_event_source(event_queue, al_get_keyboard_event_source());
+   al_register_event_source(event_queue, al_get_mouse_event_source());
 
    al_clear_to_color(al_map_rgb(0, 0, 0));
 
-   al_start_timer(timer);
+   al_start_timer(FPS_TIMER);
    jlog("Timer started.");
 
    jlog("Game initialized.");
@@ -210,6 +240,25 @@ void draw_tiles()
    }
 }
 
+void update_screen()
+{
+   al_set_target_bitmap(view_port);
+   al_clear_to_color(al_map_rgb(0, 0, 0));
+
+   draw_tiles();
+
+
+   al_set_target_bitmap(game);
+   al_draw_bitmap(stat_border, 0, 0, 0);
+   al_draw_bitmap(view_port, 16, 16, 0);
+   al_draw_textf(reg_font, al_map_rgb(255,255,255), 234, 17, ALLEGRO_ALIGN_LEFT, "Map Position");
+   al_draw_textf(reg_font, al_map_rgb(255,255,255), 234, 27, ALLEGRO_ALIGN_LEFT, "%d, %d", mouse_over_tile_x, mouse_over_tile_y);
+   al_set_target_backbuffer(display);
+   al_draw_scaled_bitmap(game, 0, 0, 320, 200, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, 0);
+
+   al_flip_display();
+}
+
 //////////////////////////////////////////////////////
 //Clean up everything for now (Replacing this later)
 ////////////////////////////////////////////////////
@@ -221,12 +270,14 @@ void clean_up()
    al_destroy_bitmap(game);
    al_destroy_bitmap(tile_sheet);
    al_destroy_event_queue(event_queue);
-   al_destroy_timer(timer);
+   al_destroy_timer(FPS_TIMER);
    jlog("***CLEANING UP AND QUITTING***\n\n");
 }
 
-int main(int argc, char **argv)\
+int main(int argc, char **argv)
 {
+
+   int scroll_speed = 4;
 
    if (init_game() != 0)
    {
@@ -235,35 +286,57 @@ int main(int argc, char **argv)\
       return 100;
    }
 
+
+
    al_set_target_bitmap(game);
    al_draw_bitmap(stat_border, 0, 0, 0);
 
    //This is the main loop for now
    bool program_done = false;
+
    while(!program_done)
    {
+
       ALLEGRO_EVENT ev;
       al_wait_for_event(event_queue, &ev);
 
       if (ev.type == ALLEGRO_EVENT_TIMER)
       {
-         if (key[KEY_UP] && CAM_Y > 0)
+         if (ev.timer.source == FPS_TIMER)
          {
-            CAM_Y--;
+            //Scroll speed
+//            if (key[KEY_LSHIFT])
+//            {
+//               scroll_speed = 8;
+//
+//            }
+//            else if (!key[KEY_LSHIFT])
+//            {
+//               scroll_speed = 1;
+//
+//            }
+
+            //Scroll controls
+            if (key[KEY_UP] && CAM_Y > 0)
+            {
+               CAM_Y -= scroll_speed;
+            }
+            if (key[KEY_DOWN] && CAM_Y < (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT)
+            {
+               CAM_Y += scroll_speed;
+            }
+            if (key[KEY_LEFT] && CAM_X > 0)
+            {
+               CAM_X -= scroll_speed;
+            }
+            if (key[KEY_RIGHT] && CAM_X < (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH)
+            {
+               CAM_X += scroll_speed;
+            }
+
+            redraw = true;
          }
-         if (key[KEY_DOWN] && CAM_Y < MAP_HEIGHT * TILE_SIZE - VIEWPORT_HEIGHT)
-         {
-            CAM_Y++;
-         }
-         if (key[KEY_LEFT] && CAM_X > 0)
-         {
-            CAM_X--;
-         }
-         if (key[KEY_RIGHT] && CAM_X < MAP_WIDTH * TILE_SIZE - VIEWPORT_WIDTH)
-         {
-            CAM_X++;
-         }
-         redraw = true;
+
       }
       else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
       {
@@ -285,6 +358,21 @@ int main(int argc, char **argv)\
             case ALLEGRO_KEY_RIGHT:
                key[KEY_RIGHT] = true;
                break;
+            case ALLEGRO_KEY_W:
+               key[KEY_UP] = true;
+               break;
+            case ALLEGRO_KEY_S:
+               key[KEY_DOWN] = true;
+               break;
+            case ALLEGRO_KEY_A:
+               key[KEY_LEFT] = true;
+               break;
+            case ALLEGRO_KEY_D:
+               key[KEY_RIGHT] = true;
+               break;
+            case ALLEGRO_KEY_LSHIFT:
+               key[KEY_LSHIFT] = true;
+               break;
          }
       }
       else if (ev.type == ALLEGRO_EVENT_KEY_UP)
@@ -303,30 +391,54 @@ int main(int argc, char **argv)\
             case ALLEGRO_KEY_RIGHT:
                key[KEY_RIGHT] = false;
                break;
+            case ALLEGRO_KEY_W:
+               key[KEY_UP] = false;
+               break;
+            case ALLEGRO_KEY_S:
+               key[KEY_DOWN] = false;
+               break;
+            case ALLEGRO_KEY_A:
+               key[KEY_LEFT] = false;
+               break;
+            case ALLEGRO_KEY_D:
+               key[KEY_RIGHT] = false;
+               break;
+            case ALLEGRO_KEY_LSHIFT:
+               key[KEY_LSHIFT] = false;
+               break;
             case ALLEGRO_KEY_ESCAPE:
                program_done = true;
                break;
          }
       }
+      else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES)
+      {
+         al_get_mouse_state(&mouse);
 
+         mouse_x = ev.mouse.x;
+         mouse_y = ev.mouse.y;
+
+      }
       if (redraw && al_is_event_queue_empty(event_queue))
       {
          redraw = false;
-
-         al_set_target_bitmap(view_port);
-         al_clear_to_color(al_map_rgb(0, 0, 0));
-
-         draw_tiles();
-
-         al_set_target_bitmap(game);
-         al_draw_bitmap(view_port, 16, 16, 0);
-         al_set_target_backbuffer(display);
-         al_draw_scaled_bitmap(game, 0, 0, 320, 200, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, 0);
-
-         al_flip_display();
+         update_screen();
       }
-   }
 
+      //If mouse is inside view port
+      if ((mouse_x > 16 * DISPLAY_MULTIPLYER) && (mouse_x < (VIEWPORT_WIDTH + 16) * DISPLAY_MULTIPLYER) && (mouse_y > 16 * DISPLAY_MULTIPLYER) && (mouse_y < (VIEWPORT_HEIGHT + 16) * DISPLAY_MULTIPLYER))
+      {
+         mouse_over_tile_x = ( (((mouse_x - (16 * DISPLAY_MULTIPLYER)) + (CAM_X * DISPLAY_MULTIPLYER)) / TILE_SIZE) / DISPLAY_MULTIPLYER );
+         mouse_over_tile_y = ( (((mouse_y - (16 * DISPLAY_MULTIPLYER)) + (CAM_Y * DISPLAY_MULTIPLYER)) / TILE_SIZE) / DISPLAY_MULTIPLYER );
+
+         if (mouse.buttons & 2)
+         {
+            map[mouse_over_tile_x + mouse_over_tile_y * MAP_WIDTH] = 0;
+         }
+
+      }
+
+   }
    clean_up();
    return 0;
 }

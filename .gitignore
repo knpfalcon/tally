@@ -3,3 +3,6 @@
 *.layout
 *.log
 log.txt
+spedit_log.txt
+
+/obj/

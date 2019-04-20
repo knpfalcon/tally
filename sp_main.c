@@ -39,7 +39,7 @@ int mouse_y = 0;
 int mouse_over_tile_x;
 int mouse_over_tile_y;
 
-enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT};
+enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LSHIFT};
 bool key[4] = {false, false, false, false };
 
 int map[MAP_WIDTH * MAP_HEIGHT];
@@ -53,6 +53,8 @@ ALLEGRO_BITMAP *view_port = NULL;
 ALLEGRO_BITMAP *stat_border = NULL;
 ALLEGRO_BITMAP *game = NULL;
 ALLEGRO_BITMAP *tile_sheet = NULL;
+
+ALLEGRO_MOUSE_STATE mouse;
 
 
 
@@ -250,8 +252,8 @@ void update_screen()
    al_set_target_bitmap(game);
    al_draw_bitmap(stat_border, 0, 0, 0);
    al_draw_bitmap(view_port, 16, 16, 0);
-   al_draw_textf(reg_font, al_map_rgb(255,255,255), 242, 146, ALLEGRO_ALIGN_LEFT, "Mouse XY");
-   al_draw_textf(reg_font, al_map_rgb(255,255,255), 242, 156, ALLEGRO_ALIGN_LEFT, "%d, %d", mouse_over_tile_x, mouse_over_tile_y);
+   al_draw_textf(reg_font, al_map_rgb(255,255,255), 234, 17, ALLEGRO_ALIGN_LEFT, "Map Position");
+   al_draw_textf(reg_font, al_map_rgb(255,255,255), 234, 27, ALLEGRO_ALIGN_LEFT, "%d, %d", mouse_over_tile_x, mouse_over_tile_y);
    al_set_target_backbuffer(display);
    al_draw_scaled_bitmap(game, 0, 0, 320, 200, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, 0);
 
@@ -273,8 +275,10 @@ void clean_up()
    jlog("***CLEANING UP AND QUITTING***\n\n");
 }
 
-int main(int argc, char **argv)\
+int main(int argc, char **argv)
 {
+
+   int scroll_speed = 4;
 
    if (init_game() != 0)
    {
@@ -301,22 +305,36 @@ int main(int argc, char **argv)\
       {
          if (ev.timer.source == FPS_TIMER)
          {
+            //Scroll speed
+//            if (key[KEY_LSHIFT])
+//            {
+//               scroll_speed = 8;
+//
+//            }
+//            else if (!key[KEY_LSHIFT])
+//            {
+//               scroll_speed = 1;
+//
+//            }
+
+            //Scroll controls
             if (key[KEY_UP] && CAM_Y > 0)
             {
-               CAM_Y--;
+               CAM_Y -= scroll_speed;
             }
-            if (key[KEY_DOWN] && CAM_Y < MAP_HEIGHT * TILE_SIZE - VIEWPORT_HEIGHT)
+            if (key[KEY_DOWN] && CAM_Y < (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT)
             {
-               CAM_Y++;
+               CAM_Y += scroll_speed;
             }
             if (key[KEY_LEFT] && CAM_X > 0)
             {
-               CAM_X--;
+               CAM_X -= scroll_speed;
             }
-            if (key[KEY_RIGHT] && CAM_X < MAP_WIDTH * TILE_SIZE - VIEWPORT_WIDTH)
+            if (key[KEY_RIGHT] && CAM_X < (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH)
             {
-               CAM_X++;
+               CAM_X += scroll_speed;
             }
+
             redraw = true;
          }
 
@@ -341,6 +359,21 @@ int main(int argc, char **argv)\
             case ALLEGRO_KEY_RIGHT:
                key[KEY_RIGHT] = true;
                break;
+            case ALLEGRO_KEY_W:
+               key[KEY_UP] = true;
+               break;
+            case ALLEGRO_KEY_S:
+               key[KEY_DOWN] = true;
+               break;
+            case ALLEGRO_KEY_A:
+               key[KEY_LEFT] = true;
+               break;
+            case ALLEGRO_KEY_D:
+               key[KEY_RIGHT] = true;
+               break;
+            case ALLEGRO_KEY_LSHIFT:
+               key[KEY_LSHIFT] = true;
+               break;
          }
       }
       else if (ev.type == ALLEGRO_EVENT_KEY_UP)
@@ -359,6 +392,21 @@ int main(int argc, char **argv)\
             case ALLEGRO_KEY_RIGHT:
                key[KEY_RIGHT] = false;
                break;
+            case ALLEGRO_KEY_W:
+               key[KEY_UP] = false;
+               break;
+            case ALLEGRO_KEY_S:
+               key[KEY_DOWN] = false;
+               break;
+            case ALLEGRO_KEY_A:
+               key[KEY_LEFT] = false;
+               break;
+            case ALLEGRO_KEY_D:
+               key[KEY_RIGHT] = false;
+               break;
+            case ALLEGRO_KEY_LSHIFT:
+               key[KEY_LSHIFT] = false;
+               break;
             case ALLEGRO_KEY_ESCAPE:
                program_done = true;
                break;
@@ -366,26 +414,30 @@ int main(int argc, char **argv)\
       }
       else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES)
       {
+         al_get_mouse_state(&mouse);
+
          mouse_x = ev.mouse.x;
          mouse_y = ev.mouse.y;
 
       }
-
       if (redraw && al_is_event_queue_empty(event_queue))
       {
          redraw = false;
          update_screen();
       }
 
-
-      if ((mouse_x > 16 * DISPLAY_MULTIPLYER) &&
-         (mouse_x < (VIEWPORT_WIDTH + 16) * DISPLAY_MULTIPLYER) &&
-         (mouse_y > 16 * DISPLAY_MULTIPLYER) &&
-         (mouse_y < (VIEWPORT_HEIGHT + 16) * DISPLAY_MULTIPLYER)) //If mouse is inside viewport
-         {
+      //If mouse is inside view port
+      if ((mouse_x > 16 * DISPLAY_MULTIPLYER) && (mouse_x < (VIEWPORT_WIDTH + 16) * DISPLAY_MULTIPLYER) && (mouse_y > 16 * DISPLAY_MULTIPLYER) && (mouse_y < (VIEWPORT_HEIGHT + 16) * DISPLAY_MULTIPLYER))
+      {
          mouse_over_tile_x = ( (((mouse_x - (16 * DISPLAY_MULTIPLYER)) + (CAM_X * DISPLAY_MULTIPLYER)) / TILE_SIZE) / DISPLAY_MULTIPLYER );
          mouse_over_tile_y = ( (((mouse_y - (16 * DISPLAY_MULTIPLYER)) + (CAM_Y * DISPLAY_MULTIPLYER)) / TILE_SIZE) / DISPLAY_MULTIPLYER );
+
+         if (mouse.buttons & 2)
+         {
+            map[mouse_over_tile_x + mouse_over_tile_y * MAP_WIDTH] = 0;
          }
+
+      }
 
    }
    clean_up();
