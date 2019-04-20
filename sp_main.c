@@ -251,7 +251,7 @@ void update_screen()
    al_draw_bitmap(stat_border, 0, 0, 0);
    al_draw_bitmap(view_port, 16, 16, 0);
    al_draw_textf(reg_font, al_map_rgb(255,255,255), 242, 146, ALLEGRO_ALIGN_LEFT, "Mouse XY");
-   al_draw_textf(reg_font, al_map_rgb(255,255,255), 242, 156, ALLEGRO_ALIGN_LEFT, "%d, %d", mouse_over_tile_x / DISPLAY_MULTIPLYER, mouse_over_tile_y / DISPLAY_MULTIPLYER);
+   al_draw_textf(reg_font, al_map_rgb(255,255,255), 242, 156, ALLEGRO_ALIGN_LEFT, "%d, %d", mouse_over_tile_x, mouse_over_tile_y);
    al_set_target_backbuffer(display);
    al_draw_scaled_bitmap(game, 0, 0, 320, 200, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, 0);
 
@@ -383,8 +383,8 @@ int main(int argc, char **argv)\
          (mouse_y > 16 * DISPLAY_MULTIPLYER) &&
          (mouse_y < (VIEWPORT_HEIGHT + 16) * DISPLAY_MULTIPLYER)) //If mouse is inside viewport
          {
-         mouse_over_tile_x = ( ((mouse_x - (16 * DISPLAY_MULTIPLYER)) + (CAM_X * DISPLAY_MULTIPLYER)) / TILE_SIZE );
-         mouse_over_tile_y = ( ((mouse_y - (16 * DISPLAY_MULTIPLYER)) + (CAM_Y * DISPLAY_MULTIPLYER)) / TILE_SIZE );
+         mouse_over_tile_x = ( (((mouse_x - (16 * DISPLAY_MULTIPLYER)) + (CAM_X * DISPLAY_MULTIPLYER)) / TILE_SIZE) / DISPLAY_MULTIPLYER );
+         mouse_over_tile_y = ( (((mouse_y - (16 * DISPLAY_MULTIPLYER)) + (CAM_Y * DISPLAY_MULTIPLYER)) / TILE_SIZE) / DISPLAY_MULTIPLYER );
          }
 
    }
