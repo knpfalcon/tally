@@ -6,26 +6,15 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
 
-
-#define ALLEGRO_USE_CONSOLE
-#define TILE001 448, 112 //Macro hack for tile_sheet coordinates... It works, by God!
-#define TILE002 400, 112
-#define TILE003 128, 32
-#define TILE_SIZE 16
-
-#define FONT_FILE "fixed_01.ttf"
-
-#define DISPLAY_MULTIPLYER 7
-
-#define MAP_WIDTH 128
-#define MAP_HEIGHT 90
+#include "sp_main.h"
+#include "sp_map.h"
 
 const float FPS = 120;
 
 bool redraw = true;
 
-const int DISPLAY_WIDTH = 320 * DISPLAY_MULTIPLYER;
-const int DISPLAY_HEIGHT = 200 * DISPLAY_MULTIPLYER;
+const int DISPLAY_WIDTH = 320 * DISPLAY_MULTIPLIER;
+const int DISPLAY_HEIGHT = 200 * DISPLAY_MULTIPLIER;
 
 const int VIEWPORT_WIDTH = 208;
 const int VIEWPORT_HEIGHT = 160;
@@ -42,7 +31,7 @@ int mouse_over_tile_y = 0;
 enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LSHIFT};
 bool key[4] = {false, false, false, false };
 
-int map[MAP_WIDTH * MAP_HEIGHT];
+t_map *map;
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -55,34 +44,6 @@ ALLEGRO_BITMAP *game = NULL;
 ALLEGRO_BITMAP *tile_sheet = NULL;
 
 ALLEGRO_MOUSE_STATE mouse;
-
-
-
-///////////////////////////////////////////
-//Function to print to console and a FILE
-/////////////////////////////////////////
-void jlog(char *format, ...)
-{
-   va_list v_ptr;
-   FILE *fp;
-
-   fp = fopen("spedit_log.txt", "at");
-   if (fp)
-   {
-      va_start(v_ptr, format);
-
-      vfprintf(fp, format, v_ptr);
-      fprintf(fp, "\n");
-
-      vprintf(format, v_ptr);
-      printf("\n");
-
-      va_end(v_ptr);
-
-      fclose(fp);
-    }
-
-}
 
 /////////////////////////////////////////////////
 //Initiate everything the game needs at startup
@@ -181,10 +142,11 @@ int init_game()
 
    //Fill with random 1's and 0's
    srand(time(NULL));
-   for (int i = 0; i < MAP_WIDTH * MAP_HEIGHT; i++)
-   {
-      map[i] = rand() % 4;
-   }
+//   for (int i = 0; i < MAP_WIDTH + MAP_HEIGHT * MAP_WIDTH; i++)
+//   {
+//      map->position[i].tile = (unsigned char)rand() % 4;
+//   }
+//   jlog("Map randomly filled.");
 //   for (int t = 0; t < MAP_HEIGHT * MAP_WIDTH; t++)
 //   {
 //            printf("%d", map[t]);
@@ -223,15 +185,15 @@ void draw_tiles()
       {
          if ((x < MAP_WIDTH) && (x > -1) && (y < MAP_HEIGHT) && (y > -1))
          {
-            if ((map[x + y * MAP_WIDTH] == 1))
+            if ((map->position[x + y * MAP_WIDTH].tile == 1))
             {
                al_draw_bitmap_region(tile_sheet, TILE001, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE) - CAM_X, (y * TILE_SIZE) - CAM_Y, 0); //Draw the tile, subtracting the camera position
             }
-            if ((map[x + y * MAP_WIDTH] == 2))
+            if ((map->position[x + y * MAP_WIDTH].tile == 2))
             {
                al_draw_bitmap_region(tile_sheet, TILE002, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE) - CAM_X, (y * TILE_SIZE) - CAM_Y, 0); //Draw the tile, subtracting the camera position
             }
-            if ((map[x + y * MAP_WIDTH] == 3))
+            if ((map->position[x + y * MAP_WIDTH].tile == 3))
             {
                al_draw_bitmap_region(tile_sheet, TILE003, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE) - CAM_X, (y * TILE_SIZE) - CAM_Y, 0); //Draw the tile, subtracting the camera position
             }
@@ -251,7 +213,7 @@ void update_screen()
    al_set_target_bitmap(game);
    al_draw_bitmap(stat_border, 0, 0, 0);
    al_draw_bitmap(view_port, 16, 16, 0);
-   al_draw_textf(reg_font, al_map_rgb(255,255,255), 234, 17, ALLEGRO_ALIGN_LEFT, "Map Position");
+   al_draw_textf(reg_font, al_map_rgb(255,255,255), 234, 17, ALLEGRO_ALIGN_LEFT, "map->position");
    al_draw_textf(reg_font, al_map_rgb(255,255,255), 234, 27, ALLEGRO_ALIGN_LEFT, "%d, %d", mouse_over_tile_x, mouse_over_tile_y);
    al_set_target_backbuffer(display);
    al_draw_scaled_bitmap(game, 0, 0, 320, 200, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, 0);
@@ -286,7 +248,13 @@ int main(int argc, char **argv)
       return 100;
    }
 
-
+   map = create_empty_map(); //Create an empty map
+   if (map == NULL)
+   {
+      jlog("In file %s, Line %d. Couldn't create an empty map!" __FILE__, __LINE__);
+      return -505;
+   }
+   jlog("Empty map created.");
 
    al_set_target_bitmap(game);
    al_draw_bitmap(stat_border, 0, 0, 0);
@@ -413,30 +381,40 @@ int main(int argc, char **argv)
       }
       else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES)
       {
-         al_get_mouse_state(&mouse);
-
          mouse_x = ev.mouse.x;
          mouse_y = ev.mouse.y;
-
       }
+
       if (redraw && al_is_event_queue_empty(event_queue))
       {
+         // If mouse clicks in view port. I'm putting this here for now.
+         al_get_mouse_state(&mouse);
+         //If mouse is inside view port
+         if ((mouse_x > 16 * DISPLAY_MULTIPLIER) && (mouse_x < (VIEWPORT_WIDTH + 16) * DISPLAY_MULTIPLIER) && (mouse_y > 16 * DISPLAY_MULTIPLIER) && (mouse_y < (VIEWPORT_HEIGHT + 16) * DISPLAY_MULTIPLIER))
+         {
+            mouse_over_tile_x = ( (((mouse_x - (16 * DISPLAY_MULTIPLIER)) + (CAM_X * DISPLAY_MULTIPLIER)) / TILE_SIZE) / DISPLAY_MULTIPLIER );
+            mouse_over_tile_y = ( (((mouse_y - (16 * DISPLAY_MULTIPLIER)) + (CAM_Y * DISPLAY_MULTIPLIER)) / TILE_SIZE) / DISPLAY_MULTIPLIER );
+
+            if (mouse.buttons & 1)
+            {
+            map->position[mouse_over_tile_x + mouse_over_tile_y * MAP_WIDTH].tile = (unsigned char)rand() % 4;
+            }
+            else if (mouse.buttons & 2)
+            {
+            map->position[mouse_over_tile_x + mouse_over_tile_y * MAP_WIDTH].tile = 0;
+            }
+         }
+         else
+         {
+            mouse_over_tile_x = 0;
+            mouse_over_tile_y = 0;
+         }
+
          redraw = false;
          update_screen();
       }
 
-      //If mouse is inside view port
-      if ((mouse_x > 16 * DISPLAY_MULTIPLYER) && (mouse_x < (VIEWPORT_WIDTH + 16) * DISPLAY_MULTIPLYER) && (mouse_y > 16 * DISPLAY_MULTIPLYER) && (mouse_y < (VIEWPORT_HEIGHT + 16) * DISPLAY_MULTIPLYER))
-      {
-         mouse_over_tile_x = ( (((mouse_x - (16 * DISPLAY_MULTIPLYER)) + (CAM_X * DISPLAY_MULTIPLYER)) / TILE_SIZE) / DISPLAY_MULTIPLYER );
-         mouse_over_tile_y = ( (((mouse_y - (16 * DISPLAY_MULTIPLYER)) + (CAM_Y * DISPLAY_MULTIPLYER)) / TILE_SIZE) / DISPLAY_MULTIPLYER );
 
-         if (mouse.buttons & 2)
-         {
-            map[mouse_over_tile_x + mouse_over_tile_y * MAP_WIDTH] = 0;
-         }
-
-      }
 
    }
    clean_up();

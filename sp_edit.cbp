@@ -17,8 +17,8 @@
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
-					<Add option="-Og" />
 					<Add option="-Wall" />
+					<Add option="-Og" />
 					<Add option="-ggdb3" />
 					<Add option="-Wno-unused" />
 					<Add option="-DDEBUG" />
@@ -86,9 +86,14 @@
 			<Add library="dsound" />
 			<Add directory="C:/libs/allegro525/lib" />
 		</Linker>
+		<Unit filename="jt_util.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="jt_util.h" />
 		<Unit filename="sp_edit.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="sp_main.h" />
 		<Unit filename="sp_map.c">
 			<Option compilerVar="CC" />
 		</Unit>
