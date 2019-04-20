@@ -27,8 +27,26 @@ t_map *create_empty_map()
       return NULL;
    }
 
-   memset(m->position, 0, sizeof(t_map_pos));
+   memset(m->position, 0, MAP_WIDTH * MAP_HEIGHT * sizeof(t_map_pos));
 
    jlog("Empty map data allocated. Returning map pointer (m).");
    return m;
+}
+
+void destroy_map(t_map *m)
+{
+   if (m == NULL)
+   {
+      jlog("Map was NULL. Nothing to destroy.");
+      return;
+   }
+
+   if (m->position != NULL)
+   {
+      free(m->position);
+   }
+
+   free(m);
+
+   jlog("Map Destroyed.");
 }

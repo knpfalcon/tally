@@ -13,7 +13,7 @@
 #define MAP_WIDTH 128
 #define MAP_HEIGHT 90
 
-#define DISPLAY_MULTIPLIER 7
+#define DISPLAY_MULTIPLIER 8
 
 #define FONT_FILE "fixed_01.ttf"
 

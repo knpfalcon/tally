@@ -22,5 +22,6 @@ typedef struct t_map
 
 
 t_map *create_empty_map();
+void destroy_map(t_map *m);
 
 #endif // SP_MAP_H
