@@ -17,19 +17,9 @@ bool redraw = true;
 const int DISPLAY_WIDTH = 320 * DISPLAY_MULTIPLIER;
 const int DISPLAY_HEIGHT = 200 * DISPLAY_MULTIPLIER;
 
-const int VIEWPORT_WIDTH = 208;
-const int VIEWPORT_HEIGHT = 160;
-const int VIEWPORT_X = 16;
-const int VIEWPORT_Y = 16;
+t_cam cam;
 
-float CAM_X = 0;
-float CAM_Y = 0;
-
-int mouse_x = 0;
-int mouse_y = 0;
-
-int mouse_over_tile_x = 0;
-int mouse_over_tile_y = 0;
+t_mouse sp_mouse;
 
 bool show_mini_map = false;
 
@@ -56,7 +46,7 @@ ALLEGRO_MOUSE_STATE mouse;
 ///////////////////////////////////////////////
 int init_game()
 {
-   //Init Allegro
+   //Initialize Allegro
    if(!al_init())
    {
       jlog("Failed to initialize allegro!\n");
@@ -77,7 +67,7 @@ int init_game()
       jlog("Failed to initialize image_addon!");
       return -1;
    }
-   jlog("Image addon initialized.");
+   jlog("Image add-on initialized.");
 
    FPS_TIMER = al_create_timer(1.0 / FPS);
    if(!FPS_TIMER)
@@ -101,21 +91,20 @@ int init_game()
    }
    jlog("Mouse installed.");
 
-
-   //Font Addons
+   //Font Add-ons
    if(!al_init_font_addon())
    {
       jlog("Failed to install fonts addon!");
       return -1;
    }
-   jlog("Fonts addon installed.");
+   jlog("Fonts add-on installed.");
 
    if(!al_init_ttf_addon())
    {
       jlog("Failed to install ttf addon!");
       return -1;
    }
-   jlog("TTF addon installed.");
+   jlog("TTF add-on installed.");
 
    //Primitives
    if (!al_init_primitives_addon())
@@ -123,7 +112,7 @@ int init_game()
       jlog("Failed to install primitives addon!");
       return -1;
    }
-   jlog("Primitives addon initialized.");
+   jlog("Primitives add-on initialized.");
 
    //Create Display
    display = al_create_display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -134,13 +123,12 @@ int init_game()
    }
    jlog("Display Created.");
 
-   //Create viewport bitmap
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
    stat_border = al_load_bitmap("status_border.png");
+   mini_map = al_create_bitmap(MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
 
    //Create the game bitmap that needs to be stretched to display
    game = al_create_bitmap(320, 200);
-   mini_map = al_create_bitmap(MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
 
    tile_sheet = al_load_bitmap("tile_sheet.png");
    if (tile_sheet == NULL) { jlog("Couldn't load tile_sheet.png"); }
@@ -154,18 +142,6 @@ int init_game()
       return -1;
    }
    jlog("%s loaded.", FONT_FILE);
-
-   //Fill with random 1's and 0's
-   srand(time(NULL));
-//   for (int i = 0; i < MAP_WIDTH + MAP_HEIGHT * MAP_WIDTH; i++)
-//   {
-//      map->position[i].tile = (unsigned char)rand() % 4;
-//   }
-//   jlog("Map randomly filled.");
-//   for (int t = 0; t < MAP_HEIGHT * MAP_WIDTH; t++)
-//   {
-//            printf("%d", map[t]);
-//   }
 
    al_register_event_source(event_queue, al_get_display_event_source(display));
    al_register_event_source(event_queue, al_get_timer_event_source(FPS_TIMER));
@@ -181,86 +157,50 @@ int init_game()
    return 0;
 }
 
-
-void draw_tiles()
-{
-   al_set_target_bitmap(view_port);
-   al_clear_to_color(al_map_rgba(0, 0, 0, 0));
-                                                            //Which tiles are in view? The view port size divided by the tile size plus 1.
-   int y_tiles_in_view = VIEWPORT_HEIGHT / TILE_SIZE + 1;   //Should be 10 tiles +1 row off view
-   int x_tiles_in_view = VIEWPORT_WIDTH / TILE_SIZE + 1;    //Should be 13 tiles +1 Column off view
-
-
-   int sx = CAM_X / TILE_SIZE;      //This is the tile to draw from according to camera position
-   int sy = CAM_Y / TILE_SIZE;      //This is the tile to draw from according to camera position
-
-   for (int y = sy; y < sy + y_tiles_in_view; y++)
-   {
-      for (int x = sx; x < sx + x_tiles_in_view; x++)
-      {
-         if ((x < MAP_WIDTH) && (x > -1) && (y < MAP_HEIGHT) && (y > -1))
-         {
-            if ((map->position[x + y * MAP_WIDTH].tile == 1))
-            {
-               al_draw_bitmap_region(tile_sheet, TILE001, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE) - CAM_X, (y * TILE_SIZE) - CAM_Y, 0); //Draw the tile, subtracting the camera position
-            }
-            if ((map->position[x + y * MAP_WIDTH].tile == 2))
-            {
-               al_draw_bitmap_region(tile_sheet, TILE002, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE) - CAM_X, (y * TILE_SIZE) - CAM_Y, 0); //Draw the tile, subtracting the camera position
-            }
-            if ((map->position[x + y * MAP_WIDTH].tile == 3))
-            {
-               al_draw_bitmap_region(tile_sheet, TILE003, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE) - CAM_X, (y * TILE_SIZE) - CAM_Y, 0); //Draw the tile, subtracting the camera position
-            }
-         }
-      }
-   }
-
-}
-
 void draw_mini_map()
 {
    al_set_target_bitmap(mini_map);
    al_clear_to_color(al_map_rgb(0,0,0));
-   //al_lock_bitmap(mini_map, al_get_bitmap_format(mini_map), ALLEGRO_LOCK_READWRITE);
    for (int y = 0; y < MAP_HEIGHT; y++)
    {
       for (int x = 0; x < MAP_WIDTH; x++)
       {
-         if ((map->position[x + y * MAP_WIDTH].tile == 1))
+         if (map->position[x + y * MAP_WIDTH].empty_tile == false)
          {
-            al_draw_bitmap_region(tile_sheet, TILE001, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE), (y * TILE_SIZE), 0);
+            if ((map->position[x + y * MAP_WIDTH].tile == 0))
+            {
+               al_draw_bitmap_region(tile_sheet, TILE000, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE), (y * TILE_SIZE), 0);
+            }
+            if ((map->position[x + y * MAP_WIDTH].tile == 1))
+            {
+               al_draw_bitmap_region(tile_sheet, TILE001, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE), (y * TILE_SIZE), 0);
+            }
+            if ((map->position[x + y * MAP_WIDTH].tile == 2))
+            {
+               al_draw_bitmap_region(tile_sheet, TILE002, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE), (y * TILE_SIZE), 0);
+            }
          }
-         if ((map->position[x + y * MAP_WIDTH].tile == 2))
-         {
-            al_draw_bitmap_region(tile_sheet, TILE002, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE), (y * TILE_SIZE), 0);
-         }
-         if ((map->position[x + y * MAP_WIDTH].tile == 3))
-         {
-            al_draw_bitmap_region(tile_sheet, TILE003, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE), (y * TILE_SIZE), 0);
-         }
+
       }
    }
-   //al_unlock_bitmap(mini_map);
 }
 
 void update_screen()
 {
-
    draw_mini_map();
    if (show_mini_map == false)
    {
-      draw_tiles();
+      draw_map(view_port, tile_sheet, &cam, map);
       al_set_target_bitmap(game);
       al_clear_to_color(al_map_rgb(0,0,0));
       al_draw_bitmap(stat_border, 0, 0, 0);
       al_draw_bitmap(view_port, 16, 16, 0);
       al_draw_textf(reg_font, al_map_rgb(255,255,255), 234, 17, ALLEGRO_ALIGN_LEFT, "map->position");
-      al_draw_textf(reg_font, al_map_rgb(255,255,255), 234, 27, ALLEGRO_ALIGN_LEFT, "%d, %d", mouse_over_tile_x, mouse_over_tile_y);
+      al_draw_textf(reg_font, al_map_rgb(255,255,255), 234, 27, ALLEGRO_ALIGN_LEFT, "%d, %d", sp_mouse.over_tile_x, sp_mouse.over_tile_y);
    }
 
    al_set_target_bitmap(mini_map);
-   if (show_mini_map) al_draw_rectangle(CAM_X, CAM_Y, CAM_X + VIEWPORT_WIDTH, CAM_Y + VIEWPORT_HEIGHT, al_map_rgb(255,255,255),1);
+   if (show_mini_map) al_draw_rectangle(cam.x, cam.y, cam.x + VIEWPORT_WIDTH, cam.y + VIEWPORT_HEIGHT, al_map_rgb(255,255,255),1);
 
    al_set_target_backbuffer(display);
 
@@ -272,6 +212,43 @@ void update_screen()
    }
 
    al_flip_display();
+}
+
+void check_click_in_viewport() // If mouse clicks in view port. I'm putting this here for now.
+{
+   al_get_mouse_state(&mouse);
+   if (show_mini_map == false)
+   {
+      //If mouse is inside view port
+      if ((sp_mouse.x > VIEWPORT_X * DISPLAY_MULTIPLIER) && (sp_mouse.x < (VIEWPORT_WIDTH + VIEWPORT_X) * DISPLAY_MULTIPLIER) && (sp_mouse.y > VIEWPORT_Y * DISPLAY_MULTIPLIER) && (sp_mouse.y < (VIEWPORT_HEIGHT + VIEWPORT_Y) * DISPLAY_MULTIPLIER))
+      {
+         sp_mouse.over_tile_x = ( (((sp_mouse.x - (16 * DISPLAY_MULTIPLIER)) + (cam.x * DISPLAY_MULTIPLIER)) / TILE_SIZE) / DISPLAY_MULTIPLIER );
+         sp_mouse.over_tile_y = ( (((sp_mouse.y - (16 * DISPLAY_MULTIPLIER)) + (cam.y * DISPLAY_MULTIPLIER)) / TILE_SIZE) / DISPLAY_MULTIPLIER );
+
+         if (mouse.buttons & 1)
+         {
+            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].empty_tile = false;
+            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].tile = 0; //(unsigned char)rand() % 4;
+         }
+         else if (mouse.buttons & 2)
+         {
+            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].empty_tile = true;
+         }
+      }
+      else
+      {
+         sp_mouse.over_tile_x = 0;
+         sp_mouse.over_tile_y = 0;
+      }
+   }
+}
+
+void check_cam_bounds() //Check to make sure camera is not out of bounds.
+{
+   if (cam.x < 0) cam.x = 0;
+   if (cam.x > (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH) cam.x = (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH;
+   if (cam.y < 0) cam.y = 0;
+   if (cam.y > (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT) cam.y = (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT;
 }
 
 //////////////////////////////////////////////////////
@@ -331,58 +308,31 @@ int main(int argc, char **argv)
             if (key[KEY_LSHIFT])
             {
                scroll_speed = 32;
-
             }
             else if (!key[KEY_LSHIFT])
             {
                scroll_speed = 4;
-
             }
 
             //Scroll controls
-            if (key[KEY_UP] && CAM_Y > 0)
+            if (key[KEY_UP] && cam.y > 0)
             {
-               CAM_Y -= scroll_speed;
+               cam.y -= scroll_speed;
             }
-            if (key[KEY_DOWN] && CAM_Y < (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT)
+            if (key[KEY_DOWN] && cam.y < (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT)
             {
-               CAM_Y += scroll_speed;
+               cam.y += scroll_speed;
             }
-            if (key[KEY_LEFT] && CAM_X > 0)
+            if (key[KEY_LEFT] && cam.x > 0)
             {
-               CAM_X -= scroll_speed;
+               cam.x -= scroll_speed;
             }
-            if (key[KEY_RIGHT] && CAM_X < (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH)
+            if (key[KEY_RIGHT] && cam.x < (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH)
             {
-               CAM_X += scroll_speed;
-            }
-
-            // If mouse clicks in view port. I'm putting this here for now.
-            al_get_mouse_state(&mouse);
-            if (show_mini_map == false)
-            {
-               //If mouse is inside view port
-               if ((mouse_x > VIEWPORT_X * DISPLAY_MULTIPLIER) && (mouse_x < (VIEWPORT_WIDTH + VIEWPORT_X) * DISPLAY_MULTIPLIER) && (mouse_y > VIEWPORT_Y * DISPLAY_MULTIPLIER) && (mouse_y < (VIEWPORT_HEIGHT + VIEWPORT_Y) * DISPLAY_MULTIPLIER))
-               {
-                  mouse_over_tile_x = ( (((mouse_x - (16 * DISPLAY_MULTIPLIER)) + (CAM_X * DISPLAY_MULTIPLIER)) / TILE_SIZE) / DISPLAY_MULTIPLIER );
-                  mouse_over_tile_y = ( (((mouse_y - (16 * DISPLAY_MULTIPLIER)) + (CAM_Y * DISPLAY_MULTIPLIER)) / TILE_SIZE) / DISPLAY_MULTIPLIER );
-
-                  if (mouse.buttons & 1)
-                  {
-                  map->position[mouse_over_tile_x + mouse_over_tile_y * MAP_WIDTH].tile = 1; //(unsigned char)rand() % 4;
-                  }
-                  else if (mouse.buttons & 2)
-                  {
-                  map->position[mouse_over_tile_x + mouse_over_tile_y * MAP_WIDTH].tile = 0;
-                  }
-               }
-               else
-               {
-                  mouse_over_tile_x = 0;
-                  mouse_over_tile_y = 0;
-               }
+               cam.x += scroll_speed;
             }
 
+            check_click_in_viewport();
             redraw = true;
          }
 
@@ -468,25 +418,17 @@ int main(int argc, char **argv)
       }
       else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES)
       {
-         mouse_x = ev.mouse.x;
-         mouse_y = ev.mouse.y;
+         sp_mouse.x = ev.mouse.x;
+         sp_mouse.y = ev.mouse.y;
       }
 
       if (redraw && al_is_event_queue_empty(event_queue))
       {
-         //Check to make sure camera is not out of bounds.
-            if (CAM_X < 0) CAM_X = 0;
-            if (CAM_X > (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH) CAM_X = (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH;
-            if (CAM_Y < 0) CAM_Y = 0;
-            if (CAM_Y > (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT) CAM_Y = (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT;
-
+         check_cam_bounds();
 
          redraw = false;
          update_screen();
       }
-
-
-
    }
    clean_up();
    return 0;
