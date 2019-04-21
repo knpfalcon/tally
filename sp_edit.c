@@ -18,15 +18,13 @@ const int DISPLAY_WIDTH = 320 * DISPLAY_MULTIPLIER;
 const int DISPLAY_HEIGHT = 200 * DISPLAY_MULTIPLIER;
 
 t_cam cam;
-
 t_mouse sp_mouse;
+t_map *map = NULL;
 
 bool show_mini_map = false;
 
-enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LSHIFT};
-bool key[5] = {false, false, false, false, false };
-
-t_map *map = NULL;
+enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LSHIFT, KEY_PAD_PLUS, KEY_PAD_MINUS};
+bool key[7] = {false, false, false, false, false, false, false };
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -38,6 +36,7 @@ ALLEGRO_BITMAP *stat_border = NULL;
 ALLEGRO_BITMAP *game = NULL;
 ALLEGRO_BITMAP *tile_sheet = NULL;
 ALLEGRO_BITMAP *mini_map = NULL;
+ALLEGRO_BITMAP *bg = NULL;
 
 ALLEGRO_MOUSE_STATE mouse;
 
@@ -124,18 +123,19 @@ int init_game()
    jlog("Display Created.");
 
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-   stat_border = al_load_bitmap("status_border.png");
+   stat_border = al_load_bitmap("data/status_border.png");
+   bg = al_load_bitmap("data/bg_1.png");
    mini_map = al_create_bitmap(MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
 
    //Create the game bitmap that needs to be stretched to display
    game = al_create_bitmap(320, 200);
 
-   tile_sheet = al_load_bitmap("tile_sheet.png");
+   tile_sheet = al_load_bitmap("data/tile_sheet.png");
    if (tile_sheet == NULL) { jlog("Couldn't load tile_sheet.png"); }
    jlog("tile_sheet.png loaded.");
 
 
-   reg_font = al_load_ttf_font(FONT_FILE, 8, 0);
+   reg_font = al_load_ttf_font(FONT_FILE, 16, 0);
    if(!reg_font)
    {
       jlog("Failed to load %s", FONT_FILE);
@@ -167,42 +167,46 @@ void draw_mini_map()
       {
          if (map->position[x + y * MAP_WIDTH].empty_tile == false)
          {
-            if ((map->position[x + y * MAP_WIDTH].tile == 0))
-            {
-               al_draw_bitmap_region(tile_sheet, TILE000, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE), (y * TILE_SIZE), 0);
-            }
-            if ((map->position[x + y * MAP_WIDTH].tile == 1))
-            {
-               al_draw_bitmap_region(tile_sheet, TILE001, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE), (y * TILE_SIZE), 0);
-            }
-            if ((map->position[x + y * MAP_WIDTH].tile == 2))
-            {
-               al_draw_bitmap_region(tile_sheet, TILE002, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE), (y * TILE_SIZE), 0);
-            }
+            al_draw_bitmap_region(tile_sheet, map->position[x + y * MAP_WIDTH].tile_x * TILE_SIZE, map->position[x + y * MAP_WIDTH].tile_y * TILE_SIZE, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE), (y * TILE_SIZE), 0);
          }
 
       }
    }
 }
 
+
+void show_info_stuff()
+{
+   if (show_mini_map == false)
+   {
+      al_draw_bitmap(tile_sheet, 226 * DISPLAY_MULTIPLIER, 16 * DISPLAY_MULTIPLIER, 0);
+      al_draw_rectangle(sp_mouse.tile_selection_x * TILE_SIZE +(226 * DISPLAY_MULTIPLIER), sp_mouse.tile_selection_y * TILE_SIZE + (16 * DISPLAY_MULTIPLIER),
+                        sp_mouse.tile_selection_x * TILE_SIZE +(226 * DISPLAY_MULTIPLIER) + TILE_SIZE, sp_mouse.tile_selection_y  * TILE_SIZE+ (16 * DISPLAY_MULTIPLIER) + TILE_SIZE,
+                        al_map_rgb(255,255,0), 2);
+      al_draw_textf(reg_font, al_map_rgb(255,255,255), 16 * DISPLAY_MULTIPLIER, 2 * DISPLAY_MULTIPLIER, ALLEGRO_ALIGN_LEFT, "map->position %d, %d", sp_mouse.over_tile_x, sp_mouse.over_tile_y);
+      al_draw_textf(reg_font, al_map_rgb(255,255,255), 226 * DISPLAY_MULTIPLIER , 13 * DISPLAY_MULTIPLIER, 0, "x:%d, y:%d", sp_mouse.tile_selection_x, sp_mouse.tile_selection_y);
+      al_draw_textf(reg_font, al_map_rgb(255,255,255), 256 * DISPLAY_MULTIPLIER, 13 * DISPLAY_MULTIPLIER, 0, "Tile Selected: %d", sp_mouse.tile_selection);
+
+   }
+}
 void update_screen()
 {
    draw_mini_map();
    if (show_mini_map == false)
    {
-      draw_map(view_port, tile_sheet, &cam, map);
+      draw_map(view_port, tile_sheet, bg, &cam, map);
       al_set_target_bitmap(game);
       al_clear_to_color(al_map_rgb(0,0,0));
       al_draw_bitmap(stat_border, 0, 0, 0);
       al_draw_bitmap(view_port, 16, 16, 0);
-      al_draw_textf(reg_font, al_map_rgb(255,255,255), 234, 17, ALLEGRO_ALIGN_LEFT, "map->position");
-      al_draw_textf(reg_font, al_map_rgb(255,255,255), 234, 27, ALLEGRO_ALIGN_LEFT, "%d, %d", sp_mouse.over_tile_x, sp_mouse.over_tile_y);
+      al_draw_bitmap_region(tile_sheet, sp_mouse.tile_selection_x * TILE_SIZE, sp_mouse.tile_selection_y * TILE_SIZE, TILE_SIZE, TILE_SIZE, 256, 16, 0);
    }
 
    al_set_target_bitmap(mini_map);
    if (show_mini_map) al_draw_rectangle(cam.x, cam.y, cam.x + VIEWPORT_WIDTH, cam.y + VIEWPORT_HEIGHT, al_map_rgb(255,255,255),1);
 
    al_set_target_backbuffer(display);
+
 
    if (show_mini_map == false) al_draw_scaled_bitmap(game, 0, 0, 320, 200, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, 0);
 
@@ -211,6 +215,8 @@ void update_screen()
       al_draw_scaled_bitmap(mini_map, 0, 0, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT , 0);
    }
 
+
+   show_info_stuff();
    al_flip_display();
 }
 
@@ -225,10 +231,11 @@ void check_click_in_viewport() // If mouse clicks in view port. I'm putting this
          sp_mouse.over_tile_x = ( (((sp_mouse.x - (16 * DISPLAY_MULTIPLIER)) + (cam.x * DISPLAY_MULTIPLIER)) / TILE_SIZE) / DISPLAY_MULTIPLIER );
          sp_mouse.over_tile_y = ( (((sp_mouse.y - (16 * DISPLAY_MULTIPLIER)) + (cam.y * DISPLAY_MULTIPLIER)) / TILE_SIZE) / DISPLAY_MULTIPLIER );
 
-         if (mouse.buttons & 1)
+         if (mouse.buttons & 1 && map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].empty_tile == true)
          {
             map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].empty_tile = false;
-            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].tile = 0; //(unsigned char)rand() % 4;
+            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].tile_x = sp_mouse.tile_selection_x;
+            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].tile_y = sp_mouse.tile_selection_y;
          }
          else if (mouse.buttons & 2)
          {
@@ -251,6 +258,52 @@ void check_cam_bounds() //Check to make sure camera is not out of bounds.
    if (cam.y > (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT) cam.y = (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT;
 }
 
+void check_tile_selection()
+{
+   if (mouse.z < sp_mouse.z || key[KEY_PAD_MINUS])
+   {
+      sp_mouse.z = mouse.z;
+
+      if (sp_mouse.tile_selection_x > 0)
+      {
+         sp_mouse.tile_selection_x--;
+      }
+      else if (sp_mouse.tile_selection_x == 0 && sp_mouse.tile_selection_y > 0)
+      {
+         sp_mouse.tile_selection_x = 15;
+         sp_mouse.tile_selection_y--;
+      }
+      else if (sp_mouse.tile_selection_x == 0 && sp_mouse.tile_selection_y == 0)
+      {
+         sp_mouse.tile_selection_x = 15;
+         sp_mouse.tile_selection_y = 15;
+      }
+      sp_mouse.tile_selection = sp_mouse.tile_selection_x + sp_mouse.tile_selection_y * 16;
+
+   }
+   if (mouse.z > sp_mouse.z || key[KEY_PAD_PLUS])
+   {
+      sp_mouse.z = mouse.z;
+
+      if (sp_mouse.tile_selection_x < 15)
+      {
+         sp_mouse.tile_selection_x++;
+      }
+      else if (sp_mouse.tile_selection_x == 15 && sp_mouse.tile_selection_y < 15)
+      {
+         sp_mouse.tile_selection_x = 0;
+         sp_mouse.tile_selection_y++;
+      }
+      else if (sp_mouse.tile_selection_x == 15 && sp_mouse.tile_selection_y == 15)
+      {
+         sp_mouse.tile_selection_x = 0;
+         sp_mouse.tile_selection_y = 0;
+      }
+
+      sp_mouse.tile_selection = sp_mouse.tile_selection_x + sp_mouse.tile_selection_y * 16;
+
+   }
+}
 //////////////////////////////////////////////////////
 //Clean up everything for now (Replacing this later)
 ////////////////////////////////////////////////////
@@ -262,6 +315,7 @@ void clean_up()
    al_destroy_bitmap(game);
    al_destroy_bitmap(tile_sheet);
    al_destroy_bitmap(mini_map);
+   al_destroy_bitmap(bg);
    al_destroy_event_queue(event_queue);
    al_destroy_timer(FPS_TIMER);
    destroy_map(map);
@@ -333,6 +387,8 @@ int main(int argc, char **argv)
             }
 
             check_click_in_viewport();
+            check_tile_selection();
+
             redraw = true;
          }
 
@@ -373,6 +429,12 @@ int main(int argc, char **argv)
                key[KEY_LSHIFT] = true;
                show_mini_map = true;
                break;
+            case ALLEGRO_KEY_PAD_PLUS:
+               key[KEY_PAD_PLUS] = true;
+               break;
+            case ALLEGRO_KEY_PAD_MINUS:
+               key[KEY_PAD_MINUS] = true;
+               break;
          }
       }
       else if (ev.type == ALLEGRO_EVENT_KEY_UP)
@@ -411,6 +473,12 @@ int main(int argc, char **argv)
                al_save_bitmap("map.png", mini_map);
                jlog("Map saved to map.png");
                break;
+            case ALLEGRO_KEY_PAD_PLUS:
+               key[KEY_PAD_PLUS] = false;
+               break;
+            case ALLEGRO_KEY_PAD_MINUS:
+               key[KEY_PAD_MINUS] = false;
+               break;
             case ALLEGRO_KEY_ESCAPE:
                program_done = true;
                break;
@@ -425,6 +493,7 @@ int main(int argc, char **argv)
       if (redraw && al_is_event_queue_empty(event_queue))
       {
          check_cam_bounds();
+
 
          redraw = false;
          update_screen();
