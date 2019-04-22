@@ -23,6 +23,8 @@ typedef struct t_map
 
 t_map *create_empty_map();
 void destroy_map(t_map *m);
+bool save_map(t_map *m, ALLEGRO_DISPLAY *display);
+t_map *load_map(const char *filename);
 void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m);
 
 #endif // SP_MAP_H

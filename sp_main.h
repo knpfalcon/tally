@@ -3,11 +3,6 @@
 
 #include "jt_util.h"
 
-//Macro hack for tile_sheet coordinates... It works, by God!
-#define TILE000 0, 0
-#define TILE001 16, 0
-#define TILE002 32, 0
-
 #define VIEWPORT_WIDTH 208
 #define VIEWPORT_HEIGHT 160
 #define VIEWPORT_X 16

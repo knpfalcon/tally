@@ -6,6 +6,7 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_native_dialog.h>
 
 #include "sp_main.h"
 #include "sp_map.h"
@@ -22,6 +23,8 @@ t_mouse sp_mouse;
 t_map *map = NULL;
 
 bool show_mini_map = false;
+
+const char *filename;
 
 enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LSHIFT, KEY_PAD_PLUS, KEY_PAD_MINUS};
 bool key[7] = {false, false, false, false, false, false, false };
@@ -113,6 +116,12 @@ int init_game()
    }
    jlog("Primitives add-on initialized.");
 
+   if (!al_init_native_dialog_addon())
+   {
+      jlog("Faile to initialize native dialog addon!");
+   }
+   jlog("Native dialog addon add-on initialized.");
+
    //Create Display
    display = al_create_display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
    if(!display)
@@ -183,7 +192,8 @@ void show_info_stuff()
       al_draw_rectangle(sp_mouse.tile_selection_x * TILE_SIZE +(226 * DISPLAY_MULTIPLIER), sp_mouse.tile_selection_y * TILE_SIZE + (16 * DISPLAY_MULTIPLIER),
                         sp_mouse.tile_selection_x * TILE_SIZE +(226 * DISPLAY_MULTIPLIER) + TILE_SIZE, sp_mouse.tile_selection_y  * TILE_SIZE+ (16 * DISPLAY_MULTIPLIER) + TILE_SIZE,
                         al_map_rgb(255,255,0), 2);
-      al_draw_textf(reg_font, al_map_rgb(255,255,255), 16 * DISPLAY_MULTIPLIER, 2 * DISPLAY_MULTIPLIER, ALLEGRO_ALIGN_LEFT, "map->position %d, %d", sp_mouse.over_tile_x, sp_mouse.over_tile_y);
+      al_draw_textf(reg_font, al_map_rgb(255,255,255), 16 * DISPLAY_MULTIPLIER, 4 * DISPLAY_MULTIPLIER, ALLEGRO_ALIGN_LEFT, "map->position %d, %d", sp_mouse.over_tile_x, sp_mouse.over_tile_y);
+      al_draw_textf(reg_font, al_map_rgb(255,255,255), 16 * DISPLAY_MULTIPLIER, 2 * DISPLAY_MULTIPLIER, ALLEGRO_ALIGN_LEFT, "%s", map->name);
       al_draw_textf(reg_font, al_map_rgb(255,255,255), 226 * DISPLAY_MULTIPLIER , 13 * DISPLAY_MULTIPLIER, 0, "x:%d, y:%d", sp_mouse.tile_selection_x, sp_mouse.tile_selection_y);
       al_draw_textf(reg_font, al_map_rgb(255,255,255), 256 * DISPLAY_MULTIPLIER, 13 * DISPLAY_MULTIPLIER, 0, "Tile Selected: %d", sp_mouse.tile_selection);
 
@@ -194,7 +204,7 @@ void update_screen()
    draw_mini_map();
    if (show_mini_map == false)
    {
-      draw_map(view_port, tile_sheet, bg, &cam, map);
+      if (map != NULL) draw_map(view_port, tile_sheet, bg, &cam, map);
       al_set_target_bitmap(game);
       al_clear_to_color(al_map_rgb(0,0,0));
       al_draw_bitmap(stat_border, 0, 0, 0);
@@ -309,28 +319,56 @@ void check_tile_selection()
 ////////////////////////////////////////////////////
 void clean_up()
 {
-   al_destroy_display(display);
-   al_destroy_bitmap(view_port);
-   al_destroy_bitmap(stat_border);
-   al_destroy_bitmap(game);
-   al_destroy_bitmap(tile_sheet);
-   al_destroy_bitmap(mini_map);
-   al_destroy_bitmap(bg);
-   al_destroy_event_queue(event_queue);
-   al_destroy_timer(FPS_TIMER);
-   destroy_map(map);
+
+
+   destroy_map(map);                      jlog("Destroying map.");
+   al_destroy_bitmap(view_port);          jlog("Destroying view_port.");
+   al_destroy_bitmap(stat_border);        jlog("Destroying stat_border.");
+   al_destroy_bitmap(game);               jlog("Destroying game.");
+   al_destroy_bitmap(tile_sheet);         jlog("Destroying tile_sheet.");
+   al_destroy_bitmap(mini_map);           jlog("Destroying mini_map.");
+   al_destroy_bitmap(bg);                 jlog("Destroying bg.");
+   al_destroy_event_queue(event_queue);   jlog("Destroying event_queue.");
+   al_destroy_timer(FPS_TIMER);           jlog("Destroying FPS_TIMER.");
+   al_shutdown_native_dialog_addon();     jlog("Destroying al_shutdown_native_dialog_addon.");
+   al_destroy_display(display);           jlog("Destroying display.");
+
    jlog("***CLEANING UP AND QUITTING***\n\n");
+}
+
+
+bool open_file_dialog()
+{
+   ALLEGRO_PATH *path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
+   al_append_path_component(path, "data/maps");
+   al_set_path_filename(path, (const char *)"map.spl");
+   filename = al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP);
+
+   ALLEGRO_FILECHOOSER *file_dialog = al_create_native_file_dialog(filename, "Open Map", "*.*;*.spl", ALLEGRO_FILECHOOSER_FILE_MUST_EXIST);
+   if(!file_dialog) return false;
+
+   if(!al_show_native_file_dialog(display, file_dialog)) {
+      if(file_dialog) al_destroy_native_file_dialog(file_dialog);
+      return false;
+   }
+
+   filename = al_get_native_file_dialog_path(file_dialog, 0);
+   jlog("%s", filename);
+
+   al_destroy_native_file_dialog(file_dialog);
+
+   return true;
 }
 
 int main(int argc, char **argv)
 {
-
+   bool load = false;
    int scroll_speed = 16;
+
 
    if (init_game() != 0)
    {
       jlog("Failed to init game!\n");
-      clean_up();
       return 100;
    }
 
@@ -389,6 +427,23 @@ int main(int argc, char **argv)
             check_click_in_viewport();
             check_tile_selection();
 
+            if (load == true)
+            {
+               load = false;
+               if (open_file_dialog())
+               {
+                  destroy_map(map);
+                  map = NULL;
+                  map = load_map(filename);
+                  if (map == NULL)
+                  {
+                     jlog("Something went wrong with map loading!");
+                     return -99;
+                  }
+               }
+
+            }
+
             redraw = true;
          }
 
@@ -431,6 +486,8 @@ int main(int argc, char **argv)
                break;
             case ALLEGRO_KEY_PAD_PLUS:
                key[KEY_PAD_PLUS] = true;
+               break;
+            case ALLEGRO_KEY_F3:
                break;
             case ALLEGRO_KEY_PAD_MINUS:
                key[KEY_PAD_MINUS] = true;
@@ -479,6 +536,12 @@ int main(int argc, char **argv)
             case ALLEGRO_KEY_PAD_MINUS:
                key[KEY_PAD_MINUS] = false;
                break;
+            case ALLEGRO_KEY_F2:
+               if(!save_map(map, display)) jlog("Error saving map!");
+               break;
+            case ALLEGRO_KEY_F3:
+               load = true;
+               break;
             case ALLEGRO_KEY_ESCAPE:
                program_done = true;
                break;
@@ -493,7 +556,6 @@ int main(int argc, char **argv)
       if (redraw && al_is_event_queue_empty(event_queue))
       {
          check_cam_bounds();
-
 
          redraw = false;
          update_screen();

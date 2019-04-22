@@ -2,13 +2,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <allegro5/allegro.h>
+#include <allegro5/allegro_native_dialog.h>
 
 #include "sp_main.h"
 #include "sp_map.h"
 
 t_map *create_empty_map()
 {
-   t_map *m; //Pointer to return at the end of function.
+   t_map *m = NULL; //Pointer to return at the end of function.
 
    m = malloc(sizeof(t_map)); //Allocate memory for map
    if (m == NULL)
@@ -17,6 +18,10 @@ t_map *create_empty_map()
       return NULL; //Return NULL on failure
    }
 
+   for (int i = 0; i < 32; i++)
+   {
+      m->name[i] = 0;
+   }
    strcpy_s(m->name, 32, "EMPTY MAP");
 
    m->position = malloc(MAP_WIDTH * MAP_HEIGHT * sizeof(t_map_pos));
@@ -59,6 +64,81 @@ void destroy_map(t_map *m)
    jlog("Map Destroyed.");
 }
 
+bool save_map(t_map *m, ALLEGRO_DISPLAY *display)
+{
+   ALLEGRO_PATH *path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
+   al_append_path_component(path, "data/maps");
+   al_set_path_filename(path, (const char *)"map.spl");
+   const char *filename = al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP);
+
+   ALLEGRO_FILECHOOSER *file_dialog = al_create_native_file_dialog(filename, "Save Map", "*.*;*.spl", ALLEGRO_FILECHOOSER_SAVE);
+   if(!file_dialog) return false;
+
+   if(!al_show_native_file_dialog(display, file_dialog)) {
+      if(file_dialog) al_destroy_native_file_dialog(file_dialog);
+      return false;
+   }
+
+   filename = al_get_native_file_dialog_path(file_dialog, 0);
+
+   al_destroy_native_file_dialog(file_dialog);
+
+   FILE *fp = NULL;
+
+   fp = fopen(filename, "wb");
+   if (fp == NULL)
+   {
+      jlog("Error opening file to save map to!");
+      return false;
+   }
+
+   fwrite(m, sizeof(t_map), 1, fp);
+
+   fwrite(m->position, sizeof(t_map_pos), MAP_WIDTH * MAP_HEIGHT, fp);
+
+   fclose(fp);
+
+   jlog("Map Saved.");
+   return true;
+}
+
+t_map *load_map(const char *fname)
+{
+   t_map *m;
+
+   FILE *fp = NULL;
+
+   fp = fopen(fname, "r");
+   if (fp == NULL)
+   {
+      jlog("Error opening map file!");
+      return NULL;
+   }
+
+   m = malloc(sizeof(t_map)); //Allocate memory for map
+   if (m == NULL)
+   {
+      jlog("In file %s, Line %d. Couldn't create an empty map! m returns NULL." __FILE__, __LINE__);
+      fclose(fp);
+      return NULL; //Return NULL on failure
+   }
+   fread(m, sizeof(t_map), 1, fp);
+
+   m->position = malloc(MAP_WIDTH * MAP_HEIGHT * sizeof(t_map_pos));
+   if (m->position == NULL)
+   {
+      free(m);
+      fclose(fp);
+      jlog("In file %s, Line %d. Couldn't create an empty map! m->position returns NULL." __FILE__, __LINE__);
+      return NULL;
+   }
+   fread(m->position, sizeof(t_map_pos), MAP_WIDTH * MAP_HEIGHT, fp);
+
+   jlog("Map Opened.");
+   fclose(fp);
+   return m;
+
+}
 
 void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m)
 {
