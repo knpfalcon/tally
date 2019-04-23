@@ -1,0 +1,13 @@
+TODO
+
+EDITOR
+======
+
+TILE SHEET
+----------
+Make the tile selection differ from the tile type. I don't want a tile
+coordinate in the tile data (t_map_pos).
+
+Possible fixes. Make an array of tile bitmaps eg. ALLEGRO_BITMAP *tiles[256]
+and then use a temporary bitmap to store each tile in a slot. That way I can
+refer to the tiles by index, but load them from a 256x256 pixel bitmap.
