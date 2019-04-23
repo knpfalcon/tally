@@ -30,11 +30,6 @@ typedef struct t_mouse
    int over_tile_x;
    int over_tile_y;
    unsigned char tile_selection;
-   unsigned int tile_selection_x;
-   unsigned int tile_selection_y;
-// unsigned char tile_sheet_x;
-// unsigned char tile_sheet_y;
-
 }t_mouse;
 
 #endif // SP_MAIN_H
