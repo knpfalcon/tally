@@ -143,7 +143,7 @@ t_map *load_map(const char *fname)
 
 }
 
-void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m)
+void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tiles[], ALLEGRO_BITMAP *background, t_cam *c, t_map *m)
 {
    al_set_target_bitmap(d_bmp);
    al_draw_bitmap(background, 0, 0, 0);
@@ -164,7 +164,8 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
          {
             if (m->position[x + y * MAP_WIDTH].empty_tile == false)
             {
-               al_draw_bitmap_region(tile_sheet, m->position[x + y * MAP_WIDTH].tile_x * TILE_SIZE, m->position[x + y * MAP_WIDTH].tile_y * TILE_SIZE, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE) - c->x, (y * TILE_SIZE) - c->y, 0); //Draw the tile, subtracting the camera position
+               al_draw_bitmap(tiles[m->position[x + y * MAP_WIDTH].tile], (x * TILE_SIZE) - c->x, (y * TILE_SIZE) - c->y, 0);
+               //al_draw_bitmap_region(tile_sheet, m->position[x + y * MAP_WIDTH].tile_x * TILE_SIZE, m->position[x + y * MAP_WIDTH].tile_y * TILE_SIZE, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE) - c->x, (y * TILE_SIZE) - c->y, 0); //Draw the tile, subtracting the camera position
             }
          }
       }

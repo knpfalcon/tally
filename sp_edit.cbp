@@ -89,6 +89,7 @@
 			<Add library="dsound" />
 			<Add directory="C:/libs/allegro525/lib" />
 		</Linker>
+		<Unit filename="TODO.TXT" />
 		<Unit filename="jt_util.c">
 			<Option compilerVar="CC" />
 		</Unit>

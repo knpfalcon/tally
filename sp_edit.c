@@ -38,6 +38,8 @@ const char *filename;
 enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LSHIFT, KEY_PAD_PLUS, KEY_PAD_MINUS};
 bool key[7] = {false, false, false, false, false, false, false };
 
+unsigned char tile_selection = 0;
+
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
 ALLEGRO_TIMER *FPS_TIMER = NULL;
@@ -49,6 +51,9 @@ ALLEGRO_BITMAP *game = NULL;
 ALLEGRO_BITMAP *tile_sheet = NULL;
 ALLEGRO_BITMAP *mini_map = NULL;
 ALLEGRO_BITMAP *bg = NULL;
+ALLEGRO_BITMAP *temp_bmp = NULL;
+
+ALLEGRO_BITMAP *tiles[256];
 
 ALLEGRO_MOUSE_STATE mouse;
 
@@ -153,6 +158,7 @@ int init_game()
    jlog("tile_sheet.png loaded.");
 
 
+
    reg_font = al_load_ttf_font(FONT_FILE, 16, 0);
    if(!reg_font)
    {
@@ -171,6 +177,25 @@ int init_game()
    al_start_timer(FPS_TIMER);
    jlog("Timer started.");
 
+   //load tile sheet into an array of bitmaps
+   al_draw_text(reg_font, al_map_rgb(255,255,255), 16, 16 , 0, "Loading...");
+   al_flip_display();
+
+   for (int y = 0; y < 16; y++)
+   {
+      for (int x = 0; x < 16; x++)
+      {
+         tiles[x + y * 16] = al_create_bitmap(TILE_SIZE, TILE_SIZE);
+         if (!tiles[x + y * 16])
+         {
+            jlog("Error creating Tile %d!", x + y * 16);
+         }
+         al_set_target_bitmap(tiles[x + y * 16]);
+         al_draw_bitmap_region(tile_sheet, x * 16, y * 16, 16, 16, 0, 0, 0);
+         jlog("Copied Tile %d from tile_sheet.", x + y * 16);
+      }
+   }
+
    jlog("Game initialized.");
    return 0;
 }
@@ -185,7 +210,8 @@ void draw_mini_map()
       {
          if (map->position[x + y * MAP_WIDTH].empty_tile == false)
          {
-            al_draw_bitmap_region(tile_sheet, map->position[x + y * MAP_WIDTH].tile_x * TILE_SIZE, map->position[x + y * MAP_WIDTH].tile_y * TILE_SIZE, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE), (y * TILE_SIZE), 0);
+            //al_draw_bitmap_region(tile_sheet, map->position[x + y * MAP_WIDTH].tile_x * TILE_SIZE, map->position[x + y * MAP_WIDTH].tile_y * TILE_SIZE, TILE_SIZE, TILE_SIZE, (x * TILE_SIZE), (y * TILE_SIZE), 0);
+            al_draw_bitmap(tiles[map->position[x + y * MAP_WIDTH].tile], x * TILE_SIZE, y * TILE_SIZE, 0);
          }
 
       }
@@ -215,12 +241,13 @@ void update_screen()
 
    if (show_mini_map == false)
    {
-      if (map != NULL) draw_map(view_port, tile_sheet, bg, &cam, map);
+      if (map != NULL) draw_map(view_port, tiles, bg, &cam, map);
       al_set_target_bitmap(game);
       al_clear_to_color(al_map_rgb(0,0,0));
       al_draw_bitmap(stat_border, 0, 0, 0);
       al_draw_bitmap(view_port, 16, 16, 0);
-      al_draw_bitmap_region(tile_sheet, sp_mouse.tile_selection_x * TILE_SIZE, sp_mouse.tile_selection_y * TILE_SIZE, TILE_SIZE, TILE_SIZE, 256, 16, 0);
+      al_draw_bitmap(tiles[sp_mouse.tile_selection], 256, 16, 0);
+      //al_draw_bitmap_region(tile_sheet, sp_mouse.tile_selection_x * TILE_SIZE, sp_mouse.tile_selection_y * TILE_SIZE, TILE_SIZE, TILE_SIZE, 256, 16, 0);
    }
 
    al_set_target_bitmap(mini_map);
@@ -255,8 +282,8 @@ void check_click_in_viewport() // If mouse clicks in view port. I'm putting this
          if (mouse.buttons & 1 && map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].empty_tile == true)
          {
             map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].empty_tile = false;
-            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].tile_x = sp_mouse.tile_selection_x;
-            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].tile_y = sp_mouse.tile_selection_y;
+            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].tile = sp_mouse.tile_selection;
+            //map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].tile_y = sp_mouse.tile_selection_y;
          }
          else if (mouse.buttons & 2)
          {
@@ -288,6 +315,7 @@ void check_tile_selection()
       if (sp_mouse.tile_selection_x > 0)
       {
          sp_mouse.tile_selection_x--;
+         tile_selection = sp_mouse.tile_selection_x + sp_mouse.tile_selection_y * 16;
       }
       else if (sp_mouse.tile_selection_x == 0 && sp_mouse.tile_selection_y > 0)
       {
@@ -299,8 +327,7 @@ void check_tile_selection()
          sp_mouse.tile_selection_x = 15;
          sp_mouse.tile_selection_y = 15;
       }
-      sp_mouse.tile_selection = sp_mouse.tile_selection_x + sp_mouse.tile_selection_y * 16;
-
+      //sp_mouse.tile_selection = sp_mouse.tile_selection_x + sp_mouse.tile_selection_y * 16;
    }
    if (mouse.z > sp_mouse.z || key[KEY_PAD_PLUS])
    {
@@ -321,9 +348,8 @@ void check_tile_selection()
          sp_mouse.tile_selection_y = 0;
       }
 
-      sp_mouse.tile_selection = sp_mouse.tile_selection_x + sp_mouse.tile_selection_y * 16;
-
    }
+   sp_mouse.tile_selection = sp_mouse.tile_selection_x + sp_mouse.tile_selection_y * 16;
 }
 
 bool open_file_dialog()
