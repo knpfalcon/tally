@@ -544,19 +544,24 @@ void check_map_naming(ALLEGRO_EVENT *ev, int *pos)
 
 void clean_up()
 {
-   destroy_map(map);                      jlog("Destroying map.");
-//   al_destroy_bitmap(view_port);          jlog("Destroying view_port.");
-//   al_destroy_bitmap(stat_border);        jlog("Destroying stat_border.");
-//   al_destroy_bitmap(game);               jlog("Destroying game.");
-//   al_destroy_bitmap(tile_sheet);         jlog("Destroying tile_sheet.");
-//   al_destroy_bitmap(mini_map);           jlog("Destroying mini_map.");
-//   al_destroy_bitmap(bg);                 jlog("Destroying bg.");
-//   al_destroy_event_queue(event_queue);   jlog("Destroying event_queue.");
-//   al_destroy_timer(FPS_TIMER);           jlog("Destroying FPS_TIMER.");
-//   al_shutdown_native_dialog_addon();     jlog("Destroying al_shutdown_native_dialog_addon.");
-   al_destroy_display(display);           jlog("Destroying display.");
+   destroy_map(map);
 
-   jlog("***CLEANING UP AND QUITTING***\n\n");
+   if(event_queue) {
+      al_destroy_event_queue(event_queue);
+      event_queue = NULL;
+      jlog("Event queue destroyed.");
+   }
+
+   if(FPS_TIMER) {
+      al_destroy_timer(FPS_TIMER);
+      FPS_TIMER = NULL;
+      jlog("FPS_TIMER destroyed.");
+   }
+
+   al_destroy_display(display);
+   jlog("Display Destroyed.");
+
+   jlog("***QUITTING***\n\n");
 }
 
 
@@ -566,14 +571,14 @@ int main(int argc, char **argv)
    if (init_game() != 0)
    {
       jlog("Failed to init game!\n");
-      goto CLEAN_UP;
+      return -1;
    }
 
    map = create_empty_map(); //Create an empty map
    if (map == NULL)
    {
       jlog("In file %s, Line %d. Couldn't create an empty map!" __FILE__, __LINE__);
-      goto CLEAN_UP;
+      return -1;
    }
    jlog("Empty map created.");
 
@@ -632,7 +637,6 @@ int main(int argc, char **argv)
       }
    }
 
-CLEAN_UP:
    clean_up();
    return 0;
 }
