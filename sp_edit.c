@@ -429,8 +429,11 @@ void check_key_up(ALLEGRO_EVENT *ev)
          show_mini_map = false;
          break;
       case ALLEGRO_KEY_B:
-         al_save_bitmap("map.png", mini_map);
-         jlog("Map saved to map.png");
+         if (name_map == false)
+         {
+            al_save_bitmap("map.png", mini_map);
+            jlog("Image of map saved to map.png");
+         }
          break;
       case ALLEGRO_KEY_PAD_PLUS:
          key[KEY_PAD_PLUS] = false;
