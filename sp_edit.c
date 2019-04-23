@@ -8,8 +8,12 @@
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_native_dialog.h>
 
+
+#include "memwatch/memwatch.h"
+
 #include "sp_main.h"
 #include "sp_map.h"
+
 
 const float FPS = 60;
 
@@ -183,7 +187,6 @@ void draw_mini_map()
    }
 }
 
-
 void show_info_stuff()
 {
    if (show_mini_map == false)
@@ -199,6 +202,7 @@ void show_info_stuff()
 
    }
 }
+
 void update_screen()
 {
    draw_mini_map();
@@ -314,28 +318,25 @@ void check_tile_selection()
 
    }
 }
-//////////////////////////////////////////////////////
-//Clean up everything for now (Replacing this later)
-////////////////////////////////////////////////////
+
 void clean_up()
 {
 
 
    destroy_map(map);                      jlog("Destroying map.");
-   al_destroy_bitmap(view_port);          jlog("Destroying view_port.");
-   al_destroy_bitmap(stat_border);        jlog("Destroying stat_border.");
-   al_destroy_bitmap(game);               jlog("Destroying game.");
-   al_destroy_bitmap(tile_sheet);         jlog("Destroying tile_sheet.");
-   al_destroy_bitmap(mini_map);           jlog("Destroying mini_map.");
-   al_destroy_bitmap(bg);                 jlog("Destroying bg.");
-   al_destroy_event_queue(event_queue);   jlog("Destroying event_queue.");
-   al_destroy_timer(FPS_TIMER);           jlog("Destroying FPS_TIMER.");
-   al_shutdown_native_dialog_addon();     jlog("Destroying al_shutdown_native_dialog_addon.");
+//   al_destroy_bitmap(view_port);          jlog("Destroying view_port.");
+//   al_destroy_bitmap(stat_border);        jlog("Destroying stat_border.");
+//   al_destroy_bitmap(game);               jlog("Destroying game.");
+//   al_destroy_bitmap(tile_sheet);         jlog("Destroying tile_sheet.");
+//   al_destroy_bitmap(mini_map);           jlog("Destroying mini_map.");
+//   al_destroy_bitmap(bg);                 jlog("Destroying bg.");
+//   al_destroy_event_queue(event_queue);   jlog("Destroying event_queue.");
+//   al_destroy_timer(FPS_TIMER);           jlog("Destroying FPS_TIMER.");
+//   al_shutdown_native_dialog_addon();     jlog("Destroying al_shutdown_native_dialog_addon.");
    al_destroy_display(display);           jlog("Destroying display.");
 
    jlog("***CLEANING UP AND QUITTING***\n\n");
 }
-
 
 bool open_file_dialog()
 {
@@ -344,11 +345,12 @@ bool open_file_dialog()
    al_set_path_filename(path, (const char *)"map.spl");
    filename = al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP);
 
-   ALLEGRO_FILECHOOSER *file_dialog = al_create_native_file_dialog(filename, "Open Map", "*.*;*.spl", ALLEGRO_FILECHOOSER_FILE_MUST_EXIST);
+   ALLEGRO_FILECHOOSER *file_dialog = al_create_native_file_dialog(filename, "Open Map", "*.spl", ALLEGRO_FILECHOOSER_FILE_MUST_EXIST);
    if(!file_dialog) return false;
 
    if(!al_show_native_file_dialog(display, file_dialog)) {
       if(file_dialog) al_destroy_native_file_dialog(file_dialog);
+      jlog("Open File dialog closed.");
       return false;
    }
 
@@ -369,14 +371,14 @@ int main(int argc, char **argv)
    if (init_game() != 0)
    {
       jlog("Failed to init game!\n");
-      return 100;
+      goto CLEAN_UP;
    }
 
    map = create_empty_map(); //Create an empty map
    if (map == NULL)
    {
       jlog("In file %s, Line %d. Couldn't create an empty map!" __FILE__, __LINE__);
-      return -505;
+      goto CLEAN_UP;
    }
    jlog("Empty map created.");
 
@@ -441,9 +443,9 @@ int main(int argc, char **argv)
                      return -99;
                   }
                }
-
             }
 
+            check_cam_bounds();
             redraw = true;
          }
 
@@ -537,13 +539,13 @@ int main(int argc, char **argv)
                key[KEY_PAD_MINUS] = false;
                break;
             case ALLEGRO_KEY_F2:
-               if(!save_map(map, display)) jlog("Error saving map!");
+               save_map(map, display);
                break;
             case ALLEGRO_KEY_F3:
                load = true;
                break;
             case ALLEGRO_KEY_ESCAPE:
-               program_done = true;
+               //program_done = true;
                break;
          }
       }
@@ -555,12 +557,14 @@ int main(int argc, char **argv)
 
       if (redraw && al_is_event_queue_empty(event_queue))
       {
-         check_cam_bounds();
+
 
          redraw = false;
          update_screen();
       }
    }
+
+CLEAN_UP:
    clean_up();
    return 0;
 }

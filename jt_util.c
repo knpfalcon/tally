@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "memwatch/memwatch.h"
 #include "jt_util.h"
 
 ///////////////////////////////////////////

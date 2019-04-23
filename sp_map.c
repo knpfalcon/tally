@@ -4,6 +4,9 @@
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_native_dialog.h>
 
+
+#include "memwatch/memwatch.h"
+
 #include "sp_main.h"
 #include "sp_map.h"
 
@@ -71,11 +74,12 @@ bool save_map(t_map *m, ALLEGRO_DISPLAY *display)
    al_set_path_filename(path, (const char *)"map.spl");
    const char *filename = al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP);
 
-   ALLEGRO_FILECHOOSER *file_dialog = al_create_native_file_dialog(filename, "Save Map", "*.*;*.spl", ALLEGRO_FILECHOOSER_SAVE);
+   ALLEGRO_FILECHOOSER *file_dialog = al_create_native_file_dialog(filename, "Save Map", "*.spl", ALLEGRO_FILECHOOSER_SAVE);
    if(!file_dialog) return false;
 
    if(!al_show_native_file_dialog(display, file_dialog)) {
       if(file_dialog) al_destroy_native_file_dialog(file_dialog);
+      jlog("Save File dialog closed.");
       return false;
    }
 
@@ -83,20 +87,19 @@ bool save_map(t_map *m, ALLEGRO_DISPLAY *display)
 
    al_destroy_native_file_dialog(file_dialog);
 
-   FILE *fp = NULL;
+   ALLEGRO_FILE *fp = NULL;
 
-   fp = fopen(filename, "wb");
+   fp = al_fopen(filename, "wb");
    if (fp == NULL)
    {
       jlog("Error opening file to save map to!");
       return false;
    }
 
-   fwrite(m, sizeof(t_map), 1, fp);
+   al_fwrite(fp, m, sizeof(t_map));
+   al_fwrite(fp, m->position, (MAP_WIDTH * MAP_HEIGHT) * sizeof(t_map_pos));
 
-   fwrite(m->position, sizeof(t_map_pos), MAP_WIDTH * MAP_HEIGHT, fp);
-
-   fclose(fp);
+   al_fclose(fp);
 
    jlog("Map Saved.");
    return true;
@@ -106,9 +109,9 @@ t_map *load_map(const char *fname)
 {
    t_map *m;
 
-   FILE *fp = NULL;
+   ALLEGRO_FILE *fp = NULL;
 
-   fp = fopen(fname, "r");
+   fp = al_fopen(fname, "rb");
    if (fp == NULL)
    {
       jlog("Error opening map file!");
@@ -119,23 +122,23 @@ t_map *load_map(const char *fname)
    if (m == NULL)
    {
       jlog("In file %s, Line %d. Couldn't create an empty map! m returns NULL." __FILE__, __LINE__);
-      fclose(fp);
+      al_fclose(fp);
       return NULL; //Return NULL on failure
    }
-   fread(m, sizeof(t_map), 1, fp);
+   al_fread(fp, m, sizeof(t_map));
 
    m->position = malloc(MAP_WIDTH * MAP_HEIGHT * sizeof(t_map_pos));
    if (m->position == NULL)
    {
       free(m);
-      fclose(fp);
+      al_fclose(fp);
       jlog("In file %s, Line %d. Couldn't create an empty map! m->position returns NULL." __FILE__, __LINE__);
       return NULL;
    }
-   fread(m->position, sizeof(t_map_pos), MAP_WIDTH * MAP_HEIGHT, fp);
+   al_fread(fp, m->position, (MAP_WIDTH * MAP_HEIGHT) *sizeof(t_map_pos));
 
    jlog("Map Opened.");
-   fclose(fp);
+   al_fclose(fp);
    return m;
 
 }
