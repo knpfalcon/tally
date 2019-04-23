@@ -27,6 +27,11 @@ t_mouse sp_mouse;
 t_map *map = NULL;
 
 bool show_mini_map = false;
+bool load = false;
+bool name_map = false;
+
+int scroll_speed = 16;
+int caret_pos = 0;
 
 const char *filename;
 
@@ -196,6 +201,7 @@ void show_info_stuff()
                         sp_mouse.tile_selection_x * TILE_SIZE +(226 * DISPLAY_MULTIPLIER) + TILE_SIZE, sp_mouse.tile_selection_y  * TILE_SIZE+ (16 * DISPLAY_MULTIPLIER) + TILE_SIZE,
                         al_map_rgb(255,255,0), 2);
       al_draw_textf(reg_font, al_map_rgb(255,255,255), 16 * DISPLAY_MULTIPLIER, 4 * DISPLAY_MULTIPLIER, ALLEGRO_ALIGN_LEFT, "map->position %d, %d", sp_mouse.over_tile_x, sp_mouse.over_tile_y);
+      if (name_map) al_draw_filled_circle((16 * DISPLAY_MULTIPLIER) - 5, 3 * DISPLAY_MULTIPLIER, 4, al_map_rgb(255, 0, 0));
       al_draw_textf(reg_font, al_map_rgb(255,255,255), 16 * DISPLAY_MULTIPLIER, 2 * DISPLAY_MULTIPLIER, ALLEGRO_ALIGN_LEFT, "%s", map->name);
       al_draw_textf(reg_font, al_map_rgb(255,255,255), 226 * DISPLAY_MULTIPLIER , 13 * DISPLAY_MULTIPLIER, 0, "x:%d, y:%d", sp_mouse.tile_selection_x, sp_mouse.tile_selection_y);
       al_draw_textf(reg_font, al_map_rgb(255,255,255), 256 * DISPLAY_MULTIPLIER, 13 * DISPLAY_MULTIPLIER, 0, "Tile Selected: %d", sp_mouse.tile_selection);
@@ -206,6 +212,7 @@ void show_info_stuff()
 void update_screen()
 {
    draw_mini_map();
+
    if (show_mini_map == false)
    {
       if (map != NULL) draw_map(view_port, tile_sheet, bg, &cam, map);
@@ -319,25 +326,6 @@ void check_tile_selection()
    }
 }
 
-void clean_up()
-{
-
-
-   destroy_map(map);                      jlog("Destroying map.");
-//   al_destroy_bitmap(view_port);          jlog("Destroying view_port.");
-//   al_destroy_bitmap(stat_border);        jlog("Destroying stat_border.");
-//   al_destroy_bitmap(game);               jlog("Destroying game.");
-//   al_destroy_bitmap(tile_sheet);         jlog("Destroying tile_sheet.");
-//   al_destroy_bitmap(mini_map);           jlog("Destroying mini_map.");
-//   al_destroy_bitmap(bg);                 jlog("Destroying bg.");
-//   al_destroy_event_queue(event_queue);   jlog("Destroying event_queue.");
-//   al_destroy_timer(FPS_TIMER);           jlog("Destroying FPS_TIMER.");
-//   al_shutdown_native_dialog_addon();     jlog("Destroying al_shutdown_native_dialog_addon.");
-   al_destroy_display(display);           jlog("Destroying display.");
-
-   jlog("***CLEANING UP AND QUITTING***\n\n");
-}
-
 bool open_file_dialog()
 {
    ALLEGRO_PATH *path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
@@ -362,11 +350,215 @@ bool open_file_dialog()
    return true;
 }
 
+void check_key_down(ALLEGRO_EVENT *ev)
+{
+   switch(ev->keyboard.keycode)
+   {
+      case ALLEGRO_KEY_UP:
+         key[KEY_UP] = true;
+         break;
+      case ALLEGRO_KEY_DOWN:
+         key[KEY_DOWN] = true;
+         break;
+      case ALLEGRO_KEY_LEFT:
+         key[KEY_LEFT] = true;
+         break;
+      case ALLEGRO_KEY_RIGHT:
+         key[KEY_RIGHT] = true;
+         break;
+      case ALLEGRO_KEY_W:
+         key[KEY_UP] = true;
+         break;
+      case ALLEGRO_KEY_S:
+         key[KEY_DOWN] = true;
+         break;
+      case ALLEGRO_KEY_A:
+         key[KEY_LEFT] = true;
+         break;
+      case ALLEGRO_KEY_D:
+         key[KEY_RIGHT] = true;
+         break;
+      case ALLEGRO_KEY_LSHIFT:
+         key[KEY_LSHIFT] = true;
+         if (name_map == false)
+         {
+            show_mini_map = true;
+         }
+         break;
+      case ALLEGRO_KEY_PAD_PLUS:
+         key[KEY_PAD_PLUS] = true;
+         break;
+      case ALLEGRO_KEY_F3:
+         break;
+      case ALLEGRO_KEY_PAD_MINUS:
+         key[KEY_PAD_MINUS] = true;
+         break;
+   }
+}
+
+void check_key_up(ALLEGRO_EVENT *ev)
+{
+   switch(ev->keyboard.keycode)
+   {
+      case ALLEGRO_KEY_UP:
+         key[KEY_UP] = false;
+         break;
+      case ALLEGRO_KEY_DOWN:
+         key[KEY_DOWN] = false;
+         break;if (show_mini_map)
+      case ALLEGRO_KEY_LEFT:
+         key[KEY_LEFT] = false;
+         break;
+      case ALLEGRO_KEY_RIGHT:
+         key[KEY_RIGHT] = false;
+         break;
+      case ALLEGRO_KEY_W:
+         key[KEY_UP] = false;
+         break;
+      case ALLEGRO_KEY_S:
+         key[KEY_DOWN] = false;
+         break;
+      case ALLEGRO_KEY_A:
+         key[KEY_LEFT] = false;
+         break;
+      case ALLEGRO_KEY_D:
+         key[KEY_RIGHT] = false;
+         break;
+      case ALLEGRO_KEY_LSHIFT:
+         key[KEY_LSHIFT] = false;
+         show_mini_map = false;
+         break;
+      case ALLEGRO_KEY_B:
+         al_save_bitmap("map.png", mini_map);
+         jlog("Map saved to map.png");
+         break;
+      case ALLEGRO_KEY_PAD_PLUS:
+         key[KEY_PAD_PLUS] = false;
+         break;
+      case ALLEGRO_KEY_PAD_MINUS:
+         key[KEY_PAD_MINUS] = false;
+         break;
+      case ALLEGRO_KEY_F2:
+         save_map(map, display);
+         break;
+      case ALLEGRO_KEY_F3:
+         load = true;
+         break;
+      case ALLEGRO_KEY_F12:
+         name_map = true;
+         break;
+      case ALLEGRO_KEY_ESCAPE:
+         //program_done = true;
+         break;
+   }
+}
+
+void check_timer_logic(ALLEGRO_EVENT *ev)
+{
+   if (ev->timer.source == FPS_TIMER)
+   {
+      //Scroll speed
+      if (key[KEY_LSHIFT])
+      {
+         scroll_speed = 32;
+      }
+      else if (!key[KEY_LSHIFT])
+      {
+         scroll_speed = 4;
+      }
+
+      //Scroll controls
+      if (key[KEY_UP] && cam.y > 0)
+      {
+         cam.y -= scroll_speed;
+      }
+      if (key[KEY_DOWN] && cam.y < (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT)
+      {
+         cam.y += scroll_speed;
+      }
+      if (key[KEY_LEFT] && cam.x > 0)
+      {
+         cam.x -= scroll_speed;
+      }
+      if (key[KEY_RIGHT] && cam.x < (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH)
+      {
+         cam.x += scroll_speed;
+      }
+
+      check_click_in_viewport();
+      check_tile_selection();
+
+      if (load == true)
+      {
+         load = false;
+         if (open_file_dialog())
+         {
+            destroy_map(map);
+            map = NULL;
+            map = load_map(filename);
+            if (map == NULL)
+            {
+               jlog("Something went wrong with map loading!");
+               destroy_map(map);
+               map = NULL;
+            }
+         }
+      }
+
+      check_cam_bounds();
+   }
+}
+
+void check_map_naming(ALLEGRO_EVENT *ev, int *pos)
+{
+   switch (ev->keyboard.keycode)
+   {
+      case ALLEGRO_KEY_ENTER:
+         jlog("Map named to %s", map->name);
+         name_map = false;
+         break;
+
+      case ALLEGRO_KEY_BACKSPACE:
+         if (*pos > 0)
+         {
+            map->name[*pos-1] = '\0';
+            --*pos;
+            break;
+         }
+         break;
+      case ALLEGRO_KEY_ESCAPE:
+         name_map = false;
+         break;
+      default:
+         if (*pos < 31)
+         {
+            map->name[*pos] = ev->keyboard.unichar;
+            map->name[*pos+1] = '\0';
+         }
+         break;
+   }
+}
+
+void clean_up()
+{
+   destroy_map(map);                      jlog("Destroying map.");
+//   al_destroy_bitmap(view_port);          jlog("Destroying view_port.");
+//   al_destroy_bitmap(stat_border);        jlog("Destroying stat_border.");
+//   al_destroy_bitmap(game);               jlog("Destroying game.");
+//   al_destroy_bitmap(tile_sheet);         jlog("Destroying tile_sheet.");
+//   al_destroy_bitmap(mini_map);           jlog("Destroying mini_map.");
+//   al_destroy_bitmap(bg);                 jlog("Destroying bg.");
+//   al_destroy_event_queue(event_queue);   jlog("Destroying event_queue.");
+//   al_destroy_timer(FPS_TIMER);           jlog("Destroying FPS_TIMER.");
+//   al_shutdown_native_dialog_addon();     jlog("Destroying al_shutdown_native_dialog_addon.");
+   al_destroy_display(display);           jlog("Destroying display.");
+
+   jlog("***CLEANING UP AND QUITTING***\n\n");
+}
+
+
 int main(int argc, char **argv)
 {
-   bool load = false;
-   int scroll_speed = 16;
-
 
    if (init_game() != 0)
    {
@@ -396,59 +588,12 @@ int main(int argc, char **argv)
 
       if (ev.type == ALLEGRO_EVENT_TIMER)
       {
-         if (ev.timer.source == FPS_TIMER)
+         if (!name_map)
          {
-            //Scroll speed
-            if (key[KEY_LSHIFT])
-            {
-               scroll_speed = 32;
-            }
-            else if (!key[KEY_LSHIFT])
-            {
-               scroll_speed = 4;
-            }
-
-            //Scroll controls
-            if (key[KEY_UP] && cam.y > 0)
-            {
-               cam.y -= scroll_speed;
-            }
-            if (key[KEY_DOWN] && cam.y < (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT)
-            {
-               cam.y += scroll_speed;
-            }
-            if (key[KEY_LEFT] && cam.x > 0)
-            {
-               cam.x -= scroll_speed;
-            }
-            if (key[KEY_RIGHT] && cam.x < (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH)
-            {
-               cam.x += scroll_speed;
-            }
-
-            check_click_in_viewport();
-            check_tile_selection();
-
-            if (load == true)
-            {
-               load = false;
-               if (open_file_dialog())
-               {
-                  destroy_map(map);
-                  map = NULL;
-                  map = load_map(filename);
-                  if (map == NULL)
-                  {
-                     jlog("Something went wrong with map loading!");
-                     return -99;
-                  }
-               }
-            }
-
-            check_cam_bounds();
-            redraw = true;
+            check_timer_logic(&ev);
          }
 
+         redraw = true;
       }
       else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
       {
@@ -456,98 +601,11 @@ int main(int argc, char **argv)
       }
       else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
       {
-         switch(ev.keyboard.keycode)
-         {
-            case ALLEGRO_KEY_UP:
-               key[KEY_UP] = true;
-               break;
-            case ALLEGRO_KEY_DOWN:
-               key[KEY_DOWN] = true;
-               break;
-            case ALLEGRO_KEY_LEFT:
-               key[KEY_LEFT] = true;
-               break;
-            case ALLEGRO_KEY_RIGHT:
-               key[KEY_RIGHT] = true;
-               break;
-            case ALLEGRO_KEY_W:
-               key[KEY_UP] = true;
-               break;
-            case ALLEGRO_KEY_S:
-               key[KEY_DOWN] = true;
-               break;
-            case ALLEGRO_KEY_A:
-               key[KEY_LEFT] = true;
-               break;
-            case ALLEGRO_KEY_D:
-               key[KEY_RIGHT] = true;
-               break;
-            case ALLEGRO_KEY_LSHIFT:
-               key[KEY_LSHIFT] = true;
-               show_mini_map = true;
-               break;
-            case ALLEGRO_KEY_PAD_PLUS:
-               key[KEY_PAD_PLUS] = true;
-               break;
-            case ALLEGRO_KEY_F3:
-               break;
-            case ALLEGRO_KEY_PAD_MINUS:
-               key[KEY_PAD_MINUS] = true;
-               break;
-         }
+         check_key_down(&ev);
       }
       else if (ev.type == ALLEGRO_EVENT_KEY_UP)
       {
-         switch(ev.keyboard.keycode)
-         {
-            case ALLEGRO_KEY_UP:
-               key[KEY_UP] = false;
-               break;
-            case ALLEGRO_KEY_DOWN:
-               key[KEY_DOWN] = false;
-               break;if (show_mini_map)
-            case ALLEGRO_KEY_LEFT:
-               key[KEY_LEFT] = false;
-               break;
-            case ALLEGRO_KEY_RIGHT:
-               key[KEY_RIGHT] = false;
-               break;
-            case ALLEGRO_KEY_W:
-               key[KEY_UP] = false;
-               break;
-            case ALLEGRO_KEY_S:
-               key[KEY_DOWN] = false;
-               break;
-            case ALLEGRO_KEY_A:
-               key[KEY_LEFT] = false;
-               break;
-            case ALLEGRO_KEY_D:
-               key[KEY_RIGHT] = false;
-               break;
-            case ALLEGRO_KEY_LSHIFT:
-               key[KEY_LSHIFT] = false;
-               show_mini_map = false;
-               break;
-            case ALLEGRO_KEY_B:
-               al_save_bitmap("map.png", mini_map);
-               jlog("Map saved to map.png");
-               break;
-            case ALLEGRO_KEY_PAD_PLUS:
-               key[KEY_PAD_PLUS] = false;
-               break;
-            case ALLEGRO_KEY_PAD_MINUS:
-               key[KEY_PAD_MINUS] = false;
-               break;
-            case ALLEGRO_KEY_F2:
-               save_map(map, display);
-               break;
-            case ALLEGRO_KEY_F3:
-               load = true;
-               break;
-            case ALLEGRO_KEY_ESCAPE:
-               //program_done = true;
-               break;
-         }
+         check_key_up(&ev);
       }
       else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES)
       {
@@ -555,10 +613,17 @@ int main(int argc, char **argv)
          sp_mouse.y = ev.mouse.y;
       }
 
+      caret_pos = strlen(map->name);
+      if (ev.type == ALLEGRO_EVENT_KEY_CHAR && al_is_event_queue_empty(event_queue))
+      {
+         if (name_map == true)
+         {
+            check_map_naming(&ev, &caret_pos);
+         }
+      }
+
       if (redraw && al_is_event_queue_empty(event_queue))
       {
-
-
          redraw = false;
          update_screen();
       }

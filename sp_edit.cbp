@@ -17,11 +17,13 @@
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
-					<Add option="-Wall" />
 					<Add option="-Og" />
+					<Add option="-g" />
 					<Add option="-ggdb3" />
 					<Add option="-Wno-unused" />
 					<Add option="-DDEBUG" />
+					<Add option="-DMEMWATCH" />
+					<Add option="-DMEMWATCH_STDIO" />
 				</Compiler>
 				<Linker>
 					<Add library="allegro_monolith-debug-static" />
@@ -49,6 +51,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-march=i686" />
+			<Add option="-Wall" />
 			<Add option="-m32" />
 			<Add option="-std=gnu11" />
 			<Add option="-Werror" />
@@ -90,6 +93,13 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="jt_util.h" />
+		<Unit filename="memwatch/memwatch.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="memwatch/memwatch.h">
+			<Option target="Debug" />
+		</Unit>
 		<Unit filename="sp_edit.c">
 			<Option compilerVar="CC" />
 		</Unit>
