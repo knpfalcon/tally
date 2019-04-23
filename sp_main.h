@@ -13,8 +13,8 @@
 #define MAP_WIDTH 128
 #define MAP_HEIGHT 90
 
-#define DISPLAY_MULTIPLIER 10
-#define FONT_FILE "data/fixed_01.ttf"
+#define DISPLAY_MULTIPLIER 9
+#define FONT_FILE "data/hack.ttf"
 
 typedef struct t_cam
 {

@@ -14,7 +14,6 @@
 #include "sp_main.h"
 #include "sp_map.h"
 
-
 const float FPS = 60;
 
 bool redraw = true;
@@ -156,7 +155,7 @@ int init_game()
 
 
 
-   reg_font = al_load_ttf_font(FONT_FILE, 16, 0);
+   reg_font = al_load_ttf_font(FONT_FILE, 4 * DISPLAY_MULTIPLIER, 0);
    if(!reg_font)
    {
       jlog("Failed to load %s", FONT_FILE);
@@ -217,10 +216,12 @@ void show_info_stuff()
                         get_coord_on_tilesheet(Y, sp_mouse.tile_selection) + (16 * DISPLAY_MULTIPLIER) + TILE_SIZE,
                         al_map_rgb(255,255,0),
                         2);
-      al_draw_textf(reg_font, al_map_rgb(255,255,255), 16 * DISPLAY_MULTIPLIER, 4 * DISPLAY_MULTIPLIER, ALLEGRO_ALIGN_LEFT, "map->position %d, %d", sp_mouse.over_tile_x, sp_mouse.over_tile_y);
-      if (name_map) al_draw_filled_circle((16 * DISPLAY_MULTIPLIER) - 5, 3 * DISPLAY_MULTIPLIER, 4, al_map_rgb(255, 0, 0));
+      al_draw_textf(reg_font, al_map_rgb(255,255,255), 16 * DISPLAY_MULTIPLIER, 6 * DISPLAY_MULTIPLIER, ALLEGRO_ALIGN_LEFT, "map->position %d, %d", sp_mouse.over_tile_x, sp_mouse.over_tile_y);
+      if (name_map) al_draw_filled_circle((16 * DISPLAY_MULTIPLIER) - 2 * DISPLAY_MULTIPLIER, 4 * DISPLAY_MULTIPLIER,
+                                          2 * DISPLAY_MULTIPLIER,
+                                          al_map_rgb(255, 0, 0));
       al_draw_textf(reg_font, al_map_rgb(255,255,255), 16 * DISPLAY_MULTIPLIER, 2 * DISPLAY_MULTIPLIER, ALLEGRO_ALIGN_LEFT, "%s", map->name);
-      al_draw_textf(reg_font, al_map_rgb(255,255,255), 256 * DISPLAY_MULTIPLIER, 13 * DISPLAY_MULTIPLIER, 0, "Tile Selected: %d", sp_mouse.tile_selection);
+      al_draw_textf(reg_font, al_map_rgb(255,255,255), 226 * DISPLAY_MULTIPLIER, 10 * DISPLAY_MULTIPLIER, 0, "Tile Selected: %d", sp_mouse.tile_selection);
 
    }
 }
@@ -236,16 +237,20 @@ void update_screen()
       al_clear_to_color(al_map_rgb(0,0,0));
       al_draw_bitmap(stat_border, 0, 0, 0);
       al_draw_bitmap(view_port, 16, 16, 0);
-      al_draw_bitmap_region(tile_sheet,
+
+      if (DISPLAY_MULTIPLIER  >= 9)
+      {
+         al_draw_bitmap_region(tile_sheet,
                             get_coord_on_tilesheet(X, sp_mouse.tile_selection),
                             get_coord_on_tilesheet(Y, sp_mouse.tile_selection),
                             TILE_SIZE,
                             TILE_SIZE,
                             256, 16, 0);
+      }
    }
 
    al_set_target_bitmap(mini_map);
-   if (show_mini_map) al_draw_rectangle(cam.x, cam.y, cam.x + VIEWPORT_WIDTH, cam.y + VIEWPORT_HEIGHT, al_map_rgb(255,255,255),1);
+   if (show_mini_map) al_draw_rectangle(cam.x, cam.y, cam.x + VIEWPORT_WIDTH, cam.y + VIEWPORT_HEIGHT, al_map_rgb(255,255,255), 1 * DISPLAY_MULTIPLIER);
 
    al_set_target_backbuffer(display);
 
@@ -533,14 +538,15 @@ void check_map_naming(ALLEGRO_EVENT *ev, int *pos)
             break;
          }
          break;
-      case ALLEGRO_KEY_ESCAPE:
-         name_map = false;
-         break;
       default:
-         if (*pos < 31)
+         if (ev->keyboard.unichar >= 32 && ev->keyboard.unichar < 127)
          {
-            map->name[*pos] = ev->keyboard.unichar;
-            map->name[*pos+1] = '\0';
+            if (*pos < 31)
+            {
+               map->name[*pos] = ev->keyboard.unichar;
+               map->name[*pos+1] = '\0';
+               break;
+            }
          }
          break;
    }
