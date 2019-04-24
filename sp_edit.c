@@ -484,7 +484,7 @@ void check_key_up(ALLEGRO_EVENT *ev)
          break;
       case ALLEGRO_KEY_DOWN:
          key[KEY_DOWN] = false;
-         break;if (cond.show_mini_map)
+         break;
       case ALLEGRO_KEY_LEFT:
          key[KEY_LEFT] = false;
          break;
