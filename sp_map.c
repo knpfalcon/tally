@@ -4,12 +4,14 @@
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_native_dialog.h>
 
-
 #include "memwatch/memwatch.h"
 
 #include "sp_main.h"
 #include "sp_map.h"
 
+/************************************************
+ * Creates an empty map in memory               *
+ ************************************************/
 t_map *create_empty_map()
 {
    t_map *m = NULL; //Pointer to return at the end of function.
@@ -49,6 +51,9 @@ t_map *create_empty_map()
    return m;
 }
 
+/************************************************
+ * Frees a map from memory                      *
+ ************************************************/
 void destroy_map(t_map *m)
 {
    if (m == NULL)
@@ -67,6 +72,9 @@ void destroy_map(t_map *m)
    jlog("Map Destroyed.");
 }
 
+/************************************************
+ * Saves a map to disk                          *
+ ************************************************/
 bool save_map(t_map *m, ALLEGRO_DISPLAY *display)
 {
    ALLEGRO_PATH *path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
@@ -74,7 +82,10 @@ bool save_map(t_map *m, ALLEGRO_DISPLAY *display)
    al_set_path_filename(path, (const char *)"map.spl");
    const char *filename = al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP);
 
-   ALLEGRO_FILECHOOSER *file_dialog = al_create_native_file_dialog(filename, "Save Map", "*.spl", ALLEGRO_FILECHOOSER_SAVE);
+   ALLEGRO_FILECHOOSER *file_dialog = al_create_native_file_dialog(filename,
+                                                                   "Save Map",
+                                                                   "*.spl",
+                                                                   ALLEGRO_FILECHOOSER_SAVE);
    if(!file_dialog) return false;
 
    if(!al_show_native_file_dialog(display, file_dialog)) {
@@ -105,6 +116,9 @@ bool save_map(t_map *m, ALLEGRO_DISPLAY *display)
    return true;
 }
 
+/************************************************
+ * Loads a map from disk                        *
+ ************************************************/
 t_map *load_map(const char *fname)
 {
    t_map *m;
@@ -143,18 +157,21 @@ t_map *load_map(const char *fname)
 
 }
 
+/************************************************
+ * Draws only seen tiles to view port           *
+ ************************************************/
 void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m)
 {
    al_set_target_bitmap(d_bmp);
    al_draw_bitmap(background, 0, 0, 0);
-   //al_clear_to_color(al_map_rgba(0, 0, 0, 0));
-                                                            //Which tiles are in view? The view port size divided by the tile size plus 1.
+
+   //Which tiles are in view?
    int y_tiles_in_view = VIEWPORT_HEIGHT / TILE_SIZE + 1;   //Should be 10 tiles +1 row off view
    int x_tiles_in_view = VIEWPORT_WIDTH / TILE_SIZE + 1;    //Should be 13 tiles +1 Column off view
 
 
-   int sx = c->x / TILE_SIZE;      //This is the tile to draw from according to camera position
-   int sy = c->y / TILE_SIZE;      //This is the tile to draw from according to camera position
+   int sx = c->x / TILE_SIZE;    //This is the tile to draw from, according to camera position
+   int sy = c->y / TILE_SIZE;    //This is the tile to draw from, according to camera position
 
    for (int y = sy; y < sy + y_tiles_in_view; y++)
    {
@@ -164,32 +181,17 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
          {
             if (m->position[x + y * MAP_WIDTH].empty_tile == false)
             {
+               //Draw the tile, subtracting the camera position
                al_draw_bitmap_region(tile_sheet,
-                                     get_coord_on_tilesheet(X, m->position[x + y * MAP_WIDTH].tile),
-                                     get_coord_on_tilesheet(Y, m->position[x + y * MAP_WIDTH].tile),
+                                     convert_index_to_pixel_xy(m->position[x + y * MAP_WIDTH].tile, 16, TILE_SIZE, RETURN_X),
+                                     convert_index_to_pixel_xy(m->position[x + y * MAP_WIDTH].tile, 16, TILE_SIZE, RETURN_Y),
                                      TILE_SIZE,
                                      TILE_SIZE,
                                      (x * TILE_SIZE) - c->x,
                                      (y * TILE_SIZE) - c->y,
-                                     0); //Draw the tile, subtracting the camera position
+                                     0);
             }
          }
       }
    }
-}
-
-float get_coord_on_tilesheet(int x_or_y, unsigned char index)
-{
-   int result = 0;
-   if (x_or_y == X)
-   {
-      result = (index % 16) * TILE_SIZE;
-
-   }
-   else if (x_or_y == Y)
-   {
-      result = (index / 16) * TILE_SIZE;
-   }
-
-   return result;
 }

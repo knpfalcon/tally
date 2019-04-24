@@ -1,9 +1,6 @@
 #ifndef SP_MAP_H
 #define SP_MAP_H
 
-#define X 0
-#define Y 1
-
 #include <stdbool.h>
 
 // This is a position on the map
@@ -17,6 +14,7 @@ typedef struct t_map_pos
    unsigned char item; //Is there an item in this slot? (Collectibles, keys, weapons, ammo.)
 } t_map_pos;
 
+//This is the map struct
 typedef struct t_map
 {
    char name[32];
@@ -30,6 +28,5 @@ void destroy_map(t_map *m);
 bool save_map(t_map *m, ALLEGRO_DISPLAY *display);
 t_map *load_map(const char *filename);
 void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m);
-float get_coord_on_tilesheet(int x_or_y, unsigned char index);
 
 #endif // SP_MAP_H

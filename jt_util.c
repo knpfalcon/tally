@@ -10,9 +10,9 @@
 #include "memwatch/memwatch.h"
 #include "jt_util.h"
 
-///////////////////////////////////////////
-//Function to print to console and a FILE
-/////////////////////////////////////////
+/**********************************************
+ * Print to console and a FILE with new-lines *
+ **********************************************/
 void jlog(char *format, ...)
 {
    va_list v_ptr;
@@ -33,5 +33,25 @@ void jlog(char *format, ...)
 
       fclose(fp);
     }
+}
 
+/***********************************************
+ * Returns an an X or Y from an index value    *
+ * multiplied by size of each column in pixels *
+ ***********************************************/
+int convert_index_to_pixel_xy(unsigned char index_source, int num_columns, int size_in_pixels, int return_x_or_y)
+{
+   int result = 0;
+
+   if (return_x_or_y == RETURN_X)
+   {
+      result = (index_source % num_columns) * size_in_pixels;
+
+   }
+   else if (return_x_or_y == RETURN_Y)
+   {
+      result = (index_source / num_columns) * size_in_pixels;
+   }
+
+   return result;
 }
