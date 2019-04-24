@@ -36,7 +36,7 @@ void jlog(char *format, ...)
 }
 
 /***********************************************
- * Returns an an X or Y from an index value    *
+ * Returns an X or Y from an index value       *
  * multiplied by size of each column in pixels *
  ***********************************************/
 int convert_index_to_pixel_xy(unsigned char index_source, int num_columns, int size_in_pixels, int return_x_or_y)
