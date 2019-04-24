@@ -12,6 +12,7 @@
 
 #include "sp_main.h"
 #include "sp_map.h"
+#include "sp_edit.h"
 
 const float FPS = 60;
 
@@ -24,19 +25,12 @@ t_cam cam;
 t_mouse sp_mouse;
 t_map *map = NULL;
 
-bool show_mini_map = false;
-bool load = false;
-bool name_map = false;
-
-int scroll_speed = 16;
-int caret_pos = 0;
-
-unsigned char tile_selection = 0;
+t_conditional cond = {false, false, false};
 
 const char *filename;
 
 enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LSHIFT, KEY_PAD_PLUS, KEY_PAD_MINUS};
-bool key[7] = {false, false, false, false, false, false, false };
+bool key[7] = {false, false, false, false, false, false, false};
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -54,8 +48,6 @@ ALLEGRO_BITMAP *stat_border = NULL;
 ALLEGRO_BITMAP *mini_map = NULL;
 ALLEGRO_BITMAP *view_port = NULL;
 ALLEGRO_BITMAP *game = NULL;
-
-
 
 
 /*************************************************
@@ -133,7 +125,7 @@ int init_game()
 
    if (!al_init_native_dialog_addon())
    {
-      jlog("Faile to initialize native dialog addon!");
+      jlog("Failed to initialize native dialog addon!");
    }
    jlog("Native dialog addon add-on initialized.");
 
@@ -216,7 +208,7 @@ void draw_mini_map()
  ************************************************/
 void show_info_stuff()
 {
-   if (show_mini_map == false)
+   if (cond.show_mini_map == false)
    {
       al_draw_bitmap(tile_sheet, 226 * DISPLAY_MULTIPLIER, 16 * DISPLAY_MULTIPLIER, 0);
       al_draw_rectangle(convert_index_to_pixel_xy(sp_mouse.tile_selection, 16, TILE_SIZE, RETURN_X) + (226 * DISPLAY_MULTIPLIER),
@@ -235,7 +227,7 @@ void show_info_stuff()
                     sp_mouse.over_tile_y
                     );
 
-      if (name_map)
+      if (cond.name_map)
       {
          al_draw_filled_circle(16 * DISPLAY_MULTIPLIER - 2 * DISPLAY_MULTIPLIER, 4 * DISPLAY_MULTIPLIER,
                                2 * DISPLAY_MULTIPLIER,
@@ -266,7 +258,7 @@ void update_screen()
 {
    draw_mini_map();
 
-   if (show_mini_map == false)
+   if (cond.show_mini_map == false)
    {
       if (map != NULL) draw_map(view_port, tile_sheet, bg, &cam, map);
       al_set_target_bitmap(game);
@@ -285,13 +277,13 @@ void update_screen()
                                TILE_SIZE,
                                256,
                                16,
-                               0 );
+                               0);
       }
    }
 
    //Draw the zoomed out map
    al_set_target_bitmap(mini_map);
-   if (show_mini_map)
+   if (cond.show_mini_map)
    {
       al_draw_rectangle(cam.x,
                         cam.y,
@@ -302,9 +294,9 @@ void update_screen()
    }
    al_set_target_backbuffer(display);
 
-   if (show_mini_map == false) al_draw_scaled_bitmap(game, 0, 0, 320, 200, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, 0);
+   if (cond.show_mini_map == false) al_draw_scaled_bitmap(game, 0, 0, 320, 200, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, 0);
 
-   if (show_mini_map)
+   if (cond.show_mini_map)
    {
       al_draw_scaled_bitmap(mini_map, 0, 0, MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT , 0);
    }
@@ -319,7 +311,7 @@ void update_screen()
 void check_click_in_viewport()
 {
    al_get_mouse_state(&mouse);
-   if (show_mini_map == false)
+   if (cond.show_mini_map == false)
    {
       //If mouse is inside view port
       if (sp_mouse.x > VIEWPORT_X * DISPLAY_MULTIPLIER
@@ -464,9 +456,9 @@ void check_key_down(ALLEGRO_EVENT *ev)
          break;
       case ALLEGRO_KEY_LSHIFT:
          key[KEY_LSHIFT] = true;
-         if (name_map == false)
+         if (cond.name_map == false)
          {
-            show_mini_map = true;
+            cond.show_mini_map = true;
          }
          break;
       case ALLEGRO_KEY_PAD_PLUS:
@@ -492,7 +484,7 @@ void check_key_up(ALLEGRO_EVENT *ev)
          break;
       case ALLEGRO_KEY_DOWN:
          key[KEY_DOWN] = false;
-         break;if (show_mini_map)
+         break;if (cond.show_mini_map)
       case ALLEGRO_KEY_LEFT:
          key[KEY_LEFT] = false;
          break;
@@ -513,10 +505,10 @@ void check_key_up(ALLEGRO_EVENT *ev)
          break;
       case ALLEGRO_KEY_LSHIFT:
          key[KEY_LSHIFT] = false;
-         show_mini_map = false;
+         cond.show_mini_map = false;
          break;
       case ALLEGRO_KEY_B:
-         if (name_map == false)
+         if (cond.name_map == false)
          {
             al_save_bitmap("map.png", mini_map);
             jlog("Image of map saved to map.png");
@@ -532,10 +524,10 @@ void check_key_up(ALLEGRO_EVENT *ev)
          save_map(map, display);
          break;
       case ALLEGRO_KEY_F3:
-         load = true;
+         cond.map_load = true;
          break;
       case ALLEGRO_KEY_F12:
-         name_map = true;
+         cond.name_map = true;
          break;
       case ALLEGRO_KEY_ESCAPE:
          //program_done = true;
@@ -548,6 +540,8 @@ void check_key_up(ALLEGRO_EVENT *ev)
  ************************************************/
 void check_timer_logic(ALLEGRO_EVENT *ev)
 {
+   static int scroll_speed;
+
    if (ev->timer.source == FPS_TIMER)
    {
       //Cam Speed is faster on zoomed out mini-map
@@ -582,9 +576,9 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
       check_tile_selection();
 
       //Load a map, but destroy the one in memory first
-      if (load == true)
+      if (cond.map_load == true)
       {
-         load = false;
+         cond.map_load = false;
          if (open_file_dialog())
          {
             destroy_map(map);
@@ -606,30 +600,33 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
 /************************************************
  * When naming a map by pressing F12            *
  ************************************************/
-void check_map_naming(ALLEGRO_EVENT *ev, int *pos)
+void check_map_naming(ALLEGRO_EVENT *ev)
 {
+   static int caret_pos;
+   caret_pos = strlen(map->name);
+
    switch (ev->keyboard.keycode)
    {
       case ALLEGRO_KEY_ENTER:
          jlog("Map named to %s", map->name);
-         name_map = false;
+         cond.name_map = false;
          break;
 
       case ALLEGRO_KEY_BACKSPACE:
-         if (*pos > 0)
+         if (caret_pos > 0)
          {
-            map->name[*pos-1] = '\0';
-            --*pos;
+            map->name[caret_pos-1] = '\0';
+            --caret_pos;
             break;
          }
          break;
       default:
          if (ev->keyboard.unichar >= 32 && ev->keyboard.unichar < 127)
          {
-            if (*pos < 31)
+            if (caret_pos < 31)
             {
-               map->name[*pos] = ev->keyboard.unichar;
-               map->name[*pos+1] = '\0';
+               map->name[caret_pos] = ev->keyboard.unichar;
+               map->name[caret_pos+1] = '\0';
                break;
             }
          }
@@ -698,7 +695,7 @@ int main(int argc, char **argv)
 
       if (ev.type == ALLEGRO_EVENT_TIMER)
       {
-         if (!name_map)
+         if (!cond.name_map)
          {
             check_timer_logic(&ev);
          }
@@ -723,12 +720,12 @@ int main(int argc, char **argv)
          sp_mouse.y = ev.mouse.y;
       }
 
-      caret_pos = strlen(map->name);
+
       if (ev.type == ALLEGRO_EVENT_KEY_CHAR && al_is_event_queue_empty(event_queue))
       {
-         if (name_map == true)
+         if (cond.name_map == true)
          {
-            check_map_naming(&ev, &caret_pos);
+            check_map_naming(&ev);
          }
       }
 
