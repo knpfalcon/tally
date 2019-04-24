@@ -104,6 +104,7 @@
 		<Unit filename="sp_edit.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="sp_edit.h" />
 		<Unit filename="sp_main.h" />
 		<Unit filename="sp_map.c">
 			<Option compilerVar="CC" />
