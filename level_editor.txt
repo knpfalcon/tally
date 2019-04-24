@@ -1,0 +1,21 @@
+=================================
+=Sprocket Level Editor Reference=
+=================================
+
+Keyboard
+--------
+Scroll       W,S,A,D/ARROW KEYS
+Save         F2
+Open         F5
+New          LEFT CTRL + N
+Full Map     LEFT SHIFT
+Tile Select  NUMPAD -/+
+Name Map     F12 (ENTER to set)
+
+
+Mouse
+-----
+Place Tile     LEFT BUTTON
+Erase Tile     RIGHT BUTTON
+Set Player     MIDDLE BUTTON
+Tile Select    SCROLL WHEEL
