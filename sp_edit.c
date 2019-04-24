@@ -25,12 +25,12 @@ t_cam cam;
 t_mouse sp_mouse;
 t_map *map = NULL;
 
-t_conditional cond = {false, false, false};
+t_conditional cond = {false, false, false, false};
 
 const char *filename;
 
-enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LSHIFT, KEY_PAD_PLUS, KEY_PAD_MINUS};
-bool key[7] = {false, false, false, false, false, false, false};
+enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_N,KEY_PAD_PLUS, KEY_PAD_MINUS};
+bool key[10] = {false, false, false, false, false, false, false, false, false};
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -62,7 +62,12 @@ int init_game()
       jlog("Failed to initialize allegro!\n");
       return -1;
    }
-   jlog("Allegro initialized.");
+   uint32_t version = al_get_allegro_version();
+   int major = version >> 24;
+   int minor = (version >> 16) & 255;
+   int revision = (version >> 8) & 255;
+   int release = version & 255;
+   jlog("Allegro %d.%d.%d release %d", major, minor, revision, release);
 
    event_queue = al_create_event_queue();
    if (!event_queue)
@@ -131,6 +136,7 @@ int init_game()
    jlog("Native dialog addon add-on initialized.");
 
    //Create Display
+   //al_set_new_display_flags(ALLEGRO_OPENGL);
    display = al_create_display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
    if(!display)
    {
@@ -187,6 +193,7 @@ void draw_mini_map()
 {
    al_set_target_bitmap(mini_map);
    al_clear_to_color(al_map_rgb(0,0,0));
+   al_hold_bitmap_drawing(true);
    for (int y = 0; y < MAP_HEIGHT; y++)
    {
       for (int x = 0; x < MAP_WIDTH; x++)
@@ -205,6 +212,7 @@ void draw_mini_map()
 
       }
    }
+   al_hold_bitmap_drawing(false);
    al_draw_bitmap(player_start, map->player_start_x, map->player_start_y, 0);
 }
 
@@ -231,7 +239,6 @@ void show_info_stuff()
                     sp_mouse.over_tile_x,
                     sp_mouse.over_tile_y
                     );
-
       if (cond.name_map)
       {
          al_draw_filled_circle(16 * DISPLAY_MULTIPLIER - 2 * DISPLAY_MULTIPLIER, 4 * DISPLAY_MULTIPLIER,
@@ -252,8 +259,26 @@ void show_info_stuff()
                     0,
                     "Tile Selected: %d",
                     sp_mouse.tile_selection);
-
+      if (cond.map_saved == true)
+      {
+         al_draw_text(reg_font,
+                      al_map_rgb(0,255,0),
+                      16 * DISPLAY_MULTIPLIER,
+                      180 * DISPLAY_MULTIPLIER,
+                      ALLEGRO_ALIGN_LEFT,
+                      "MAP SAVED.");
+      }
+      else if (cond.map_saved == false)
+      {
+         al_draw_text(reg_font,
+                      al_map_rgb(255,0,0),
+                      16 * DISPLAY_MULTIPLIER,
+                      180 * DISPLAY_MULTIPLIER,
+                      ALLEGRO_ALIGN_LEFT,
+                      "MAP NOT SAVED.");
+      }
    }
+
 }
 
 /************************************************
@@ -354,15 +379,22 @@ void check_click_in_viewport()
          {
             map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].empty_tile = false;
             map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].tile = sp_mouse.tile_selection;
+            cond.map_saved = false;
          }
          else if (mouse.buttons & 2)
          {
-            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].empty_tile = true;
+            if (map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].empty_tile == false)
+            {
+               map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].empty_tile = true;
+               cond.map_saved = false;
+            }
+
          }
          else if (mouse.buttons & 4)
          {
             map->player_start_x = sp_mouse.over_tile_x * TILE_SIZE;
             map->player_start_y = sp_mouse.over_tile_y * TILE_SIZE;
+            cond.map_saved = false;
          }
       }
       else
@@ -487,6 +519,12 @@ void check_key_down(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_D:
          key[KEY_RIGHT] = true;
          break;
+      case ALLEGRO_KEY_LCTRL:
+         key[KEY_LCTRL] = true;
+         break;
+      case ALLEGRO_KEY_N:
+         key[KEY_N] = true;
+         break;
       case ALLEGRO_KEY_LSHIFT:
          key[KEY_LSHIFT] = true;
          if (cond.name_map == false)
@@ -536,6 +574,12 @@ void check_key_up(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_D:
          key[KEY_RIGHT] = false;
          break;
+      case ALLEGRO_KEY_LCTRL:
+         key[KEY_LCTRL] = false;
+         break;
+      case ALLEGRO_KEY_N:
+         key[KEY_N] = false;
+         break;
       case ALLEGRO_KEY_LSHIFT:
          key[KEY_LSHIFT] = false;
          cond.show_mini_map = false;
@@ -554,13 +598,23 @@ void check_key_up(ALLEGRO_EVENT *ev)
          key[KEY_PAD_MINUS] = false;
          break;
       case ALLEGRO_KEY_F2:
-         save_map(map, display);
+         if (save_map(map, display)) cond.map_saved = true;
          break;
-      case ALLEGRO_KEY_F3:
+      case ALLEGRO_KEY_F5:
          cond.map_load = true;
          break;
       case ALLEGRO_KEY_F12:
          cond.name_map = true;
+         break;
+      case ALLEGRO_KEY_F:
+         for (int y = 0; y < MAP_HEIGHT; y++)
+         {
+            for (int x = 0; x < MAP_WIDTH; x++)
+            {
+               map->position[x + y * MAP_WIDTH].empty_tile = false;
+               map->position[x + y * MAP_WIDTH].tile = sp_mouse.tile_selection;
+            }
+         }
          break;
       case ALLEGRO_KEY_ESCAPE:
          //program_done = true;
@@ -605,6 +659,26 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
          cam.x += scroll_speed;
       }
 
+      if (key[KEY_LCTRL] && key[KEY_N])
+      {
+         key[KEY_LCTRL] = false;
+         key[KEY_N] = false;
+         int button = al_show_native_message_box(display,
+                                                 "Create New Map",
+                                                 "Are you sure?",
+                                                 "This will clear your current map data, and you will "
+                                                 "lose the current map if it's not saved.\n\n"
+                                                 "Do you want to continue?",
+                                                 NULL, ALLEGRO_MESSAGEBOX_YES_NO);
+         if (button == 1)
+         {
+            destroy_map(map);
+            map = NULL;
+            map = create_empty_map();
+            cond.map_saved = false;
+         }
+      }
+
       check_click_in_viewport();
       check_tile_selection();
 
@@ -623,6 +697,7 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
                destroy_map(map);
                map = NULL;
             }
+            cond.map_saved = true;
          }
       }
 
@@ -643,6 +718,7 @@ void check_map_naming(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_ENTER:
          jlog("Map named to %s", map->name);
          cond.name_map = false;
+         cond.map_saved = false;
          break;
 
       case ALLEGRO_KEY_BACKSPACE:

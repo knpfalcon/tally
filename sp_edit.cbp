@@ -94,6 +94,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="jt_util.h" />
+		<Unit filename="level_editor.txt" />
 		<Unit filename="memwatch/memwatch.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />

@@ -177,6 +177,7 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
    int sx = c->x / TILE_SIZE;    //This is the tile to draw from, according to camera position
    int sy = c->y / TILE_SIZE;    //This is the tile to draw from, according to camera position
 
+   al_hold_bitmap_drawing(true);
    for (int y = sy; y < sy + y_tiles_in_view; y++)
    {
       for (int x = sx; x < sx + x_tiles_in_view; x++)
@@ -198,4 +199,5 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
          }
       }
    }
+   al_hold_bitmap_drawing(false);
 }

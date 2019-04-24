@@ -9,6 +9,7 @@ typedef struct t_conditional
    bool show_mini_map;
    bool map_load;
    bool name_map;
+   bool map_saved;
 
 } t_conditional;
 
