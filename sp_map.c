@@ -28,6 +28,10 @@ t_map *create_empty_map()
       m->name[i] = 0;
    }
    strcpy_s(m->name, 32, "EMPTY MAP");
+   m->bg = 0;
+   m->num_enemies = 0;
+   m->player_start_x = 0;
+   m->player_start_y = 0;
 
    m->position = malloc(MAP_WIDTH * MAP_HEIGHT * sizeof(t_map_pos));
    if (m->position == NULL)

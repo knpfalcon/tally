@@ -43,6 +43,7 @@ ALLEGRO_FONT *reg_font = NULL;
 ALLEGRO_BITMAP *tile_sheet = NULL;
 ALLEGRO_BITMAP *bg = NULL;
 ALLEGRO_BITMAP *stat_border = NULL;
+ALLEGRO_BITMAP *player_start = NULL;
 
 //Bitmaps that get drawn to
 ALLEGRO_BITMAP *mini_map = NULL;
@@ -138,9 +139,12 @@ int init_game()
    }
    jlog("Display Created.");
 
-   view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+
    stat_border = al_load_bitmap("data/status_border.png");
    bg = al_load_bitmap("data/bg_1.png");
+   player_start = al_load_bitmap("data/player_start.png");
+
+   view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
    mini_map = al_create_bitmap(MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
 
    //Create the game bitmap that needs to be stretched to display
@@ -201,6 +205,7 @@ void draw_mini_map()
 
       }
    }
+   al_draw_bitmap(player_start, map->player_start_x, map->player_start_y, 0);
 }
 
 /************************************************
@@ -252,6 +257,24 @@ void show_info_stuff()
 }
 
 /************************************************
+ * Draws the player icon at starting position   *
+ ************************************************/
+void draw_player_start()
+{
+   al_set_target_bitmap(view_port);
+   if ((cam.x - 32) < map->player_start_x  &&
+       (cam.y - 32) < map->player_start_y  &&
+       (cam.x + VIEWPORT_WIDTH) > map->player_start_x &&
+       (cam.y + VIEWPORT_HEIGHT) >map->player_start_y)
+   {
+      al_draw_bitmap(player_start, map->player_start_x - cam.x, map->player_start_y - cam.y, 0);
+   }
+
+
+}
+
+
+/************************************************
  * The drawing function, called at redraw       *
  ************************************************/
 void update_screen()
@@ -260,7 +283,12 @@ void update_screen()
 
    if (cond.show_mini_map == false)
    {
-      if (map != NULL) draw_map(view_port, tile_sheet, bg, &cam, map);
+      if (map != NULL)
+      {
+         draw_map(view_port, tile_sheet, bg, &cam, map);
+
+         draw_player_start();
+      }
       al_set_target_bitmap(game);
       al_clear_to_color(al_map_rgb(0,0,0));
       al_draw_bitmap(stat_border, 0, 0, 0);
@@ -330,6 +358,11 @@ void check_click_in_viewport()
          else if (mouse.buttons & 2)
          {
             map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].empty_tile = true;
+         }
+         else if (mouse.buttons & 4)
+         {
+            map->player_start_x = sp_mouse.over_tile_x * TILE_SIZE;
+            map->player_start_y = sp_mouse.over_tile_y * TILE_SIZE;
          }
       }
       else

@@ -101,6 +101,7 @@
 		<Unit filename="memwatch/memwatch.h">
 			<Option target="Debug" />
 		</Unit>
+		<Unit filename="plan.txt" />
 		<Unit filename="sp_edit.c">
 			<Option compilerVar="CC" />
 		</Unit>
