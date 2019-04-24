@@ -7,14 +7,16 @@
 ===================
  EDITOR
 ===================
-- Functionality to add enemies, things, and items, and player start.
-
+- Warn that map isn't saved before quitting.
+- Add EDITED text when map has been edited since last saving.
+- Add Thing Mode (Enemies, doors, switches)
+- Add Item Mode (Collectibles)
 
 
 ===================
  GAME
 ===================
-- Start on the game.
+- Make it.
 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
