@@ -175,9 +175,6 @@ int init_game()
 
    al_clear_to_color(al_map_rgb(0, 0, 0));
 
-   al_start_timer(FPS_TIMER);
-   jlog("Timer started.");
-
    //load tile sheet into an array of bitmaps
    al_draw_text(reg_font, al_map_rgb(255,255,255), 16, 16 , 0, "Loading...");
    al_flip_display();
@@ -679,8 +676,7 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
          }
       }
 
-      check_click_in_viewport();
-      check_tile_selection();
+
 
       //Load a map, but destroy the one in memory first
       if (cond.map_load == true)
@@ -796,6 +792,8 @@ int main(int argc, char **argv)
 
    //This is the main loop for now
    bool program_done = false;
+   al_start_timer(FPS_TIMER);
+   jlog("Timer started.");
    while(!program_done)
    {
 
@@ -829,6 +827,8 @@ int main(int argc, char **argv)
          sp_mouse.y = ev.mouse.y;
       }
 
+      check_click_in_viewport();
+      check_tile_selection();
 
       if (ev.type == ALLEGRO_EVENT_KEY_CHAR && al_is_event_queue_empty(event_queue))
       {

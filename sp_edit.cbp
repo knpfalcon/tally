@@ -52,6 +52,7 @@
 		<Compiler>
 			<Add option="-march=i686" />
 			<Add option="-Wall" />
+			<Add option="-std=c99" />
 			<Add option="-m32" />
 			<Add option="-std=gnu11" />
 			<Add option="-Werror" />
