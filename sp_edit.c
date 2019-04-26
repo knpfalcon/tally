@@ -240,7 +240,7 @@ void draw_mini_map()
    }
    al_hold_bitmap_drawing(false);
    //al_draw_bitmap_region(player_start, 0, 0, 32, 32, map->player_start_x, map->player_start_y, 0);
-   al_draw_bitmap(player.frame[player.cur_frame], map->player_start_x, map->player_start_y, 0);
+   al_draw_bitmap(player.frame[player.cur_frame], player.x, player.y, 0);
 }
 
 /************************************************
@@ -327,7 +327,7 @@ void draw_player_start()
                             map->player_start_x - cam.x,
                             map->player_start_y - cam.y,
                             0); */
-      al_draw_bitmap(player.frame[player.cur_frame], map->player_start_x - cam.x, map->player_start_y - cam.y, 0);
+      al_draw_bitmap(player.frame[player.cur_frame], player.x - cam.x, player.y - cam.y, 0);
    }
 
 
@@ -429,6 +429,8 @@ void check_click_in_viewport()
          {
             map->player_start_x = sp_mouse.over_tile_x * TILE_SIZE;
             map->player_start_y = sp_mouse.over_tile_y * TILE_SIZE;
+            player.x = map->player_start_x;
+            player.y = map->player_start_y;
             cond.map_saved = false;
          }
       }
@@ -722,6 +724,8 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
             destroy_map(map);
             map = NULL;
             map = create_empty_map();
+            player.x = map->player_start_x;
+            player.y = map->player_start_y;
             cond.map_saved = false;
          }
       }
@@ -741,6 +745,8 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
                destroy_map(map);
                map = NULL;
             }
+            player.x = map->player_start_x;
+            player.y = map->player_start_y;
             cond.map_saved = true;
          }
       }
