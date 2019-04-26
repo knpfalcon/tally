@@ -13,8 +13,10 @@
 #include "sp_main.h"
 #include "sp_map.h"
 #include "sp_edit.h"
+#include "sp_player.h"
 
 const float FPS = 60;
+const float ANIM_SPEED = 8;
 
 bool redraw = true;
 
@@ -24,6 +26,7 @@ const int DISPLAY_HEIGHT = 200 * DISPLAY_MULTIPLIER;
 t_cam cam;
 t_mouse sp_mouse;
 t_map *map = NULL;
+t_player player;
 
 t_conditional cond = {false, false, false, false};
 
@@ -35,6 +38,7 @@ bool key[10] = {false, false, false, false, false, false, false, false, false};
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
 ALLEGRO_TIMER *FPS_TIMER = NULL;
+ALLEGRO_TIMER *ANIM_TIMER = NULL;
 ALLEGRO_MOUSE_STATE mouse;
 
 ALLEGRO_FONT *reg_font = NULL;
@@ -43,7 +47,7 @@ ALLEGRO_FONT *reg_font = NULL;
 ALLEGRO_BITMAP *tile_sheet = NULL;
 ALLEGRO_BITMAP *bg = NULL;
 ALLEGRO_BITMAP *stat_border = NULL;
-ALLEGRO_BITMAP *player_start = NULL;
+//ALLEGRO_BITMAP *player_start = NULL;
 
 //Bitmaps that get drawn to
 ALLEGRO_BITMAP *mini_map = NULL;
@@ -91,6 +95,14 @@ int init_game()
       return -1;
    }
    jlog("FPS timer created.");
+
+   ANIM_TIMER = al_create_timer(1.0 / ANIM_SPEED);
+   if(!ANIM_TIMER)
+   {
+      jlog("Failed to create Animation timer!");
+      return -1;
+   }
+   jlog("Animation timer created.");
 
    if (!al_install_keyboard())
    {
@@ -147,8 +159,26 @@ int init_game()
 
 
    stat_border = al_load_bitmap("data/status_border.png");
+   al_lock_bitmap(stat_border, al_get_bitmap_format(stat_border), ALLEGRO_LOCK_READONLY);
+
    bg = al_load_bitmap("data/bg_1.png");
-   player_start = al_load_bitmap("data/player_start.png");
+   al_lock_bitmap(bg, al_get_bitmap_format(bg), ALLEGRO_LOCK_READONLY);
+
+   tile_sheet = al_load_bitmap("data/tile_sheet.png");
+   if (tile_sheet == NULL) { jlog("Couldn't load tile_sheet.png"); }
+   jlog("tile_sheet.png loaded.");
+   al_lock_bitmap(tile_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
+
+   player.bitmap = al_load_bitmap("data/player.png");
+   al_lock_bitmap(player.bitmap, al_get_bitmap_format(player.bitmap), ALLEGRO_LOCK_READONLY);
+   for (int j = 0; j < 7; j++)
+   {
+      player.frame[j] = al_create_sub_bitmap(player.bitmap, j * 32, 0, 32, 32);
+      al_lock_bitmap(player.frame[j], al_get_bitmap_format(player.frame[j]), ALLEGRO_LOCK_READONLY);
+      jlog("Player frame %d created and locked.", j);
+   }
+
+   player.cur_frame = 1;
 
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
    mini_map = al_create_bitmap(MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
@@ -156,9 +186,7 @@ int init_game()
    //Create the game bitmap that needs to be stretched to display
    game = al_create_bitmap(320, 200);
 
-   tile_sheet = al_load_bitmap("data/tile_sheet.png");
-   if (tile_sheet == NULL) { jlog("Couldn't load tile_sheet.png"); }
-   jlog("tile_sheet.png loaded.");
+
 
    reg_font = al_load_ttf_font(FONT_FILE, 4 * DISPLAY_MULTIPLIER, 0);
    if(!reg_font)
@@ -170,6 +198,7 @@ int init_game()
 
    al_register_event_source(event_queue, al_get_display_event_source(display));
    al_register_event_source(event_queue, al_get_timer_event_source(FPS_TIMER));
+   al_register_event_source(event_queue, al_get_timer_event_source(ANIM_TIMER));
    al_register_event_source(event_queue, al_get_keyboard_event_source());
    al_register_event_source(event_queue, al_get_mouse_event_source());
 
@@ -210,7 +239,8 @@ void draw_mini_map()
       }
    }
    al_hold_bitmap_drawing(false);
-   al_draw_bitmap(player_start, map->player_start_x, map->player_start_y, 0);
+   //al_draw_bitmap_region(player_start, 0, 0, 32, 32, map->player_start_x, map->player_start_y, 0);
+   al_draw_bitmap(player.frame[player.cur_frame], map->player_start_x, map->player_start_y, 0);
 }
 
 /************************************************
@@ -289,7 +319,15 @@ void draw_player_start()
        (cam.x + VIEWPORT_WIDTH) > map->player_start_x &&
        (cam.y + VIEWPORT_HEIGHT) >map->player_start_y)
    {
-      al_draw_bitmap(player_start, map->player_start_x - cam.x, map->player_start_y - cam.y, 0);
+     /* al_draw_bitmap_region(player_start,
+                            0,
+                            0,
+                            32,
+                            32,
+                            map->player_start_x - cam.x,
+                            map->player_start_y - cam.y,
+                            0); */
+      al_draw_bitmap(player.frame[player.cur_frame], map->player_start_x - cam.x, map->player_start_y - cam.y, 0);
    }
 
 
@@ -626,6 +664,18 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
 {
    static int scroll_speed;
 
+   if (ev->timer.source == ANIM_TIMER)
+   {
+      if (player.cur_frame < 5)
+      {
+         player.cur_frame++;
+      }
+      if (player.cur_frame == 5)
+      {
+         player.cur_frame = 1;
+      }
+   }
+
    if (ev->timer.source == FPS_TIMER)
    {
       //Cam Speed is faster on zoomed out mini-map
@@ -675,8 +725,6 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
             cond.map_saved = false;
          }
       }
-
-
 
       //Load a map, but destroy the one in memory first
       if (cond.map_load == true)
@@ -745,6 +793,14 @@ void check_map_naming(ALLEGRO_EVENT *ev)
 void clean_up()
 {
    destroy_map(map);
+   al_unlock_bitmap(tile_sheet);
+   al_unlock_bitmap(bg);
+   al_unlock_bitmap(stat_border);
+   al_unlock_bitmap(player.bitmap);
+   for (int j = 0; j < 7; j++)
+   {
+      al_unlock_bitmap(player.frame[j]);
+   }
 
    if(event_queue) {
       al_destroy_event_queue(event_queue);
@@ -756,6 +812,12 @@ void clean_up()
       al_destroy_timer(FPS_TIMER);
       FPS_TIMER = NULL;
       jlog("FPS_TIMER destroyed.");
+   }
+
+   if(ANIM_TIMER) {
+      al_destroy_timer(ANIM_TIMER);
+      ANIM_TIMER = NULL;
+      jlog("Animation timer destroyed.");
    }
 
    al_destroy_display(display);
@@ -793,7 +855,8 @@ int main(int argc, char **argv)
    //This is the main loop for now
    bool program_done = false;
    al_start_timer(FPS_TIMER);
-   jlog("Timer started.");
+   al_start_timer(ANIM_TIMER);
+   jlog("Timers started.");
    while(!program_done)
    {
 

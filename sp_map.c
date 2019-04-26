@@ -162,39 +162,41 @@ t_map *load_map(const char *fname)
 }
 
 /************************************************
- * Draws only seen tiles to view port           *
+ * Draws only seen tiles/bg to view port        *
  ************************************************/
 void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m)
 {
    al_set_target_bitmap(d_bmp);
 
 /**** BACKGROUND ****/
-   int bg_speed = 1;
-
-   if (m->bg == 0) bg_speed = 32;
-
-   int cam_pos_in_view = c->x / bg_speed;
-   int first_remaing_width = (VIEWPORT_WIDTH - cam_pos_in_view);
-   int second_remaing_width = (VIEWPORT_WIDTH - first_remaing_width);
-
-   al_hold_bitmap_drawing(true);
-   al_draw_bitmap_region(background,
-                         cam_pos_in_view,
-                         0,
-                         first_remaing_width,
-                         VIEWPORT_HEIGHT,
-                         0,
-                         0,
-                         0);
-   al_draw_bitmap_region(background,
-                         0,
-                         0,
-                         second_remaing_width,
-                         VIEWPORT_HEIGHT,
-                         first_remaing_width,
-                         0,
-                         0);
-   al_hold_bitmap_drawing(false);
+   al_draw_bitmap(background, 0, 0, 0);
+//   int bg_speed = 1;
+//
+//   if (m->bg == 0) bg_speed = 16;
+//
+//   int cam_pos_in_view = (int)c->x / bg_speed;
+//   printf("%d\n", cam_pos_in_view);
+//   int first_remaing_width = (VIEWPORT_WIDTH - cam_pos_in_view);
+//   int second_remaing_width = (VIEWPORT_WIDTH - first_remaing_width);
+//
+//   al_hold_bitmap_drawing(true);
+//   al_draw_bitmap_region(background,
+//                         cam_pos_in_view,
+//                         0,
+//                         first_remaing_width,
+//                         VIEWPORT_HEIGHT,
+//                         0,
+//                         0,
+//                         0);
+//   al_draw_bitmap_region(background,
+//                         0,
+//                         0,
+//                         second_remaing_width,
+//                         VIEWPORT_HEIGHT,
+//                         first_remaing_width,
+//                         0,
+//                         0);
+//   al_hold_bitmap_drawing(false);
 
 /**** TILES ****/
    //Which tiles are in view?
