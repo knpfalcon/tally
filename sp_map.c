@@ -166,9 +166,6 @@ t_map *load_map(const char *fname)
  ************************************************/
 void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m)
 {
-   al_set_target_bitmap(d_bmp);
-   al_draw_bitmap(background, 0, 0, 0);
-
    //Which tiles are in view?
    int y_tiles_in_view = VIEWPORT_HEIGHT / TILE_SIZE + 1;   //Should be 10 tiles +1 row off view
    int x_tiles_in_view = VIEWPORT_WIDTH / TILE_SIZE + 1;    //Should be 13 tiles +1 Column off view
@@ -177,6 +174,44 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
    int sx = c->x / TILE_SIZE;    //This is the tile to draw from, according to camera position
    int sy = c->y / TILE_SIZE;    //This is the tile to draw from, according to camera position
 
+   al_set_target_bitmap(d_bmp);
+   al_clear_to_color(al_map_rgb(0,0,0));
+
+   //Draw background
+   int bg_speed;
+   switch (m->bg)
+   {
+      case 0:
+         bg_speed = 32;
+         break;
+      default:
+         bg_speed = 1;
+         break;
+   }
+   int cam_pos_in_view = c->x / bg_speed;
+   int first_remaing_width = (VIEWPORT_WIDTH - cam_pos_in_view);
+   int second_remaing_width = (VIEWPORT_WIDTH - first_remaing_width);
+
+   al_hold_bitmap_drawing(true);
+   al_draw_bitmap_region(background,
+                         cam_pos_in_view,
+                         0,
+                         first_remaing_width,
+                         VIEWPORT_HEIGHT,
+                         0,
+                         0,
+                         0);
+   al_draw_bitmap_region(background,
+                         0,
+                         0,
+                         second_remaing_width,
+                         VIEWPORT_HEIGHT,
+                         first_remaing_width,
+                         0,
+                         0);
+   al_hold_bitmap_drawing(false);
+
+   //Draw Tiles
    al_hold_bitmap_drawing(true);
    for (int y = sy; y < sy + y_tiles_in_view; y++)
    {
