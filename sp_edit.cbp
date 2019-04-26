@@ -113,6 +113,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="sp_map.h" />
+		<Unit filename="sp_player.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="sp_player.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />
