@@ -750,6 +750,8 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
             map = create_empty_map();
             player.x = map->player_start_x;
             player.y = map->player_start_y;
+            cam.x = 0;
+            cam.y = 0;
             cond.map_saved = false;
          }
       }
@@ -758,6 +760,16 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
       if (cond.map_load == true)
       {
          cond.map_load = false;
+         if(cond.map_saved == false)
+         {
+            int button = al_show_native_message_box(display,
+                                                 "Open Map",
+                                                 "Your map doesn't appear to be saved!",
+                                                 "If you open a map, it will clear your current map data, and you will "
+                                                 "lose the current map state.\n\n Consider saving first!",
+                                                 NULL, ALLEGRO_MESSAGEBOX_WARN);
+         }
+
          if (open_file_dialog())
          {
             destroy_map(map);
