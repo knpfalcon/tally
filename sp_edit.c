@@ -771,6 +771,8 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
             }
             player.x = map->player_start_x;
             player.y = map->player_start_y;
+            cam.x = player.x - VIEWPORT_WIDTH / 2 + 16;
+            cam.y = player.y - VIEWPORT_WIDTH / 2 + 16;
             cond.map_saved = true;
          }
       }
