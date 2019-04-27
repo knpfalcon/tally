@@ -231,7 +231,6 @@ int init_game()
 
    al_clear_to_color(al_map_rgb(0, 0, 0));
 
-   //load tile sheet into an array of bitmaps
    al_draw_text(reg_font, al_map_rgb(255,255,255), 16, 16 , 0, "Loading...");
    al_flip_display();
 
@@ -346,14 +345,6 @@ void draw_player_start()
        (cam.x + VIEWPORT_WIDTH) > map->player_start_x &&
        (cam.y + VIEWPORT_HEIGHT) >map->player_start_y)
    {
-     /* al_draw_bitmap_region(player_start,
-                            0,
-                            0,
-                            32,
-                            32,
-                            map->player_start_x - cam.x,
-                            map->player_start_y - cam.y,
-                            0); */
       al_draw_bitmap(player.frame[player.cur_frame], player.x - cam.x, player.y - cam.y, 0);
    }
 

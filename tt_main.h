@@ -21,4 +21,7 @@ typedef struct t_cam
    float y;
 } t_cam;
 
+enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_ALT};
+
+
 #endif // SP_MAIN_H
