@@ -159,21 +159,42 @@ int init_game()
 
 
    stat_border = al_load_bitmap("data/status_border.png");
+   if (stat_border == NULL)
+   {
+      jlog("Couldn't load status_border.png!");
+      return -1;
+   }
+
    al_lock_bitmap(stat_border, al_get_bitmap_format(stat_border), ALLEGRO_LOCK_READONLY);
 
    bg = al_load_bitmap("data/bg_1.png");
+   if (bg == NULL)
+   {
+      jlog("Couldn't load bg1.png!");
+      return -1;
+   }
    al_lock_bitmap(bg, al_get_bitmap_format(bg), ALLEGRO_LOCK_READONLY);
 
    tile_sheet = al_load_bitmap("data/tile_sheet.png");
-   if (tile_sheet == NULL) { jlog("Couldn't load tile_sheet.png"); }
+   if (tile_sheet == NULL)
+   {
+      jlog("Couldn't load tile_sheet.png!");
+      return -1;
+   }
    jlog("tile_sheet.png loaded.");
    al_lock_bitmap(tile_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
 
    player.bitmap = al_load_bitmap("data/player.png");
+   if (player.bitmap == NULL) { jlog("Couldn't load player.png"); return -1; }
    al_lock_bitmap(player.bitmap, al_get_bitmap_format(player.bitmap), ALLEGRO_LOCK_READONLY);
-   for (int j = 0; j < 7; j++)
+   for (int j = 0; j < 8; j++)
    {
       player.frame[j] = al_create_sub_bitmap(player.bitmap, j * 32, 0, 32, 32);
+      if (player.frame[j] == NULL)
+      {
+         jlog("Couldn't create sub-bitmap from player bitmap!");
+         return -1;
+      }
       al_lock_bitmap(player.frame[j], al_get_bitmap_format(player.frame[j]), ALLEGRO_LOCK_READONLY);
       jlog("Player frame %d created and locked.", j);
    }
@@ -652,6 +673,9 @@ void check_key_up(ALLEGRO_EVENT *ev)
                map->position[x + y * MAP_WIDTH].tile = sp_mouse.tile_selection;
             }
          }
+      case ALLEGRO_KEY_P:
+         cam.x = player.x - VIEWPORT_WIDTH / 2 + 16;
+         cam.y = player.y - VIEWPORT_WIDTH / 2 + 16;
          break;
       case ALLEGRO_KEY_ESCAPE:
          //program_done = true;
@@ -861,8 +885,9 @@ int main(int argc, char **argv)
    //This is the main loop for now
    bool program_done = false;
    al_start_timer(FPS_TIMER);
+   jlog("FPS timer started.");
    al_start_timer(ANIM_TIMER);
-   jlog("Timers started.");
+   jlog("Animation timer started.");
    while(!program_done)
    {
 
