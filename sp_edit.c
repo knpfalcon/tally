@@ -675,7 +675,7 @@ void check_key_up(ALLEGRO_EVENT *ev)
          }
       case ALLEGRO_KEY_P:
          cam.x = player.x - VIEWPORT_WIDTH / 2 + 16;
-         cam.y = player.y - VIEWPORT_WIDTH / 2 + 16;
+         cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
          break;
       case ALLEGRO_KEY_ESCAPE:
          //program_done = true;
@@ -763,10 +763,9 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
          if(cond.map_saved == false)
          {
             int button = al_show_native_message_box(display,
-                                                 "Open Map",
-                                                 "Your map doesn't appear to be saved!",
-                                                 "If you open a map, it will clear your current map data, and you will "
-                                                 "lose the current map state.\n\n Consider saving first!",
+                                                 "Open Map - WARNING",
+                                                 "Map changes not saved!!",
+                                                 "If you open a map, it will clear your current changes. Consider saving first!",
                                                  NULL, ALLEGRO_MESSAGEBOX_WARN);
          }
 
@@ -784,7 +783,7 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
             player.x = map->player_start_x;
             player.y = map->player_start_y;
             cam.x = player.x - VIEWPORT_WIDTH / 2 + 16;
-            cam.y = player.y - VIEWPORT_WIDTH / 2 + 16;
+            cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
             cond.map_saved = true;
          }
       }
@@ -919,7 +918,21 @@ int main(int argc, char **argv)
       }
       else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
       {
-         break;
+         if (!cond.map_saved)
+         {
+            int button = al_show_native_message_box(display, "WARNING!",
+                                                    "Map changes not saved!",
+                                                    "Are you sure you want to quit?",
+                                                    NULL, ALLEGRO_MESSAGEBOX_YES_NO);
+            if (button == 1)
+            {
+               program_done = true;
+            }
+         }
+         else
+         {
+            program_done = true;
+         }
       }
       else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
       {
