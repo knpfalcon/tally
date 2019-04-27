@@ -6,8 +6,6 @@
 ===================
  EDITOR
 ===================
-- Warn that map isn't saved before quitting.
-- Add EDITED text when map has been edited since last saving.
 - Add Thing Mode (Enemies, doors, switches)
 - Add Item Mode (Collectibles)
 
