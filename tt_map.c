@@ -6,8 +6,8 @@
 
 #include "memwatch/memwatch.h"
 
-#include "sp_main.h"
-#include "sp_map.h"
+#include "tt_main.h"
+#include "tt_map.h"
 
 /************************************************
  * Creates an empty map in memory               *

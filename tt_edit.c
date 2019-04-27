@@ -10,10 +10,10 @@
 
 #include "memwatch/memwatch.h"
 
-#include "sp_main.h"
-#include "sp_map.h"
-#include "sp_edit.h"
-#include "sp_player.h"
+#include "tt_main.h"
+#include "tt_map.h"
+#include "tt_edit.h"
+#include "tt_player.h"
 
 const float FPS = 60;
 const float ANIM_SPEED = 8;
@@ -147,6 +147,7 @@ int init_game()
    }
    jlog("Native dialog addon add-on initialized.");
 
+
    //Create Display
    //al_set_new_display_flags(ALLEGRO_OPENGL);
    display = al_create_display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -157,6 +158,13 @@ int init_game()
    }
    jlog("Display Created.");
 
+   #ifdef DEBUG
+   al_set_window_title(display, "Tedit - Tally Trauma Level Editor -- DEBUG");
+   #endif // DEBUG
+
+   #ifdef RELEASE
+   al_set_window_title(display, "Tedit - Tally Trauma Level Editor");
+   #endif // RELEASE
 
    stat_border = al_load_bitmap("data/status_border.png");
    if (stat_border == NULL)
@@ -206,8 +214,6 @@ int init_game()
 
    //Create the game bitmap that needs to be stretched to display
    game = al_create_bitmap(320, 200);
-
-
 
    reg_font = al_load_ttf_font(FONT_FILE, 4 * DISPLAY_MULTIPLIER, 0);
    if(!reg_font)

@@ -2,15 +2,15 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="Sprocket Level Editor" />
+		<Option title="Tally Trauma" />
 		<Option platforms="Windows;" />
-		<Option execution_dir="C:/dpsource/" />
+		<Option execution_dir="C:/sprocket_remake" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
 				<Option platforms="Windows;" />
-				<Option output="bin/spedit_d" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/tally_d" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="bin" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
@@ -18,12 +18,10 @@
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-Og" />
-					<Add option="-g" />
+					<Add option="-Wall" />
 					<Add option="-ggdb3" />
 					<Add option="-Wno-unused" />
 					<Add option="-DDEBUG" />
-					<Add option="-DMEMWATCH" />
-					<Add option="-DMEMWATCH_STDIO" />
 				</Compiler>
 				<Linker>
 					<Add library="allegro_monolith-debug-static" />
@@ -31,7 +29,7 @@
 			</Target>
 			<Target title="Release">
 				<Option platforms="Windows;" />
-				<Option output="bin/spedit" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/tally" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="bin" />
 				<Option object_output="obj/" />
 				<Option type="0" />
@@ -51,8 +49,6 @@
 		</Build>
 		<Compiler>
 			<Add option="-march=i686" />
-			<Add option="-Wall" />
-			<Add option="-std=c99" />
 			<Add option="-m32" />
 			<Add option="-std=gnu11" />
 			<Add option="-Werror" />
@@ -90,33 +86,26 @@
 			<Add library="dsound" />
 			<Add directory="C:/libs/allegro525/lib" />
 		</Linker>
-		<Unit filename="TODO.TXT" />
 		<Unit filename="jt_util.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="jt_util.h" />
-		<Unit filename="level_editor.txt" />
 		<Unit filename="memwatch/memwatch.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
 		</Unit>
-		<Unit filename="memwatch/memwatch.h">
-			<Option target="Debug" />
-		</Unit>
-		<Unit filename="plan.txt" />
-		<Unit filename="sp_edit.c">
+		<Unit filename="memwatch/memwatch.h" />
+		<Unit filename="tt_main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="sp_edit.h" />
-		<Unit filename="sp_main.h" />
-		<Unit filename="sp_map.c">
+		<Unit filename="tt_main.h" />
+		<Unit filename="tt_map.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="sp_map.h" />
-		<Unit filename="sp_player.c">
+		<Unit filename="tt_map.h" />
+		<Unit filename="tt_player.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="sp_player.h" />
+		<Unit filename="tt_player.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />
