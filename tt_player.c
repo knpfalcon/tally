@@ -48,8 +48,6 @@ void animate_player(t_player *p)
       p->cur_frame = 0;
    }
 
-
-
 }
 
 void show_player_hotspot(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p)

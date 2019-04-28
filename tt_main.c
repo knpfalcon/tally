@@ -238,10 +238,11 @@ void update_screen()
  ************************************************/
 void check_cam() //Check to make sure camera is not out of bounds.
 {
+
    //Check player position and scroll
    if ( (player.x > (VIEWPORT_WIDTH / 2) -24) && (player.x < (MAP_WIDTH * TILE_SIZE) - (VIEWPORT_WIDTH / 2))  )
    {
-      cam.x = player.x - ((VIEWPORT_WIDTH / 2) -16);
+      cam.x = player.x - ((VIEWPORT_WIDTH / 2) -16) + cam.look_ahead;
    }
    if ( (player.y > (VIEWPORT_HEIGHT / 2) - 24) && (player.y < (MAP_HEIGHT * TILE_SIZE) - (VIEWPORT_HEIGHT / 2)) )
    {
@@ -250,7 +251,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
    if (cam.x < 0) cam.x = 0;
    if (cam.x > (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH)
    {
-      cam.x = (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH;
+      cam.x = ((MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH);
    }
 
    if (cam.y < 0) cam.y = 0;
@@ -380,15 +381,15 @@ void update_player()
          if (player.on_ground) player.state = STOPPED;
       }
    //Horizontal tile collision
-   if (is_ground(map, player.x + x1, player.y )) player.x = old_x; //top
-   if (is_ground(map, player.x + x2, player.y )) player.x = old_x;
+   if (is_ground(map, player.x + x1, player.y+2 )) player.x = old_x; //top
+   if (is_ground(map, player.x + x2, player.y+2 )) player.x = old_x;
    if (is_ground(map, player.x + x1, player.y + 16)) player.x = old_x; //center
    if (is_ground(map, player.x + x2, player.y + 16)) player.x = old_x;
    if (is_ground(map, player.x + x1, player.y + 31)) player.x = old_x; //bottom
    if (is_ground(map, player.x + x2, player.y + 31)) player.x = old_x;
 
    //Vertical Movement
-   if (!is_ground(map, player.x + x1, player.y +32))
+   if (!is_ground(map, player.x + x1, player.y + 32))
    {
       if(!is_ground(map, player.x +x2, player.y + 32))
       {
@@ -442,7 +443,20 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
    //Frames
    if (ev->timer.source == FPS_TIMER)
    {
-
+      //Camera Look-ahead
+      if (key[KEY_LEFT] && !key[KEY_RIGHT])
+      {
+         if (cam.look_ahead > -24) cam.look_ahead -=1;
+      }
+      if (key[KEY_RIGHT] && !key[KEY_LEFT])
+      {
+         if (cam.look_ahead < 24) cam.look_ahead += 1;
+      }
+      if (!key[KEY_RIGHT] && !key[KEY_LEFT])
+      {
+         if (cam.look_ahead < 0) cam.look_ahead += 1;
+         if (cam.look_ahead > 0) cam.look_ahead -= 1;
+      }
    }
    //Animation
    if (ev->timer.source == ANIM_TIMER)

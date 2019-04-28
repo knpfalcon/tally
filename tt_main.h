@@ -19,6 +19,7 @@ typedef struct t_cam
 {
    float x;
    float y;
+   float look_ahead;
 } t_cam;
 
 enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_ALT};
