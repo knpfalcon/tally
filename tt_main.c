@@ -150,10 +150,10 @@ int init_game()
    al_set_window_title(display, "Tally Trauma");
    #endif // RELEASE
 
-   stat_border = al_load_bitmap("data/status_border.png");
+   stat_border = al_load_bitmap("data/border.png");
    if (stat_border == NULL)
    {
-      jlog("Couldn't load status_border.png!");
+      jlog("Couldn't load border.png!");
       return -1;
    }
 
@@ -504,9 +504,11 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
       /**** Player movement ****/
       update_player();
    }
+   E
    //Frames
    if (ev->timer.source == FPS_TIMER)
    {
+
       //Camera Look-ahead
       if (key[KEY_LEFT] && !key[KEY_RIGHT])
       {

@@ -169,7 +169,10 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
    al_set_target_bitmap(d_bmp);
 
 /**** BACKGROUND ****/
+   al_hold_bitmap_drawing(true);
    al_draw_bitmap(background, 0, 0, 0);
+   al_draw_bitmap_region(background, 0, 0, 80, VIEWPORT_HEIGHT, 208, 0, 0 );
+   al_hold_bitmap_drawing(false);
    /*
    int bg_speed = 1;
 
