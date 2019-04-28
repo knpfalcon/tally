@@ -13,7 +13,7 @@
 #define MAP_WIDTH 128
 #define MAP_HEIGHT 90
 
-#define DISPLAY_MULTIPLIER 6.
+#define DISPLAY_MULTIPLIER 10
 
 typedef struct t_cam
 {

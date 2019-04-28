@@ -15,8 +15,8 @@
 
 bool program_done = false;
 
-const float FPS = 16;
-const float ANIM_SPEED = 8;
+const float FPS = 30;
+const float ANIM_SPEED = 10;
 
 bool redraw = true;
 
@@ -54,9 +54,9 @@ ALLEGRO_BITMAP *game = NULL;
 int init_game()
 {
    player.cur_frame = 0;
-   player.speed = 16;
+   player.speed = 30;
    player.state = STOPPED;
-   player.vel_x = 8;
+   player.vel_x = 4;
 
 
    //Initialize Allegro
@@ -380,17 +380,19 @@ void update_player()
          if (player.on_ground) player.state = STOPPED;
       }
    //Horizontal tile collision
-   if (is_ground(map, player.x + 16, player.y +1)) player.x = old_x;
-   if (is_ground(map, player.x + 8, player.y +1)) player.x = old_x;
-   if (is_ground(map, player.x + 16, player.y +31)) player.x = old_x;
-   if (is_ground(map, player.x +8, player.y +31)) player.x = old_x;
+   if (is_ground(map, player.x + x1, player.y )) player.x = old_x; //top
+   if (is_ground(map, player.x + x2, player.y )) player.x = old_x;
+   if (is_ground(map, player.x + x1, player.y + 16)) player.x = old_x; //center
+   if (is_ground(map, player.x + x2, player.y + 16)) player.x = old_x;
+   if (is_ground(map, player.x + x1, player.y + 31)) player.x = old_x; //bottom
+   if (is_ground(map, player.x + x2, player.y + 31)) player.x = old_x;
 
    //Vertical Movement
    if (!is_ground(map, player.x + x1, player.y +32))
    {
       if(!is_ground(map, player.x +x2, player.y + 32))
       {
-         player.vel_y += 16;
+         player.vel_y += 4;
          player.on_ground = false;
          if (player.vel_y >= 0) player.state = FALLING;
          if (player.vel_y < 0) player.state = JUMPING;
@@ -407,14 +409,13 @@ void update_player()
    //Pressed jump
    if (key[KEY_LCTRL] && player.on_ground && !player.jump_pressed && !player.jumping)
    {
-
-      player.vel_y = -82;
+      player.vel_y = -48;
       player.jumping = true;
       player.jump_pressed = true;
    }
    //Apply vertical force
    player.y += player.vel_y >> 2;
-   if (player.vel_y > 32) player.vel_y = 32;
+   if (player.vel_y > 48) player.vel_y = 48;
 
    //Check floor
    while (is_ground(map, player.x + x1, player.y +31)) {player.y--; player.jumping = false; player.on_ground = true; }
@@ -437,20 +438,16 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
    {
       /**** Player movement ****/
       update_player();
-      animate_player(&player);
    }
    //Frames
    if (ev->timer.source == FPS_TIMER)
    {
 
    }
-
-
-
    //Animation
    if (ev->timer.source == ANIM_TIMER)
    {
-
+      animate_player(&player);
    }
 
 
