@@ -11,6 +11,9 @@
 #include "tt_main.h"
 #include "tt_map.h"
 #include "tt_player.h"
+#include "tt_collision.h"
+
+bool program_done = false;
 
 const float FPS = 16;
 const float ANIM_SPEED = 8;
@@ -52,6 +55,9 @@ int init_game()
 {
    player.cur_frame = 0;
    player.speed = 16;
+   player.state = STOPPED;
+   player.vel_x = 8;
+
 
    //Initialize Allegro
    if(!al_init())
@@ -211,7 +217,8 @@ void update_screen()
 {
 
    draw_map(view_port, tile_sheet, bg, &cam, map);
-   draw_player(view_port, &cam, &player);
+   draw_player(view_port, &cam, &player, player.direction);
+   show_player_hotspot(view_port, &cam, &player);
 
    //Draw view_port to game, then draw game scaled to display.
    al_set_target_bitmap(game);
@@ -229,8 +236,17 @@ void update_screen()
 /************************************************
  * Makes sure the cam is within the map bounds  *
  ************************************************/
-void check_cam_bounds() //Check to make sure camera is not out of bounds.
+void check_cam() //Check to make sure camera is not out of bounds.
 {
+   //Check player position and scroll
+   if ( (player.x > (VIEWPORT_WIDTH / 2) -24) && (player.x < (MAP_WIDTH * TILE_SIZE) - (VIEWPORT_WIDTH / 2))  )
+   {
+      cam.x = player.x - ((VIEWPORT_WIDTH / 2) -16);
+   }
+   if ( (player.y > (VIEWPORT_HEIGHT / 2) - 24) && (player.y < (MAP_HEIGHT * TILE_SIZE) - (VIEWPORT_HEIGHT / 2)) )
+   {
+      cam.y = player.y - ((VIEWPORT_HEIGHT / 2) -16);
+   }
    if (cam.x < 0) cam.x = 0;
    if (cam.x > (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH)
    {
@@ -242,7 +258,6 @@ void check_cam_bounds() //Check to make sure camera is not out of bounds.
    {
       cam.y = (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT;
    }
-
 }
 
 /************************************************
@@ -322,7 +337,83 @@ void check_key_up(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_LSHIFT:
          key[KEY_LSHIFT] = false;
          break;
+      case ALLEGRO_KEY_ESCAPE:
+         program_done = true;
+         break;
    }
+}
+
+/************************************************
+ * Updated the player and movements             *
+ ************************************************/
+void update_player()
+{
+   int old_x = player.x;
+
+
+   //Horizontal Movement
+   if (key[KEY_RIGHT] && !key[KEY_LEFT])
+      {
+         player.direction = RIGHT;
+         player.x += player.vel_x;
+         if (player.on_ground) player.state = WALKING;
+      }
+      else if (key[KEY_LEFT] && !key[KEY_RIGHT])
+      {
+         if (player.on_ground) player.state = WALKING;
+         player.direction = LEFT;
+         player.x -= player.vel_x;
+      }
+      else if (!key[KEY_LEFT] && !key[KEY_RIGHT])
+      {
+         if (player.on_ground) player.state = STOPPED;
+      }
+
+   //Horizontal tile collision
+   if (is_ground(map, player.x + 16, player.y +1)) player.x = old_x;
+   if (is_ground(map, player.x + 8, player.y +1)) player.x = old_x;
+   if (is_ground(map, player.x + 16, player.y +31)) player.x = old_x;
+   if (is_ground(map, player.x +8, player.y +31)) player.x = old_x;
+
+   //Vertical Movement
+   if (!is_ground(map, player.x +15, player.y +32))
+   {
+      if(!is_ground(map, player.x +16, player.y + 32))
+      {
+         player.vel_y += 8;
+         player.on_ground = false;
+      }
+   }
+   else
+   {
+      player.on_ground = true;
+      player.vel_y = 0;
+      player.jump_pressed = false;
+      player.jumping = false;
+   }
+
+   //Pressed jump
+   if (key[KEY_LCTRL] && player.on_ground && !player.jump_pressed && !player.jumping)
+   {
+      player.vel_y = -64;
+      player.jumping = true;
+      player.jump_pressed = true;
+   }
+
+   //Apply vertical force
+   player.y += player.vel_y >> 2;
+
+   //Check floor
+   while (is_ground(map, player.x + 16, player.y +31)) {player.y--; player.jumping = false;}
+   while (is_ground(map, player.x + 8, player.y +31)) {player.y--; player.jumping = false;}
+
+   //Check roof
+   while (is_ground(map, player.x + 16, player.y)) {player.y++; player.vel_y = 0;}
+   while (is_ground(map, player.x + 8, player.y)) {player.y++; player.vel_y = 0;}
+
+
+   //printf("player.tate: %d\n", player.state);
+   printf("player.vel_y: %d\n", player.vel_y);
 }
 
 /************************************************
@@ -330,25 +421,26 @@ void check_key_up(ALLEGRO_EVENT *ev)
  ************************************************/
 void check_timer_logic(ALLEGRO_EVENT *ev)
 {
-   static int scroll_speed;
-
-   if (key[KEY_RIGHT])
-   {
-      player.state = WALKING;
-      if (ev->timer.source == player.timer) player.x += 8;
-   }
-
-   else player.state = GROUNDED;
-
-    if (ev->timer.source == ANIM_TIMER)
-   {
-      check_player_animation(&player);
-   }
-
+   //Frames
    if (ev->timer.source == FPS_TIMER)
    {
-      check_cam_bounds();
+
    }
+
+   //Animation
+   if (ev->timer.source == ANIM_TIMER)
+   {
+      animate_player(&player);
+   }
+
+   if (ev->timer.source == player.timer)
+   {
+      /**** Player movement ****/
+      update_player();
+   }
+
+
+   check_cam();
 }
 
 /************************************************
@@ -414,14 +506,13 @@ int main(int argc, char **argv)
    jlog("Map loaded.");
    player.x = map->player_start_x;
    player.y = map->player_start_y;
-   cam.x = player.x - (VIEWPORT_WIDTH / 2) +64;
-   cam.y = player.y - (VIEWPORT_HEIGHT/ 2) - 16;
+   check_cam();
 
    al_set_target_bitmap(game);
    al_draw_bitmap(stat_border, 0, 0, 0);
 
    //This is the main loop for now
-   bool program_done = false;
+
    al_start_timer(FPS_TIMER);
    jlog("FPS timer started.");
    al_start_timer(ANIM_TIMER);
@@ -436,7 +527,6 @@ int main(int argc, char **argv)
 
       if (ev.type == ALLEGRO_EVENT_TIMER)
       {
-
          check_timer_logic(&ev);
          redraw = true;
       }
@@ -444,7 +534,8 @@ int main(int argc, char **argv)
       {
          program_done = true;
       }
-      else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
+
+      if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
       {
          check_key_down(&ev);
       }

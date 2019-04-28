@@ -1,7 +1,9 @@
-#ifndef SP_MAP_H
-#define SP_MAP_H
+#ifndef TT_MAP_H
+#define TT_MAP_H
 
 #include <stdbool.h>
+#include <allegro5/allegro.h>
+#include "tt_main.h"
 
 // This is a position on the map
 typedef struct t_map_pos

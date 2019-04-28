@@ -94,6 +94,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="memwatch/memwatch.h" />
+		<Unit filename="tt_collision.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tt_collision.h" />
 		<Unit filename="tt_main.c">
 			<Option compilerVar="CC" />
 		</Unit>

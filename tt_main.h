@@ -1,5 +1,5 @@
-#ifndef SP_MAIN_H
-#define SP_MAIN_H
+#ifndef TT_MAIN_H
+#define TT_MAIN_H
 
 #include "jt_util.h"
 
@@ -13,7 +13,7 @@
 #define MAP_WIDTH 128
 #define MAP_HEIGHT 90
 
-#define DISPLAY_MULTIPLIER 10
+#define DISPLAY_MULTIPLIER 6.
 
 typedef struct t_cam
 {
@@ -22,6 +22,8 @@ typedef struct t_cam
 } t_cam;
 
 enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_ALT};
+
+extern bool key[10];
 
 
 #endif // SP_MAIN_H
