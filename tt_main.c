@@ -349,9 +349,19 @@ void check_key_up(ALLEGRO_EVENT *ev)
  ************************************************/
 void update_player()
 {
+   /* Special thanks to Johan Pietz, here. I borrowed
+   from his code in Alex 4 a little. It's not copy
+   and pasted, though! (Although, if you understand
+   what it does, I guess it doesn't hurt every now
+   and then.) */
+
    int old_x = player.x;
    int x1, x2;
 
+   /* These look like magic numbers, but they have
+   to be fairly precise, or else when the player
+   is standing on the edge of a tile the velocity
+   gets wacky. */
    if (player.direction == LEFT)
    {
       x1 = 17;
@@ -380,7 +390,14 @@ void update_player()
       {
          if (player.on_ground) player.state = STOPPED;
       }
-   //Horizontal tile collision
+
+   /* Horizontal Tile Collision
+      Basically checks three points in the player's
+      Y position for each side of the player. If there's
+      something there it sets the player's position back
+      to its previous position before the collision occurred.
+      But because we're not drawing here, it doesn't show the
+      jerkiness of the process.*/
    if (is_ground(map, player.x + x1, player.y + 2 )) player.x = old_x; //top
    if (is_ground(map, player.x + x2, player.y + 2 )) player.x = old_x;
    if (is_ground(map, player.x + x1, player.y + 16)) player.x = old_x; //center
@@ -388,7 +405,11 @@ void update_player()
    if (is_ground(map, player.x + x1, player.y + 31)) player.x = old_x; //bottom
    if (is_ground(map, player.x + x2, player.y + 31)) player.x = old_x;
 
-   //Vertical Movement
+   /* Vertical movement
+      Checks the two points below the player's feet
+      if there's not a solid tile, it adds 4 to
+      the Y velocity. Otherwise the player is standing
+      on a solid tile. */
    if (!is_ground(map, player.x + x1, player.y + 32))
    {
       if(!is_ground(map, player.x +x2, player.y + 32))
@@ -407,7 +428,13 @@ void update_player()
       player.jumping = false;
    }
 
-   //Pressed jump
+   /* Jump button is pressed
+      If the player is on the ground, and jump
+      is pressed. The player jumps. Subtracting
+      a number from the velocity, this gives the player
+      a vertical upwards boost while the Y velocity is
+      still being pulled in the opposite direction,
+      simulating gravity. */
    if (key[KEY_LCTRL] && player.on_ground && !player.jump_pressed && !player.jumping)
    {
       player.vel_y = -48;
@@ -419,17 +446,44 @@ void update_player()
       if (player.vel_y < 0) player.vel_y /= 2;
    }
 
-   //Apply vertical force
+   /* Apply vertical force
+      This is where the player's Y position is changed
+      based on it's Y velocity divided by 4. Effectively
+      pulling the player back down if it's in the air.
+      But it's capped so it doesn't get infinitely faster. */
    player.y += player.vel_y / 4;
    if (player.vel_y > 48) player.vel_y = 48;
 
-   //Check floor
-   while (is_ground(map, player.x + x1, player.y + 31)) {player.y--; player.jumping = false; player.on_ground = true; }
-   while (is_ground(map, player.x + x2, player.y + 31)) {player.y--; player.jumping = false; player.on_ground = true; }
+   /* Check floor
+      If the player is literally inside a tile, this
+      starts pulling them out until it's free of the tile.
+      And since it's a loop, and we're not drawing it
+      here, we don't actually see what is happening. */
+   while (is_ground(map, player.x + x1, player.y + 31))
+   {
+      player.y--;
+      player.jumping = false;
+      player.on_ground = true;
+   }
+   while (is_ground(map, player.x + x2, player.y + 31))
+   {
+      player.y--;
+      player.jumping = false;
+      player.on_ground = true;
+   }
 
-   //Check roof
-   while (is_ground(map, player.x + x1, player.y)) {player.y++; player.vel_y = 0;}
-   while (is_ground(map, player.x + x2, player.y)) {player.y++; player.vel_y = 0;}
+   /* Check Floor
+      Same as above except at the players top. */
+   while (is_ground(map, player.x + x1, player.y))
+   {
+      player.y++;
+      player.vel_y = 0;
+   }
+   while (is_ground(map, player.x + x2, player.y))
+   {
+      player.y++;
+      player.vel_y = 0;
+   }
 
    printf("player.tate: %d\n", player.state);
    //printf("player.vel_y: %d\n", player.vel_y);
