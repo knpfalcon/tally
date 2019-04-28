@@ -361,7 +361,12 @@ void update_player()
    /* These look like magic numbers, but they have
    to be fairly precise, or else when the player
    is standing on the edge of a tile the velocity
-   gets wacky. */
+   gets wacky, so these points can't hang off the
+   edge of a tile. Remember, This game's player moves
+   4 pixels at a time. So if at some point one of
+   the points is off the edge, the vertical movement
+   check will still increase the velocity, but the
+   player won't move. */
    if (player.direction == LEFT)
    {
       x1 = 17;
@@ -485,8 +490,8 @@ void update_player()
       player.vel_y = 0;
    }
 
-   printf("player.tate: %d\n", player.state);
-   //printf("player.vel_y: %d\n", player.vel_y);
+   //printf("player.tate: %d\n", player.state);
+   printf("player.vel_y: %d\n", player.vel_y);
 }
 
 /************************************************
