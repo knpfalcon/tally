@@ -381,8 +381,8 @@ void update_player()
          if (player.on_ground) player.state = STOPPED;
       }
    //Horizontal tile collision
-   if (is_ground(map, player.x + x1, player.y+2 )) player.x = old_x; //top
-   if (is_ground(map, player.x + x2, player.y+2 )) player.x = old_x;
+   if (is_ground(map, player.x + x1, player.y + 2 )) player.x = old_x; //top
+   if (is_ground(map, player.x + x2, player.y + 2 )) player.x = old_x;
    if (is_ground(map, player.x + x1, player.y + 16)) player.x = old_x; //center
    if (is_ground(map, player.x + x2, player.y + 16)) player.x = old_x;
    if (is_ground(map, player.x + x1, player.y + 31)) player.x = old_x; //bottom
@@ -414,13 +414,18 @@ void update_player()
       player.jumping = true;
       player.jump_pressed = true;
    }
+   if (!key[KEY_LCTRL])
+   {
+      if (player.vel_y < 0) player.vel_y /= 2;
+   }
+
    //Apply vertical force
-   player.y += player.vel_y >> 2;
+   player.y += player.vel_y / 4;
    if (player.vel_y > 48) player.vel_y = 48;
 
    //Check floor
-   while (is_ground(map, player.x + x1, player.y +31)) {player.y--; player.jumping = false; player.on_ground = true; }
-   while (is_ground(map, player.x + x2, player.y +31)) {player.y--; player.jumping = false; player.on_ground = true; }
+   while (is_ground(map, player.x + x1, player.y + 31)) {player.y--; player.jumping = false; player.on_ground = true; }
+   while (is_ground(map, player.x + x2, player.y + 31)) {player.y--; player.jumping = false; player.on_ground = true; }
 
    //Check roof
    while (is_ground(map, player.x + x1, player.y)) {player.y++; player.vel_y = 0;}
@@ -452,11 +457,11 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
       {
          if (cam.look_ahead < 24) cam.look_ahead += 1;
       }
-      if (!key[KEY_RIGHT] && !key[KEY_LEFT])
-      {
-         if (cam.look_ahead < 0) cam.look_ahead += 1;
-         if (cam.look_ahead > 0) cam.look_ahead -= 1;
-      }
+//      if (!key[KEY_RIGHT] && !key[KEY_LEFT])
+//      {
+//         if (cam.look_ahead < 0) cam.look_ahead += 1;
+//         if (cam.look_ahead > 0) cam.look_ahead -= 1;
+//      }
    }
    //Animation
    if (ev->timer.source == ANIM_TIMER)
