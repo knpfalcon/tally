@@ -349,7 +349,18 @@ void check_key_up(ALLEGRO_EVENT *ev)
 void update_player()
 {
    int old_x = player.x;
+   int x1, x2;
 
+   if (player.direction == LEFT)
+   {
+      x1 = 17;
+      x2 = 19;
+   }
+   else
+   {
+      x1 = 14;
+      x2 = 13;
+   }
 
    //Horizontal Movement
    if (key[KEY_RIGHT] && !key[KEY_LEFT])
@@ -368,7 +379,6 @@ void update_player()
       {
          if (player.on_ground) player.state = STOPPED;
       }
-
    //Horizontal tile collision
    if (is_ground(map, player.x + 16, player.y +1)) player.x = old_x;
    if (is_ground(map, player.x + 8, player.y +1)) player.x = old_x;
@@ -376,12 +386,14 @@ void update_player()
    if (is_ground(map, player.x +8, player.y +31)) player.x = old_x;
 
    //Vertical Movement
-   if (!is_ground(map, player.x +15, player.y +32))
+   if (!is_ground(map, player.x + x1, player.y +32))
    {
-      if(!is_ground(map, player.x +16, player.y + 32))
+      if(!is_ground(map, player.x +x2, player.y + 32))
       {
-         player.vel_y += 8;
+         player.vel_y += 16;
          player.on_ground = false;
+         if (player.vel_y >= 0) player.state = FALLING;
+         if (player.vel_y < 0) player.state = JUMPING;
       }
    }
    else
@@ -395,25 +407,25 @@ void update_player()
    //Pressed jump
    if (key[KEY_LCTRL] && player.on_ground && !player.jump_pressed && !player.jumping)
    {
-      player.vel_y = -64;
+
+      player.vel_y = -82;
       player.jumping = true;
       player.jump_pressed = true;
    }
-
    //Apply vertical force
    player.y += player.vel_y >> 2;
+   if (player.vel_y > 32) player.vel_y = 32;
 
    //Check floor
-   while (is_ground(map, player.x + 16, player.y +31)) {player.y--; player.jumping = false;}
-   while (is_ground(map, player.x + 8, player.y +31)) {player.y--; player.jumping = false;}
+   while (is_ground(map, player.x + x1, player.y +31)) {player.y--; player.jumping = false; player.on_ground = true; }
+   while (is_ground(map, player.x + x2, player.y +31)) {player.y--; player.jumping = false; player.on_ground = true; }
 
    //Check roof
-   while (is_ground(map, player.x + 16, player.y)) {player.y++; player.vel_y = 0;}
-   while (is_ground(map, player.x + 8, player.y)) {player.y++; player.vel_y = 0;}
+   while (is_ground(map, player.x + x1, player.y)) {player.y++; player.vel_y = 0;}
+   while (is_ground(map, player.x + x2, player.y)) {player.y++; player.vel_y = 0;}
 
-
-   //printf("player.tate: %d\n", player.state);
-   printf("player.vel_y: %d\n", player.vel_y);
+   printf("player.tate: %d\n", player.state);
+   //printf("player.vel_y: %d\n", player.vel_y);
 }
 
 /************************************************
@@ -421,23 +433,27 @@ void update_player()
  ************************************************/
 void check_timer_logic(ALLEGRO_EVENT *ev)
 {
+   if (ev->timer.source == player.timer)
+   {
+      /**** Player movement ****/
+      update_player();
+      animate_player(&player);
+   }
    //Frames
    if (ev->timer.source == FPS_TIMER)
    {
 
    }
 
+
+
    //Animation
    if (ev->timer.source == ANIM_TIMER)
    {
-      animate_player(&player);
+
    }
 
-   if (ev->timer.source == player.timer)
-   {
-      /**** Player movement ****/
-      update_player();
-   }
+
 
 
    check_cam();

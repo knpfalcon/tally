@@ -20,6 +20,15 @@ void draw_player(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p, unsigned char direc
 
 void animate_player(t_player *p)
 {
+   if (p->state == JUMPING)
+   {
+      p->cur_frame = 5;
+   }
+   if (p->state == FALLING)
+   {
+      p->cur_frame = 6;
+   }
+
    if (p->state == WALKING)
    {
       if (p->cur_frame == 0) p->cur_frame = 2;
@@ -28,7 +37,6 @@ void animate_player(t_player *p)
       {
          p->cur_frame++;
       }
-
       if (p->cur_frame == 5)
       {
          p->cur_frame = 1;
@@ -39,14 +47,7 @@ void animate_player(t_player *p)
    {
       p->cur_frame = 0;
    }
-   if (p->state == FALLING)
-   {
-      p->cur_frame = 6;
-   }
-   if (p->state == JUMPING)
-   {
-      p->cur_frame = 5;
-   }
+
 
 
 }
