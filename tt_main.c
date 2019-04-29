@@ -450,14 +450,17 @@ void update_player()
    if (landed == true)
    {
       landed = false;
-      printf("Tally smacked the ground!!!\n"); //Replace this with a landing sound!
+      //Player landing sound.
+      #ifdef DEBUG
+      printf("TALLY SMACKED THE GROUND!\n");
+      #endif // DEBUG
    }
 
    /*I added this in hopes that we could detect
    when a player falls off edge. Working so far.
    also detects if player barely lands on ledge
    and helps them out a little.*/
-   if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32))
+   if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && !key[KEY_LCTRL])
    {
       //Play fall off ledge sound
       if (player.direction == RIGHT) player.x += 4;
@@ -465,6 +468,16 @@ void update_player()
       player.vel_y = -24;
       #ifdef DEBUG
       printf("OOPS!\n");
+      #endif // DEBUG
+   }
+   else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && key[KEY_LCTRL])
+   {
+      //Play fall off ledge sound
+      if (player.direction == RIGHT) player.x += 4;
+      if (player.direction == LEFT) player.x -= 4;
+      //player.vel_y = -24;
+      #ifdef DEBUG
+      printf("FLY TALLY!\n");
       #endif // DEBUG
    }
    else if(player.on_ground == true && is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32))
