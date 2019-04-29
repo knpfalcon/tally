@@ -162,11 +162,11 @@ t_map *load_map(const char *fname)
 /************************************************
  * Draws only seen tiles/bg to view port        *
  ************************************************/
-void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m)
+void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *item_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m)
 {
    al_set_target_bitmap(d_bmp);
 
-/**** BACKGROUND ****/
+   /**** BACKGROUND ****/
    al_hold_bitmap_drawing(true);
    al_draw_bitmap(background, 0, 0, 0);
    al_draw_bitmap_region(background, 0, 0, 80, VIEWPORT_HEIGHT, 208, 0, 0 );
@@ -201,7 +201,7 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
    al_hold_bitmap_drawing(false);
    */
 
-/**** TILES ****/
+   /**** TILES ****/
    //Which tiles are in view?
    int y_tiles_in_view = VIEWPORT_HEIGHT / TILE_SIZE + 1;   //Should be 10 tiles +1 row off view
    int x_tiles_in_view = VIEWPORT_WIDTH / TILE_SIZE + 1;    //Should be 13 tiles +1 Column off view
@@ -214,6 +214,7 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
       {
          if ((x < MAP_WIDTH) && (x > -1) && (y < MAP_HEIGHT) && (y > -1))
          {
+            //TILE
             if (m->position[x + y * MAP_WIDTH].empty_tile == false)
             {
                //Draw the tile, subtracting the camera position
@@ -226,8 +227,37 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
                                      (y * TILE_SIZE) - c->y,
                                      0);
             }
+
+            //ITEMS
+            if (m->position[x + y * MAP_WIDTH].item > 0)
+            {
+               al_draw_bitmap_region(item_sheet,
+                                     (m->position[x + y * MAP_WIDTH].item -1) * TILE_SIZE,
+                                     0,
+                                     TILE_SIZE,
+                                     TILE_SIZE,
+                                     (x * TILE_SIZE) - c->x,
+                                     (y * TILE_SIZE) - c->y,
+                                     0);
+            }
          }
       }
    }
    al_hold_bitmap_drawing(false);
+}
+
+/************************************************
+ * Get a position on the map easily             *
+ ************************************************/
+t_map_pos *get_map_position(t_map *m, int x, int y)
+{
+   x /= TILE_SIZE;
+   y /= TILE_SIZE;
+
+   if (m == NULL) return NULL;
+	if (x < 0 || x >= MAP_WIDTH) return NULL;
+	if (y < 0 || y >= MAP_HEIGHT) return NULL;
+
+
+   return &m->position[x + y * MAP_WIDTH];
 }

@@ -25,7 +25,8 @@ typedef struct t_player
    bool on_ground;
    bool jump_pressed;
    bool jumping;
-   int health;
+   unsigned char health;
+   unsigned int score;
    #ifdef DEBUG
    int x1, x2, x3;
    #endif // DEBUG

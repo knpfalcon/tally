@@ -37,6 +37,7 @@ ALLEGRO_FONT *font = NULL;
 
 //Bitmaps that get loaded from disk
 ALLEGRO_BITMAP *tile_sheet = NULL;
+ALLEGRO_BITMAP *item_sheet = NULL;
 ALLEGRO_BITMAP *bg = NULL;
 ALLEGRO_BITMAP *stat_border = NULL;
 //ALLEGRO_BITMAP *player_start = NULL;
@@ -171,8 +172,17 @@ int init_game()
       jlog("Couldn't load tile_sheet.png!");
       return -1;
    }
-   jlog("tile_sheet.png loaded.");
    al_lock_bitmap(tile_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
+
+   item_sheet = al_load_bitmap("data/item_sheet.png");
+   if (tile_sheet == NULL)
+   {
+      jlog("Couldn't load item_sheet.png!");
+      return -1;
+   }
+   jlog("item_sheet.png loaded.");
+   al_lock_bitmap(item_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
+
 
    player.bitmap = al_load_bitmap("data/player.png");
    if (player.bitmap == NULL) { jlog("Couldn't load player.png"); return -1; }
@@ -214,7 +224,7 @@ int init_game()
 void update_screen()
 {
 
-   draw_map(view_port, tile_sheet, bg, &cam, map);
+   draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map);
    draw_player(view_port, &cam, &player, player.direction);
    show_player_hotspot(view_port, &cam, &player);
 
@@ -355,6 +365,9 @@ void update_player()
 
    int old_x = player.x;
    int x1, x2, x3;
+   int tx, ty, ty2;
+   t_map_pos *mp;
+   t_map_pos *mp2;
    bool landed = false;
 
    //Horizontal Movement
@@ -544,6 +557,47 @@ void update_player()
       player.vel_y = 0;
    }
 
+   /* Here we check if the player is over an item */
+   tx = player.x + (player.direction ? 14 : 19);
+   ty = (player.y + 1);
+   ty2 = (player.y + 31);
+   /* There are two of these so I can check
+      Tally's head and feet. */
+   mp = get_map_position(map, tx, ty);
+   mp2 = get_map_position(map, tx, ty2);
+
+   if (mp != NULL && mp2 != NULL)
+   {
+      if (mp->item > 0 || mp2->item > 0)
+      {
+         printf("Play Sound once!\n");
+         //Burger
+         if (mp->item == ITEM_BURGER) { mp->item = 0; player.score += 25; }
+         if (mp2->item == ITEM_BURGER) { mp2->item = 0; player.score += 25; }
+
+         //Disk
+         if (mp->item == ITEM_DISK) { mp->item = 0; player.score += 50; }
+         if (mp2->item == ITEM_DISK) { mp2->item = 0; player.score += 50; }
+
+         //VHS
+         if (mp->item == ITEM_VHS) { mp->item = 0; player.score += 50; }
+         if (mp2->item == ITEM_VHS) { mp2->item = 0; player.score += 50; }
+
+         //Screw
+         if (mp->item == ITEM_SCREW) { mp->item = 0; player.score += 25;}
+         if (mp2->item == ITEM_SCREW) { mp2->item = 0; player.score += 25; }
+
+         //Underwear
+         if (mp->item == ITEM_UNDERWEAR) { mp->item = 0; player.score += 25; }
+         if (mp2->item == ITEM_UNDERWEAR) { mp2->item = 0; player.score += 25; }
+
+         // Health
+         if (mp->item == ITEM_HEALTH) { mp->item = 0; player.health = 8; }
+         if (mp2->item == ITEM_HEALTH) { mp2->item = 0; player.health = 8; }
+
+      }
+   }
+
    //printf("player.tate: %d\n", player.state);
    //printf("player.vel_y: %d\n", player.vel_y);
    //printf("player.x: %d\n", player.x);
@@ -598,6 +652,7 @@ void clean_up()
 {
    destroy_map(map);
    al_unlock_bitmap(tile_sheet);
+   al_unlock_bitmap(item_sheet);
    al_unlock_bitmap(bg);
    al_unlock_bitmap(stat_border);
    al_unlock_bitmap(player.bitmap);

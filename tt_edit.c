@@ -21,6 +21,8 @@ bool redraw = true;
 const int DISPLAY_WIDTH = 320 * DISPLAY_MULTIPLIER;
 const int DISPLAY_HEIGHT = 200 * DISPLAY_MULTIPLIER;
 
+int item_selected = 1;
+
 t_cam cam;
 t_mouse sp_mouse;
 t_map *map = NULL;
@@ -43,6 +45,7 @@ ALLEGRO_FONT *reg_font = NULL;
 
 //Bitmaps that get loaded from disk
 ALLEGRO_BITMAP *tile_sheet = NULL;
+ALLEGRO_BITMAP *item_sheet = NULL;
 ALLEGRO_BITMAP *bg = NULL;
 ALLEGRO_BITMAP *stat_border = NULL;
 //ALLEGRO_BITMAP *player_start = NULL;
@@ -170,7 +173,6 @@ int init_game()
       jlog("Couldn't load status_border.png!");
       return -1;
    }
-
    al_lock_bitmap(stat_border, al_get_bitmap_format(stat_border), ALLEGRO_LOCK_READONLY);
 
    bg = al_load_bitmap("data/bg_1.png");
@@ -189,6 +191,15 @@ int init_game()
    }
    jlog("tile_sheet.png loaded.");
    al_lock_bitmap(tile_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
+
+   item_sheet = al_load_bitmap("data/item_sheet.png");
+   if (tile_sheet == NULL)
+   {
+      jlog("Couldn't load item_sheet.png!");
+      return -1;
+   }
+   jlog("item_sheet.png loaded.");
+   al_lock_bitmap(item_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
 
    player.bitmap = al_load_bitmap("data/player.png");
    if (player.bitmap == NULL) { jlog("Couldn't load player.png"); return -1; }
@@ -310,6 +321,13 @@ void show_info_stuff()
                     0,
                     "Tile Selected: %d",
                     sp_mouse.tile_selection);
+      al_draw_textf(reg_font,
+                    al_map_rgb(255,255,255),
+                    226 * DISPLAY_MULTIPLIER,
+                    48 * DISPLAY_MULTIPLIER,
+                    0,
+                    "Item: %d",
+                    item_selected);
       if (cond.map_saved == true)
       {
          al_draw_text(reg_font,
@@ -361,7 +379,7 @@ void update_screen()
    {
       if (map != NULL)
       {
-         draw_map(view_port, tile_sheet, bg, &cam, map);
+         draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map);
 
          draw_player_start();
       }
@@ -383,6 +401,14 @@ void update_screen()
                                16,
                                0);
       }
+      al_draw_bitmap_region(item_sheet,
+                               (item_selected -1) * TILE_SIZE,
+                               0,
+                               TILE_SIZE,
+                               TILE_SIZE,
+                               226,
+                               52,
+                               0);
    }
 
    //Draw the zoomed out map
@@ -439,7 +465,6 @@ void check_click_in_viewport()
                map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].empty_tile = true;
                cond.map_saved = false;
             }
-
          }
          else if (mouse.buttons & 4)
          {
@@ -448,6 +473,14 @@ void check_click_in_viewport()
             player.x = map->player_start_x;
             player.y = map->player_start_y;
             cond.map_saved = false;
+         }
+         else if (key[KEY_E])
+         {
+            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].item = item_selected;
+         }
+         else if (key[KEY_R])
+         {
+            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].item = 0;
          }
       }
       else
@@ -485,7 +518,6 @@ void check_tile_selection()
    if (mouse.z < sp_mouse.z || key[KEY_PAD_MINUS])
    {
       sp_mouse.z = mouse.z;
-
       if (sp_mouse.tile_selection > 0)
       {
          sp_mouse.tile_selection--;
@@ -508,7 +540,6 @@ void check_tile_selection()
          sp_mouse.tile_selection = 0;
       }
    }
-
 }
 
 /************************************************
@@ -593,6 +624,12 @@ void check_key_down(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_PAD_MINUS:
          key[KEY_PAD_MINUS] = true;
          break;
+      case ALLEGRO_KEY_E:
+         key[KEY_E] = true;
+         break;
+      case ALLEGRO_KEY_R:
+         key[KEY_R] = true;
+         break;
    }
 }
 
@@ -671,6 +708,20 @@ void check_key_up(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_P:
          cam.x = player.x - VIEWPORT_WIDTH / 2 + 16;
          cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
+         break;
+      case ALLEGRO_KEY_2:
+         if (item_selected < 6) item_selected++;
+         if (item_selected == 6) item_selected = 1;
+         break;
+      case ALLEGRO_KEY_1:
+         if (item_selected > 0) item_selected--;
+         if (item_selected == 0) item_selected = 6;
+         break;
+      case ALLEGRO_KEY_E:
+         key[KEY_E] = false;
+         break;
+      case ALLEGRO_KEY_R:
+         key[KEY_R] = false;
          break;
       case ALLEGRO_KEY_ESCAPE:
          //program_done = true;
@@ -832,6 +883,7 @@ void clean_up()
 {
    destroy_map(map);
    al_unlock_bitmap(tile_sheet);
+   al_unlock_bitmap(item_sheet);
    al_unlock_bitmap(bg);
    al_unlock_bitmap(stat_border);
    al_unlock_bitmap(player.bitmap);

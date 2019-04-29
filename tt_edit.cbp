@@ -17,7 +17,6 @@
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
-					<Add option="-m32" />
 					<Add option="-Og" />
 					<Add option="-g" />
 					<Add option="-ggdb3" />
@@ -25,7 +24,6 @@
 					<Add option="-DDEBUG" />
 				</Compiler>
 				<Linker>
-					<Add option="-m32" />
 					<Add library="allegro_monolith-debug-static" />
 				</Linker>
 			</Target>
@@ -51,8 +49,10 @@
 		</Build>
 		<Compiler>
 			<Add option="-march=i686" />
+			<Add option="-pedantic-errors" />
 			<Add option="-Wall" />
 			<Add option="-std=c99" />
+			<Add option="-m32" />
 			<Add option="-std=gnu11" />
 			<Add option="-Werror" />
 			<Add directory="C:/libs/allegro525/include" />
@@ -61,6 +61,7 @@
 			<Add option="-static-libstdc++" />
 			<Add option="-static-libgcc" />
 			<Add option="-static" />
+			<Add option="-m32" />
 			<Add option="-DALLEGRO_STATICLINK" />
 			<Add library="mingw32" />
 			<Add library="vorbisfile" />

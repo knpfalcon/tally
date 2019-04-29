@@ -21,7 +21,7 @@ bool is_ground(t_map *m, int x, int y)
 }
 
 /* BASIC AABB COLLISION DETECTION */
-bool tile_collision(t_map *m, int al, int ar, int ab, int at, int bl, int br, int bb, int bt)
+bool collision(t_map *m, int al, int ar, int ab, int at, int bl, int br, int bb, int bt)
 {
    if (al < br || ar > bl ||  ab > bt ||  at < bb) return true;
 
