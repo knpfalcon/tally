@@ -357,6 +357,7 @@ void update_player()
 
    int old_x = player.x;
    int x1, x2, x3;
+   bool landed = false;
 
    //Horizontal Movement
    if (key[KEY_RIGHT] && !key[KEY_LEFT])
@@ -440,10 +441,16 @@ void update_player()
    }
    else
    {
+      if (player.vel_y > 0) landed = true; //So we can make a landing sound.
       player.on_ground = true;
       player.vel_y = 0;
       player.jump_pressed = false;
       player.jumping = false;
+   }
+   if (landed == true)
+   {
+      landed = false;
+      printf("Tally smacked the ground!!!\n"); //Replace this with a landing sound!
    }
 
    /*I added this in hopes that we could detect
