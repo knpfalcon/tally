@@ -142,11 +142,11 @@ int init_game()
    jlog("Display Created.");
 
    #ifdef DEBUG
-   al_set_window_title(display, "Tally Trauma -- DEBUG");
+      al_set_window_title(display, "Tally Trauma -- DEBUG");
    #endif // DEBUG
 
    #ifdef RELEASE
-   al_set_window_title(display, "Tally Trauma");
+      al_set_window_title(display, "Tally Trauma");
    #endif // RELEASE
 
    stat_border = al_load_bitmap("data/border.png");
@@ -403,9 +403,9 @@ void update_player()
       x2 = 11;
       x3 = 15; //For detecting falling from edge.
       #ifdef DEBUG
-      player.x1 = x1;
-      player.x2 = x2;
-      player.x3 = x3;
+         player.x1 = x1;
+         player.x2 = x2;
+         player.x3 = x3;
       #endif // DEBUG
 
    }
@@ -415,9 +415,9 @@ void update_player()
       x2 = 22;
       x3 = 18; //For detecting falling from edge.
       #ifdef DEBUG
-      player.x1 = x1;
-      player.x2 = x2;
-      player.x3 = x3;
+         player.x1 = x1;
+         player.x2 = x2;
+         player.x3 = x3;
       #endif // DEBUG
    }
 
@@ -465,7 +465,7 @@ void update_player()
          landed = false;
          //Player landing sound.
          #ifdef DEBUG
-         printf("TALLY SMACKED THE GROUND!\n");
+            printf("TALLY SMACKED THE GROUND!\n");
          #endif // DEBUG
       }
    }
@@ -481,7 +481,7 @@ void update_player()
       if (player.direction == LEFT) player.x -= 4;
       //player.vel_y = -24;
       #ifdef DEBUG
-      printf("OOPS!\n");
+         printf("OOPS!\n");
       #endif // DEBUG
    }
    else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && key[KEY_LCTRL])
@@ -491,7 +491,7 @@ void update_player()
       if (player.direction == LEFT) player.x -= 4;
       //player.vel_y = -24;
       #ifdef DEBUG
-      printf("FLY TALLY!\n");
+         printf("FLY TALLY!\n");
       #endif // DEBUG
    }
    else if(player.on_ground == true && is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32))
@@ -499,7 +499,7 @@ void update_player()
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
       #ifdef DEBUG
-      printf("YOU MADE IT!\n");
+         printf("YOU MADE IT!\n");
       #endif // DEBUG
    }
 
@@ -557,12 +557,13 @@ void update_player()
       player.vel_y = 0;
    }
 
-   /* Here we check if the player is over an item */
+   /* Check for items
+   Here we check if the player is over an item */
    tx = player.x + (player.direction ? 14 : 19);
+   /* There are two of each of these so I can check
+      Tally's head AND feet. */
    ty = (player.y + 1);
    ty2 = (player.y + 31);
-   /* There are two of these so I can check
-      Tally's head and feet. */
    mp = get_map_position(map, tx, ty);
    mp2 = get_map_position(map, tx, ty2);
 
@@ -570,7 +571,9 @@ void update_player()
    {
       if (mp->item > 0 || mp2->item > 0)
       {
-         printf("Play Sound once!\n");
+         #ifdef DEBUG
+            printf("Play Sound once!\n");
+         #endif // DEBUG
          //Burger
          if (mp->item == ITEM_BURGER) { mp->item = 0; player.score += 25; }
          if (mp2->item == ITEM_BURGER) { mp2->item = 0; player.score += 25; }

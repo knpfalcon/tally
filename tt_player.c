@@ -16,9 +16,9 @@ void draw_player(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p, unsigned char direc
    }
 
    #ifdef DEBUG
-   al_draw_pixel(p->x + p->x1 - c->x, p->y + 32 - c->y, al_map_rgb(255,0,0));
-   al_draw_pixel(p->x + p->x2 - c->x, p->y + 32 - c->y, al_map_rgb(0,255,0));
-   al_draw_pixel(p->x + p->x3 - c->x, p->y + 32 - c->y, al_map_rgb(0,0,255));
+      al_draw_pixel(p->x + p->x1 - c->x, p->y + 32 - c->y, al_map_rgb(255,0,0));
+      al_draw_pixel(p->x + p->x2 - c->x, p->y + 32 - c->y, al_map_rgb(0,255,0));
+      al_draw_pixel(p->x + p->x3 - c->x, p->y + 32 - c->y, al_map_rgb(0,0,255));
    #endif // DEBUG
 }
 

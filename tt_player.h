@@ -28,7 +28,7 @@ typedef struct t_player
    unsigned char health;
    unsigned int score;
    #ifdef DEBUG
-   int x1, x2, x3;
+      int x1, x2, x3;
    #endif // DEBUG
 } t_player;
 
