@@ -4,8 +4,6 @@
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_native_dialog.h>
 
-#include "memwatch/memwatch.h"
-
 #include "tt_main.h"
 #include "tt_map.h"
 

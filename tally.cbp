@@ -90,10 +90,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="jt_util.h" />
-		<Unit filename="memwatch/memwatch.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="memwatch/memwatch.h" />
 		<Unit filename="tt_collision.c">
 			<Option compilerVar="CC" />
 		</Unit>

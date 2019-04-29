@@ -6,8 +6,6 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
 
-#include "memwatch/memwatch.h"
-
 #include "tt_main.h"
 #include "tt_map.h"
 #include "tt_player.h"
@@ -445,7 +443,6 @@ void update_player()
       player.on_ground = true;
       player.vel_y = 0;
       player.jump_pressed = false;
-      player.jumping = false;
    }
 
    if (landed == true)
@@ -469,7 +466,7 @@ void update_player()
       //Play fall off ledge sound
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
-      player.vel_y = -24;
+      //player.vel_y = -24;
       #ifdef DEBUG
       printf("OOPS!\n");
       #endif // DEBUG
@@ -500,10 +497,9 @@ void update_player()
       a vertical upwards boost while the Y velocity is
       still being pulled in the opposite direction,
       simulating gravity. */
-   if (key[KEY_LCTRL] && player.on_ground && !player.jump_pressed && !player.jumping)
+   if (key[KEY_LCTRL] && player.on_ground && !player.jump_pressed)
    {
       player.vel_y = -48;
-      player.jumping = true;
       player.jump_pressed = true;
    }
    if (!key[KEY_LCTRL])
@@ -527,13 +523,11 @@ void update_player()
    while (is_ground(map, player.x + x1, player.y + 31))
    {
       player.y--;
-      player.jumping = false;
       player.on_ground = true;
    }
    while (is_ground(map, player.x + x2, player.y + 31))
    {
       player.y--;
-      player.jumping = false;
       player.on_ground = true;
    }
 

@@ -1,5 +1,3 @@
-
-#include "memwatch/memwatch.h"
 #include "tt_player.h"
 
 void draw_player(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p, unsigned char direction)

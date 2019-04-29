@@ -8,8 +8,6 @@
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_native_dialog.h>
 
-#include "memwatch/memwatch.h"
-
 #include "tt_main.h"
 #include "tt_map.h"
 #include "tt_edit.h"
@@ -32,8 +30,8 @@ t_conditional cond = {false, false, false, false};
 
 const char *filename;
 
-enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_N,KEY_PAD_PLUS, KEY_PAD_MINUS};
-bool key[10] = {false, false, false, false, false, false, false, false, false};
+//enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_N,KEY_PAD_PLUS, KEY_PAD_MINUS};
+bool key[10] = {false};
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;

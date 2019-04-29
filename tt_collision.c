@@ -1,5 +1,3 @@
-#include "memwatch/memwatch.h"
-
 #include "tt_collision.h"
 
 /* CHECKS FOR A SOLID TILE
