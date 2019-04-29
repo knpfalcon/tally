@@ -447,13 +447,17 @@ void update_player()
       player.jump_pressed = false;
       player.jumping = false;
    }
+
    if (landed == true)
    {
-      landed = false;
-      //Player landing sound.
-      #ifdef DEBUG
-      printf("TALLY SMACKED THE GROUND!\n");
-      #endif // DEBUG
+      if (is_ground(map, player.x + x1, player.y + 32))
+      {
+         landed = false;
+         //Player landing sound.
+         #ifdef DEBUG
+         printf("TALLY SMACKED THE GROUND!\n");
+         #endif // DEBUG
+      }
    }
 
    /*I added this in hopes that we could detect
