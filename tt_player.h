@@ -26,6 +26,9 @@ typedef struct t_player
    bool jump_pressed;
    bool jumping;
    int health;
+   #ifdef DEBUG
+   int x1, x2, x3;
+   #endif // DEBUG
 } t_player;
 
 enum player_state {STOPPED = 0, WALKING = 1, JUMPING = 2, FALLING = 3};

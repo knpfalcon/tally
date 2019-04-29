@@ -345,7 +345,7 @@ void check_key_up(ALLEGRO_EVENT *ev)
 }
 
 /************************************************
- * Updated the player and movements             *
+ * Update the player and movements              *
  ************************************************/
 void update_player()
 {
@@ -356,7 +356,25 @@ void update_player()
    and then.) */
 
    int old_x = player.x;
-   int x1, x2;
+   int x1, x2, x3;
+
+   //Horizontal Movement
+   if (key[KEY_RIGHT] && !key[KEY_LEFT])
+   {
+      player.direction = RIGHT;
+      player.x += player.vel_x;
+      if (player.on_ground) player.state = WALKING;
+   }
+   else if (key[KEY_LEFT] && !key[KEY_RIGHT])
+   {
+      player.direction = LEFT;
+      player.x -= player.vel_x;
+      if (player.on_ground) player.state = WALKING;
+   }
+   else if (!key[KEY_LEFT] && !key[KEY_RIGHT])
+   {
+      if (player.on_ground) player.state = STOPPED;
+   }
 
    /* These look like magic numbers, but they have
    to be fairly precise, or else when the player
@@ -367,34 +385,30 @@ void update_player()
    the points is off the edge, the vertical movement
    check will still increase the velocity, but the
    player won't move. */
-   if (player.direction == LEFT)
+   if (player.direction == RIGHT)
    {
-      x1 = 17;
-      x2 = 19;
+      x1 = 19;
+      x2 = 11;
+      x3 = 15; //For detecting falling from edge.
+      #ifdef DEBUG
+      player.x1 = x1;
+      player.x2 = x2;
+      player.x3 = x3;
+      #endif // DEBUG
+
    }
    else
    {
       x1 = 14;
-      x2 = 13;
+      x2 = 22;
+      x3 = 18; //For detecting falling from edge.
+      #ifdef DEBUG
+      player.x1 = x1;
+      player.x2 = x2;
+      player.x3 = x3;
+      #endif // DEBUG
    }
 
-   //Horizontal Movement
-   if (key[KEY_RIGHT] && !key[KEY_LEFT])
-      {
-         player.direction = RIGHT;
-         player.x += player.vel_x;
-         if (player.on_ground) player.state = WALKING;
-      }
-      else if (key[KEY_LEFT] && !key[KEY_RIGHT])
-      {
-         if (player.on_ground) player.state = WALKING;
-         player.direction = LEFT;
-         player.x -= player.vel_x;
-      }
-      else if (!key[KEY_LEFT] && !key[KEY_RIGHT])
-      {
-         if (player.on_ground) player.state = STOPPED;
-      }
 
    /* Horizontal Tile Collision
       Basically checks three points in the player's
@@ -405,8 +419,10 @@ void update_player()
       jerkiness of the process.*/
    if (is_ground(map, player.x + x1, player.y + 2 )) player.x = old_x; //top
    if (is_ground(map, player.x + x2, player.y + 2 )) player.x = old_x;
+
    if (is_ground(map, player.x + x1, player.y + 16)) player.x = old_x; //center
    if (is_ground(map, player.x + x2, player.y + 16)) player.x = old_x;
+
    if (is_ground(map, player.x + x1, player.y + 31)) player.x = old_x; //bottom
    if (is_ground(map, player.x + x2, player.y + 31)) player.x = old_x;
 
@@ -415,15 +431,12 @@ void update_player()
       if there's not a solid tile, it adds 4 to
       the Y velocity. Otherwise the player is standing
       on a solid tile. */
-   if (!is_ground(map, player.x + x1, player.y + 32))
+   if (!is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x2, player.y + 32))
    {
-      if(!is_ground(map, player.x +x2, player.y + 32))
-      {
-         player.vel_y += 4;
-         player.on_ground = false;
-         if (player.vel_y >= 0) player.state = FALLING;
-         if (player.vel_y < 0) player.state = JUMPING;
-      }
+      player.vel_y += 4;
+      player.on_ground = false;
+      if (player.vel_y >= 0) player.state = FALLING;
+      if (player.vel_y < 0) player.state = JUMPING;
    }
    else
    {
@@ -431,6 +444,29 @@ void update_player()
       player.vel_y = 0;
       player.jump_pressed = false;
       player.jumping = false;
+   }
+
+   /*I added this in hopes that we could detect
+   when a player falls off edge. Working so far.
+   also detects if player barely lands on ledge
+   and helps them out a little.*/
+   if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32))
+   {
+      //Play fall off ledge sound
+      if (player.direction == RIGHT) player.x += 4;
+      if (player.direction == LEFT) player.x -= 4;
+      player.vel_y = -24;
+      #ifdef DEBUG
+      printf("OOPS!\n");
+      #endif // DEBUG
+   }
+   else if(player.on_ground == true && is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32))
+   {
+      if (player.direction == RIGHT) player.x += 4;
+      if (player.direction == LEFT) player.x -= 4;
+      #ifdef DEBUG
+      printf("YOU MADE IT!\n");
+      #endif // DEBUG
    }
 
    /* Jump button is pressed
@@ -491,7 +527,8 @@ void update_player()
    }
 
    //printf("player.tate: %d\n", player.state);
-   printf("player.vel_y: %d\n", player.vel_y);
+   //printf("player.vel_y: %d\n", player.vel_y);
+   //printf("player.x: %d\n", player.x);
 }
 
 /************************************************
@@ -504,7 +541,7 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
       /**** Player movement ****/
       update_player();
    }
-   E
+
    //Frames
    if (ev->timer.source == FPS_TIMER)
    {

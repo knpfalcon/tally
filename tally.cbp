@@ -17,8 +17,8 @@
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
-					<Add option="-Og" />
 					<Add option="-Wall" />
+					<Add option="-Og" />
 					<Add option="-ggdb3" />
 					<Add option="-Wno-unused" />
 					<Add option="-DDEBUG" />
