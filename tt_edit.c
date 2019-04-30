@@ -33,7 +33,7 @@ t_conditional cond = {false, false, false, false};
 const char *filename;
 
 //enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_N,KEY_PAD_PLUS, KEY_PAD_MINUS};
-bool key[10] = {false};
+bool key[11] = {false};
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -808,11 +808,11 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
          cond.map_load = false;
          if(cond.map_saved == false)
          {
-            int button = al_show_native_message_box(display,
-                                                 "Open Map - WARNING",
-                                                 "Map changes not saved!!",
-                                                 "If you open a map, it will clear your current changes. Consider saving first!",
-                                                 NULL, ALLEGRO_MESSAGEBOX_WARN);
+            al_show_native_message_box(display,
+                                      "Open Map - WARNING",
+                                      "Map changes not saved!!",
+                                      "If you open a map, it will clear your current changes. Consider saving first!",
+                                     NULL, ALLEGRO_MESSAGEBOX_WARN);
          }
 
          if (open_file_dialog())

@@ -25,7 +25,7 @@ t_cam cam;
 t_map *map = NULL;
 t_player player;
 
-bool key[10] = {false};
+bool key[11] = {false};
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
