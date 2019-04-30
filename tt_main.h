@@ -3,7 +3,7 @@
 
 #include "jt_util.h"
 
-#define VIEWPORT_WIDTH 288
+#define VIEWPORT_WIDTH 208
 #define VIEWPORT_HEIGHT 160
 #define VIEWPORT_X 16
 #define VIEWPORT_Y 16
