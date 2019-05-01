@@ -229,7 +229,7 @@ int init_game()
 
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 
-   al_reserve_samples(3);
+   al_reserve_samples(1);
    snd_pickup = al_load_sample("data/sound/pickup.ogg");
    snd_fall = al_load_sample("data/sound/fall.ogg");
    snd_jump = al_load_sample("data/sound/jump.ogg");
@@ -255,7 +255,7 @@ int init_game()
    al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
    al_set_sample_instance_gain(music_instance, 0.4);
    al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
-   al_play_sample_instance(music_instance);
+   //al_play_sample_instance(music_instance);
   //al_play_sample(music, 0.25, 0, 1, ALLEGRO_PLAYMODE_LOOP, NULL);
    jlog("Game initialized.");
    return 0;
@@ -499,6 +499,7 @@ void update_player()
    {
       if (player.vel_y > 0) landed = true; //So we can make a landing sound.
       player.on_ground = true;
+      player.jump_pressed = false;
       player.vel_y = 0;
 
    }
@@ -570,7 +571,7 @@ void update_player()
    }
    if (!key[KEY_LCTRL])
    {
-      player.jump_pressed = false;
+      //player.jump_pressed = false;
       if (player.vel_y < 0) player.vel_y /= 2;
    }
 
@@ -604,15 +605,23 @@ void update_player()
    {
       player.y++;
       player.vel_y = 0;
-      al_stop_samples();
-      al_play_sample(snd_hithead, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+      if(!player.on_ground)
+      {
+         al_stop_samples();
+         al_play_sample(snd_hithead, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+      }
+
    }
    while (is_ground(map, player.x + x2, player.y))
    {
       player.y++;
       player.vel_y = 0;
-      al_stop_samples();
-      al_play_sample(snd_hithead, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+      if(!player.on_ground)
+      {
+         al_stop_samples();
+         al_play_sample(snd_hithead, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+      }
+
    }
 
    /* Check for items
