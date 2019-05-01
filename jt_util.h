@@ -2,7 +2,7 @@
 #define JT_UTIL_H
 
 //Macro for jlog(). Change this to a file name of your choosing
-#define LOGFILE_NAME "ttedit.log"
+#define LOGFILE_NAME "tally.log"
 
 //Macros for the convert_index_to_pixel_xy() function
 #define RETURN_X 0
