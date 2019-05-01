@@ -251,11 +251,12 @@ int init_game()
 
    al_flip_display();
 
+   //Play music
    music_instance = al_create_sample_instance(music);
    al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
    al_set_sample_instance_gain(music_instance, 0.4);
    al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
-   //al_play_sample_instance(music_instance);
+   al_play_sample_instance(music_instance);
   //al_play_sample(music, 0.25, 0, 1, ALLEGRO_PLAYMODE_LOOP, NULL);
    jlog("Game initialized.");
    return 0;
