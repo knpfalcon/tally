@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
 
@@ -45,6 +47,19 @@ ALLEGRO_BITMAP *stat_border = NULL;
 //Bitmaps that get drawn to
 ALLEGRO_BITMAP *view_port = NULL;
 ALLEGRO_BITMAP *game = NULL;
+
+//Sounds
+ALLEGRO_SAMPLE *snd_pickup = NULL;
+ALLEGRO_SAMPLE *snd_fall = NULL;
+ALLEGRO_SAMPLE *snd_jump = NULL;
+ALLEGRO_SAMPLE *snd_land = NULL;
+ALLEGRO_SAMPLE *snd_hithead = NULL;
+
+ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
+
+//Music
+ALLEGRO_SAMPLE *music = NULL;
+ALLEGRO_SAMPLE_INSTANCE *music_instance;
 
 
 /*************************************************
@@ -131,6 +146,19 @@ int init_game()
    }
    jlog("Primitives add-on initialized.");
 
+   //Audio
+   if (!al_install_audio())
+   {
+      jlog("Failed to install audio!");
+      return -1;
+   }
+   if (!al_init_acodec_addon())
+   {
+      jlog("Failed to initialize audio codec addon!");
+      return -1;
+   }
+   jlog("Audio initialized.");
+
    //Create Display
    //al_set_new_display_flags(ALLEGRO_OPENGL);
    display = al_create_display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -201,6 +229,15 @@ int init_game()
 
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 
+   al_reserve_samples(3);
+   snd_pickup = al_load_sample("data/sound/pickup.ogg");
+   snd_fall = al_load_sample("data/sound/fall.ogg");
+   snd_jump = al_load_sample("data/sound/jump.ogg");
+   snd_land = al_load_sample("data/sound/land.ogg");
+   snd_hithead = al_load_sample("data/sound/hithead.ogg");
+
+   music = al_load_sample("data/music/music1.ogg");
+
    //Create the game bitmap that needs to be stretched to display
    game = al_create_bitmap(320, 200);
 
@@ -214,6 +251,12 @@ int init_game()
 
    al_flip_display();
 
+   music_instance = al_create_sample_instance(music);
+   al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
+   al_set_sample_instance_gain(music_instance, 0.4);
+   al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
+   al_play_sample_instance(music_instance);
+  //al_play_sample(music, 0.25, 0, 1, ALLEGRO_PLAYMODE_LOOP, NULL);
    jlog("Game initialized.");
    return 0;
 }
@@ -365,10 +408,12 @@ void update_player()
 
    int old_x = player.x;
    int x1, x2, x3;
-   int tx, ty, ty2;
+   int tx, ty, ty2, ty3;
    t_map_pos *mp;
    t_map_pos *mp2;
+   t_map_pos *mp3;
    bool landed = false;
+   bool jump_snd = false;
 
    //Horizontal Movement
    if (key[KEY_RIGHT] && !key[KEY_LEFT])
@@ -455,7 +500,7 @@ void update_player()
       if (player.vel_y > 0) landed = true; //So we can make a landing sound.
       player.on_ground = true;
       player.vel_y = 0;
-      player.jump_pressed = false;
+
    }
 
    if (landed == true)
@@ -463,7 +508,8 @@ void update_player()
       if (is_ground(map, player.x + x1, player.y + 32))
       {
          landed = false;
-         //Player landing sound.
+         al_stop_samples();
+         al_play_sample(snd_land, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
          #ifdef DEBUG
             printf("TALLY SMACKED THE GROUND!\n");
          #endif // DEBUG
@@ -479,7 +525,9 @@ void update_player()
       //Play fall off ledge sound
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
-      //player.vel_y = -24;
+      player.vel_y += 24;
+      al_stop_samples();
+      al_play_sample(snd_fall, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
       #ifdef DEBUG
          printf("OOPS!\n");
       #endif // DEBUG
@@ -512,11 +560,17 @@ void update_player()
       simulating gravity. */
    if (key[KEY_LCTRL] && player.on_ground && !player.jump_pressed)
    {
+      if (!is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
+      {
+         al_stop_samples();
+         al_play_sample(snd_jump, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, snd_jump_id);
+      }
       player.vel_y = -48;
       player.jump_pressed = true;
    }
    if (!key[KEY_LCTRL])
    {
+      player.jump_pressed = false;
       if (player.vel_y < 0) player.vel_y /= 2;
    }
 
@@ -544,63 +598,78 @@ void update_player()
       player.on_ground = true;
    }
 
-   /* Check Floor
+   /* Check Ceiling
       Same as above except at the players top. */
    while (is_ground(map, player.x + x1, player.y))
    {
       player.y++;
       player.vel_y = 0;
+      al_stop_samples();
+      al_play_sample(snd_hithead, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
    }
    while (is_ground(map, player.x + x2, player.y))
    {
       player.y++;
       player.vel_y = 0;
+      al_stop_samples();
+      al_play_sample(snd_hithead, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
    }
 
    /* Check for items
    Here we check if the player is over an item */
    tx = player.x + (player.direction ? 14 : 19);
-   /* There are two of each of these so I can check
-      Tally's head AND feet. */
+   /* There are three of each of these so I can check
+      Tally's head, feet, and middle. */
    ty = (player.y + 1);
    ty2 = (player.y + 31);
+   ty3 = (player.y + 16);
    mp = get_map_position(map, tx, ty);
    mp2 = get_map_position(map, tx, ty2);
+   mp3 = get_map_position(map, tx, ty3);
 
    if (mp != NULL && mp2 != NULL)
    {
-      if (mp->item > 0 || mp2->item > 0)
+      if (mp->item > 0 || mp2->item > 0 || mp3->item > 0)
       {
+         al_stop_samples();
+         al_play_sample(snd_pickup, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
          #ifdef DEBUG
             printf("Play Sound once!\n");
          #endif // DEBUG
          //Burger
-         if (mp->item == ITEM_BURGER) { mp->item = 0; player.score += 25; }
-         if (mp2->item == ITEM_BURGER) { mp2->item = 0; player.score += 25; }
+         if (mp->item == ITEM_BURGER) { mp->item = 0; player.score += 10; }
+         if (mp2->item == ITEM_BURGER) { mp2->item = 0; player.score += 10; }
+         if (mp3->item == ITEM_BURGER) { mp3->item = 0; player.score += 10; }
 
          //Disk
-         if (mp->item == ITEM_DISK) { mp->item = 0; player.score += 50; }
-         if (mp2->item == ITEM_DISK) { mp2->item = 0; player.score += 50; }
+         if (mp->item == ITEM_DISK) { mp->item = 0; player.score += 20; }
+         if (mp2->item == ITEM_DISK) { mp2->item = 0; player.score += 20; }
+         if (mp3->item == ITEM_DISK) { mp3->item = 0; player.score += 20; }
 
          //VHS
-         if (mp->item == ITEM_VHS) { mp->item = 0; player.score += 50; }
-         if (mp2->item == ITEM_VHS) { mp2->item = 0; player.score += 50; }
+         if (mp->item == ITEM_VHS) { mp->item = 0; player.score += 20; }
+         if (mp2->item == ITEM_VHS) { mp2->item = 0; player.score += 20; }
+         if (mp3->item == ITEM_VHS) { mp3->item = 0; player.score += 20; }
 
          //Screw
-         if (mp->item == ITEM_SCREW) { mp->item = 0; player.score += 25;}
-         if (mp2->item == ITEM_SCREW) { mp2->item = 0; player.score += 25; }
+         if (mp->item == ITEM_SCREW) { mp->item = 0; player.score += 10;}
+         if (mp2->item == ITEM_SCREW) { mp2->item = 0; player.score += 10; }
+         if (mp3->item == ITEM_SCREW) { mp3->item = 0; player.score += 10; }
 
          //Underwear
-         if (mp->item == ITEM_UNDERWEAR) { mp->item = 0; player.score += 25; }
-         if (mp2->item == ITEM_UNDERWEAR) { mp2->item = 0; player.score += 25; }
+         if (mp->item == ITEM_UNDERWEAR) { mp->item = 0; player.score += 20; }
+         if (mp2->item == ITEM_UNDERWEAR) { mp2->item = 0; player.score += 20; }
+         if (mp3->item == ITEM_UNDERWEAR) { mp3->item = 0; player.score += 20; }
 
          // Health
          if (mp->item == ITEM_HEALTH) { mp->item = 0; player.health = 8; }
          if (mp2->item == ITEM_HEALTH) { mp2->item = 0; player.health = 8; }
+         if (mp3->item == ITEM_HEALTH) { mp3->item = 0; player.health = 8; }
+
+         printf("Score: %d\n", player.score);
 
       }
    }
-
    //printf("player.tate: %d\n", player.state);
    //printf("player.vel_y: %d\n", player.vel_y);
    //printf("player.x: %d\n", player.x);
