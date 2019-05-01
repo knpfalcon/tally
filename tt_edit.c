@@ -710,8 +710,8 @@ void check_key_up(ALLEGRO_EVENT *ev)
          cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
          break;
       case ALLEGRO_KEY_2:
-         if (item_selected < 6) item_selected++;
-         if (item_selected == 6) item_selected = 1;
+         if (item_selected < 7) item_selected++;
+         if (item_selected == 7) item_selected = 1;
          break;
       case ALLEGRO_KEY_1:
          if (item_selected > 0) item_selected--;
