@@ -641,11 +641,6 @@ void update_player()
    {
       if (mp->item > 0 || mp2->item > 0 || mp3->item > 0)
       {
-         al_stop_samples();
-         al_play_sample(snd_pickup, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
-         #ifdef DEBUG
-            printf("Play Sound once!\n");
-         #endif // DEBUG
          //Burger
          if (mp->item == ITEM_BURGER) { mp->item = 0; player.score += 10; }
          if (mp2->item == ITEM_BURGER) { mp2->item = 0; player.score += 10; }
@@ -672,12 +667,21 @@ void update_player()
          if (mp3->item == ITEM_UNDERWEAR) { mp3->item = 0; player.score += 20; }
 
          // Health
-         if (mp->item == ITEM_HEALTH) { mp->item = 0; player.health = 8; }
-         if (mp2->item == ITEM_HEALTH) { mp2->item = 0; player.health = 8; }
-         if (mp3->item == ITEM_HEALTH) { mp3->item = 0; player.health = 8; }
-
-         printf("Score: %d\n", player.score);
-
+         if (player.health < 8)
+         {
+            al_stop_samples();
+            al_play_sample(snd_pickup, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL); //Play health south
+            if (mp->item == ITEM_HEALTH) { mp->item = 0; player.health = 8; jlog("Health: %d", player.health);}
+            if (mp2->item == ITEM_HEALTH) { mp2->item = 0; player.health = 8; jlog("Health: %d", player.health);}
+            if (mp3->item == ITEM_HEALTH) { mp3->item = 0; player.health = 8; jlog("Health: %d", player.health);}
+         }
+         // Not-Health
+         if (mp->item != ITEM_HEALTH && mp2->item != ITEM_HEALTH && mp3->item != ITEM_HEALTH)
+         {
+            al_stop_samples();
+            al_play_sample(snd_pickup, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+            jlog("Score: %d", player.score);
+         }
       }
    }
    //printf("player.tate: %d\n", player.state);
