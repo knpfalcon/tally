@@ -22,9 +22,9 @@ typedef struct t_cam
    float look_ahead;
 } t_cam;
 
-enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_N,KEY_PAD_PLUS, KEY_PAD_MINUS, KEY_E, KEY_R};
+enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_Z, KEY_N, KEY_PAD_PLUS, KEY_PAD_MINUS, KEY_E, KEY_R};
 
-extern bool key[11];
+extern bool key[12];
 
 
 #endif // SP_MAIN_H

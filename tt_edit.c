@@ -27,13 +27,14 @@ t_cam cam;
 t_mouse sp_mouse;
 t_map *map = NULL;
 t_player player;
+unsigned char item_frame = 0;
 
 t_conditional cond = {false, false, false, false};
 
 const char *filename;
 
 //enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_N,KEY_PAD_PLUS, KEY_PAD_MINUS};
-bool key[11] = {false};
+bool key[12] = {false};
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -379,7 +380,7 @@ void update_screen()
    {
       if (map != NULL)
       {
-         draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map);
+         draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
 
          draw_player_start();
       }
@@ -710,12 +711,12 @@ void check_key_up(ALLEGRO_EVENT *ev)
          cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
          break;
       case ALLEGRO_KEY_2:
-         if (item_selected < 7) item_selected++;
-         if (item_selected == 7) item_selected = 1;
+         if (item_selected < 17) item_selected++;
+         if (item_selected == 17) item_selected = 1;
          break;
       case ALLEGRO_KEY_1:
          if (item_selected > 0) item_selected--;
-         if (item_selected == 0) item_selected = 6;
+         if (item_selected == 0) item_selected = 17;
          break;
       case ALLEGRO_KEY_E:
          key[KEY_E] = false;

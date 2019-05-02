@@ -162,7 +162,7 @@ t_map *load_map(const char *fname)
 /************************************************
  * Draws only seen tiles/bg to view port        *
  ************************************************/
-void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *item_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m)
+void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *item_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m, unsigned char *item_frame)
 {
    al_set_target_bitmap(d_bmp);
 
@@ -233,7 +233,7 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
             {
                al_draw_bitmap_region(item_sheet,
                                      (m->position[x + y * MAP_WIDTH].item -1) * TILE_SIZE,
-                                     0,
+                                     *item_frame * TILE_SIZE,
                                      TILE_SIZE,
                                      TILE_SIZE,
                                      (x * TILE_SIZE) - c->x,

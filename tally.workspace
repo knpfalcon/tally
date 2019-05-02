@@ -3,6 +3,5 @@
 	<Workspace title="Workspace">
 		<Project filename="tt_edit.cbp" />
 		<Project filename="tally.cbp" />
-		<Project filename="../dpsource/Deluxe_Pacman_2 .cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>

@@ -10,7 +10,8 @@
 #define ITEM_VHS        3
 #define ITEM_SCREW      4
 #define ITEM_UNDERWEAR  5
-#define ITEM_HEALTH     6
+#define ITEM_WRENCH     6
+#define ITEM_HEALTH     10
 
 // This is a position on the map
 typedef struct t_map_pos
@@ -36,7 +37,7 @@ t_map *create_empty_map();
 void destroy_map(t_map *m);
 bool save_map(t_map *m, ALLEGRO_DISPLAY *display);
 t_map *load_map(const char *filename);
-void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *item_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m);
+void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *item_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m, unsigned char *item_frame);
 t_map_pos *get_map_position(t_map *m, int x, int y);
 
 #endif // SP_MAP_H

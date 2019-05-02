@@ -27,7 +27,10 @@ t_cam cam;
 t_map *map = NULL;
 t_player player;
 
-bool key[11] = {false};
+unsigned char item_frame = 0;
+unsigned char frame_skip = 0;
+
+bool key[12] = {false};
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -49,6 +52,7 @@ ALLEGRO_BITMAP *view_port = NULL;
 ALLEGRO_BITMAP *game = NULL;
 
 //Sounds
+float sfx_volume = 1.0;
 ALLEGRO_SAMPLE *snd_pickup = NULL;
 ALLEGRO_SAMPLE *snd_fall = NULL;
 ALLEGRO_SAMPLE *snd_jump = NULL;
@@ -58,6 +62,7 @@ ALLEGRO_SAMPLE *snd_hithead = NULL;
 ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 
 //Music
+float mus_volume = 0.5;
 ALLEGRO_SAMPLE *music = NULL;
 ALLEGRO_SAMPLE_INSTANCE *music_instance;
 
@@ -236,7 +241,7 @@ int init_game()
    snd_land = al_load_sample("data/sound/land.ogg");
    snd_hithead = al_load_sample("data/sound/hithead.ogg");
 
-   music = al_load_sample("data/music/music1.ogg");
+   music = al_load_sample("data/music/music0.ogg");
 
    //Create the game bitmap that needs to be stretched to display
    game = al_create_bitmap(320, 200);
@@ -251,24 +256,29 @@ int init_game()
 
    al_flip_display();
 
-   //Play music
+   //Play music (Make this into a function at some point.
    music_instance = al_create_sample_instance(music);
    al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
-   al_set_sample_instance_gain(music_instance, 0.4);
+   al_set_sample_instance_gain(music_instance, mus_volume);
    al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
    al_play_sample_instance(music_instance);
-  //al_play_sample(music, 0.25, 0, 1, ALLEGRO_PLAYMODE_LOOP, NULL);
+
    jlog("Game initialized.");
    return 0;
 }
 
+void play_sound(ALLEGRO_SAMPLE *s)
+{
+   al_stop_samples();
+   al_play_sample(s, sfx_volume, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+}
 /************************************************
  * The drawing function, called at redraw       *
  ************************************************/
 void update_screen()
 {
 
-   draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map);
+   draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
    draw_player(view_port, &cam, &player, player.direction);
    show_player_hotspot(view_port, &cam, &player);
 
@@ -350,6 +360,9 @@ void check_key_down(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_LSHIFT:
          key[KEY_LSHIFT] = true;
          break;
+      case ALLEGRO_KEY_Z:
+         key[KEY_Z] = true;
+         break;
    }
 }
 
@@ -389,6 +402,9 @@ void check_key_up(ALLEGRO_EVENT *ev)
          break;
       case ALLEGRO_KEY_LSHIFT:
          key[KEY_LSHIFT] = false;
+         break;
+      case ALLEGRO_KEY_Z:
+         key[KEY_Z] = false;
          break;
       case ALLEGRO_KEY_ESCAPE:
          program_done = true;
@@ -510,8 +526,7 @@ void update_player()
       if (is_ground(map, player.x + x1, player.y + 32))
       {
          landed = false;
-         al_stop_samples();
-         al_play_sample(snd_land, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+         play_sound(snd_land);
          #ifdef DEBUG
             printf("TALLY SMACKED THE GROUND!\n");
          #endif // DEBUG
@@ -525,11 +540,11 @@ void update_player()
    if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && !key[KEY_LCTRL])
    {
       //Play fall off ledge sound
+      player.state = FALLING;
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
       player.vel_y += 24;
-      al_stop_samples();
-      al_play_sample(snd_fall, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+      play_sound(snd_fall);
       #ifdef DEBUG
          printf("OOPS!\n");
       #endif // DEBUG
@@ -564,8 +579,7 @@ void update_player()
    {
       if (!is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
       {
-         al_stop_samples();
-         al_play_sample(snd_jump, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, snd_jump_id);
+         play_sound(snd_jump);
       }
       player.vel_y = -48;
       player.jump_pressed = true;
@@ -575,6 +589,13 @@ void update_player()
       //player.jump_pressed = false;
       if (player.vel_y < 0) player.vel_y /= 2;
    }
+
+   #ifdef DEBUG
+   if (key[KEY_Z])
+   {
+      player.vel_y = -8;
+   }
+   #endif // DEBUG
 
    /* Apply vertical force
       This is where the player's Y position is changed
@@ -608,8 +629,7 @@ void update_player()
       player.vel_y = 0;
       if(!player.on_ground)
       {
-         al_stop_samples();
-         al_play_sample(snd_hithead, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+         play_sound(snd_hithead);
       }
 
    }
@@ -619,8 +639,7 @@ void update_player()
       player.vel_y = 0;
       if(!player.on_ground)
       {
-         al_stop_samples();
-         al_play_sample(snd_hithead, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+         play_sound(snd_hithead);
       }
 
    }
@@ -642,9 +661,9 @@ void update_player()
       if (mp->item > 0 || mp2->item > 0 || mp3->item > 0)
       {
          //Burger
-         if (mp->item == ITEM_BURGER) { mp->item = 0; player.score += 10; }
-         if (mp2->item == ITEM_BURGER) { mp2->item = 0; player.score += 10; }
-         if (mp3->item == ITEM_BURGER) { mp3->item = 0; player.score += 10; }
+         if (mp->item == ITEM_BURGER) { mp->item = 0; player.score += 10; if (player.health < 8) player.health++; jlog("Health: %d", player.health);}
+         if (mp2->item == ITEM_BURGER) { mp2->item = 0; player.score += 10; if (player.health < 8) player.health++; jlog("Health: %d", player.health);}
+         if (mp3->item == ITEM_BURGER) { mp3->item = 0; player.score += 10; if (player.health < 8) player.health++; jlog("Health: %d", player.health);}
 
          //Disk
          if (mp->item == ITEM_DISK) { mp->item = 0; player.score += 20; }
@@ -666,25 +685,25 @@ void update_player()
          if (mp2->item == ITEM_UNDERWEAR) { mp2->item = 0; player.score += 20; }
          if (mp3->item == ITEM_UNDERWEAR) { mp3->item = 0; player.score += 20; }
 
+         //Underwear
+         if (mp->item == ITEM_WRENCH) { mp->item = 0; player.score += 50; }
+         if (mp2->item == ITEM_WRENCH) { mp2->item = 0; player.score += 50; }
+         if (mp3->item == ITEM_WRENCH) { mp3->item = 0; player.score += 50; }
+
          // Health
-         if (player.health < 8)
-         {
-            al_stop_samples();
-            al_play_sample(snd_pickup, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL); //Play health south
-            if (mp->item == ITEM_HEALTH) { mp->item = 0; player.health = 8; jlog("Health: %d", player.health);}
-            if (mp2->item == ITEM_HEALTH) { mp2->item = 0; player.health = 8; jlog("Health: %d", player.health);}
-            if (mp3->item == ITEM_HEALTH) { mp3->item = 0; player.health = 8; jlog("Health: %d", player.health);}
-         }
+         if (mp2->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp2->item = 0; jlog("Health: %d", player.health); play_sound(snd_pickup);}
+         if (mp->item == ITEM_HEALTH && player.health < 8) { player.health = 8;mp->item = 0;  jlog("Health: %d", player.health); play_sound(snd_pickup); }
+         if (mp3->item == ITEM_HEALTH && player.health < 8) { player.health = 8;mp3->item = 0; jlog("Health: %d", player.health); play_sound(snd_pickup);}
+
          // Not-Health
          if (mp->item != ITEM_HEALTH && mp2->item != ITEM_HEALTH && mp3->item != ITEM_HEALTH)
          {
-            al_stop_samples();
-            al_play_sample(snd_pickup, 1, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+            play_sound(snd_pickup);
             jlog("Score: %d", player.score);
          }
       }
    }
-   //printf("player.tate: %d\n", player.state);
+   //printf("player.state: %d\n", player.state);
    //printf("player.vel_y: %d\n", player.vel_y);
    //printf("player.x: %d\n", player.x);
 }
@@ -699,7 +718,14 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
       /**** Player movement ****/
       update_player();
    }
-
+   //Animation
+   if (ev->timer.source == ANIM_TIMER)
+   {
+      frame_skip++;
+      if (frame_skip == 2) frame_skip = 0;
+      animate_player(&player);
+      if (frame_skip == 0) item_frame ^= 1;
+   }
    //Frames
    if (ev->timer.source == FPS_TIMER)
    {
@@ -719,11 +745,7 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
 //         if (cam.look_ahead > 0) cam.look_ahead -= 1;
 //      }
    }
-   //Animation
-   if (ev->timer.source == ANIM_TIMER)
-   {
-      animate_player(&player);
-   }
+
 
 
 
