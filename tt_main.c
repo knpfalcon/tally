@@ -234,6 +234,7 @@ int init_game()
 
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 
+   //Load sounds
    al_reserve_samples(1);
    snd_pickup = al_load_sample("data/sound/pickup.ogg");
    snd_fall = al_load_sample("data/sound/fall.ogg");
@@ -245,6 +246,9 @@ int init_game()
 
    //Create the game bitmap that needs to be stretched to display
    game = al_create_bitmap(320, 200);
+
+   //Load font
+   font = al_load_bitmap_font("data/fonts/font.png");
 
    al_register_event_source(event_queue, al_get_display_event_source(display));
    al_register_event_source(event_queue, al_get_timer_event_source(FPS_TIMER));
@@ -285,6 +289,7 @@ void update_screen()
    //Draw view_port to game, then draw game scaled to display.
    al_set_target_bitmap(game);
    al_draw_bitmap(view_port, VIEWPORT_X, VIEWPORT_Y, 0);
+   al_draw_textf(font, al_map_rgb(255,255,255), 303, 18, ALLEGRO_ALIGN_RIGHT, "%010d", player.score);
    al_set_target_backbuffer(display);
    al_draw_scaled_bitmap(game,
                          0,0,
@@ -646,7 +651,7 @@ void update_player()
 
    /* Check for items
    Here we check if the player is over an item */
-   tx = player.x + (player.direction ? 14 : 19);
+   tx = player.x + (player.direction ? 14 : 18);
    /* There are three of each of these so I can check
       Tally's head, feet, and middle. */
    ty = (player.y + 1);
@@ -721,9 +726,14 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
    //Animation
    if (ev->timer.source == ANIM_TIMER)
    {
+      //This is so we can have some half-time animations.
       frame_skip++;
       if (frame_skip == 2) frame_skip = 0;
+
+      //Animate the player
       animate_player(&player);
+
+      //Toggle the item frame (there's only two)
       if (frame_skip == 0) item_frame ^= 1;
    }
    //Frames
