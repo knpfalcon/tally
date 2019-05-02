@@ -73,7 +73,6 @@ ALLEGRO_SAMPLE_INSTANCE *music_instance;
 int init_game()
 {
    player.cur_frame = 0;
-   player.speed = 30;
    player.state = STOPPED;
    player.vel_x = 4;
 
@@ -120,14 +119,6 @@ int init_game()
       jlog("Failed to create Animation timer!");
       return -1;
    }
-   player.timer = al_create_timer(1.0 / player.speed);
-   if(!player.timer)
-   {
-      jlog("Failed to create Player timer!");
-      return -1;
-   }
-   jlog("Player timer created.");
-
    if (!al_install_keyboard())
    {
       jlog("Failed to install keyboard!");
@@ -253,7 +244,6 @@ int init_game()
    al_register_event_source(event_queue, al_get_display_event_source(display));
    al_register_event_source(event_queue, al_get_timer_event_source(FPS_TIMER));
    al_register_event_source(event_queue, al_get_timer_event_source(ANIM_TIMER));
-   al_register_event_source(event_queue, al_get_timer_event_source(player.timer));
    al_register_event_source(event_queue, al_get_keyboard_event_source());
 
    al_clear_to_color(al_map_rgb(0, 0, 0));
@@ -718,28 +708,11 @@ void update_player()
  ************************************************/
 void check_timer_logic(ALLEGRO_EVENT *ev)
 {
-   if (ev->timer.source == player.timer)
-   {
-      /**** Player movement ****/
-      update_player();
-   }
-   //Animation
-   if (ev->timer.source == ANIM_TIMER)
-   {
-      //This is so we can have some half-time animations.
-      frame_skip++;
-      if (frame_skip == 2) frame_skip = 0;
-
-      //Animate the player
-      animate_player(&player);
-
-      //Toggle the item frame (there's only two)
-      if (frame_skip == 0) item_frame ^= 1;
-   }
    //Frames
    if (ev->timer.source == FPS_TIMER)
    {
 
+      update_player();
       //Camera Look-ahead
       if (key[KEY_LEFT] && !key[KEY_RIGHT])
       {
@@ -754,6 +727,22 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
 //         if (cam.look_ahead < 0) cam.look_ahead += 1;
 //         if (cam.look_ahead > 0) cam.look_ahead -= 1;
 //      }
+   }
+   //Animation
+   if (ev->timer.source == ANIM_TIMER)
+   {
+
+      //Animate the player
+      animate_player(&player);
+
+      //This is so we can have some half-time animations.
+      frame_skip++;
+      if (frame_skip == 3) frame_skip = 0;
+      if (frame_skip == 0)
+      {
+         //Toggle the item frame (there's only two)
+         item_frame ^= 1;
+      }
    }
 
 
@@ -838,8 +827,6 @@ int main(int argc, char **argv)
    jlog("FPS timer started.");
    al_start_timer(ANIM_TIMER);
    jlog("Animation timer started.");
-   al_start_timer(player.timer);
-   jlog("Player timer started.");
    while(!program_done)
    {
 

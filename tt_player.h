@@ -15,7 +15,7 @@ typedef struct t_player
    unsigned char direction;
    unsigned char state;
    ALLEGRO_TIMER *timer;
-   float speed;
+   //float speed;
    int vel_x;
    int vel_y;
    int right;
