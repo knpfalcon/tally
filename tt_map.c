@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_native_dialog.h>
 
 #include "tt_main.h"
@@ -143,7 +144,7 @@ t_map *load_map(const char *fname)
    }
    al_fread(fp, m, sizeof(t_map));
 
-   m->position = malloc(MAP_WIDTH * MAP_HEIGHT * sizeof(t_map_pos));
+   m->position = malloc( (MAP_WIDTH * MAP_HEIGHT) * sizeof(t_map_pos));
    if (m->position == NULL)
    {
       free(m);
@@ -155,6 +156,7 @@ t_map *load_map(const char *fname)
 
    jlog("Map Opened.");
    al_fclose(fp);
+
    return m;
 
 }
@@ -260,4 +262,29 @@ t_map_pos *get_map_position(t_map *m, int x, int y)
 
 
    return &m->position[x + y * MAP_WIDTH];
+}
+
+void draw_console_map(t_map *m, t_player *p, ALLEGRO_BITMAP *bmp)
+{
+   al_set_target_bitmap(bmp);
+   al_clear_to_color(al_map_rgb(0,0,0));
+
+   al_draw_circle( 1+ (p->x / TILE_SIZE) / 2, 1 + (p->y / TILE_SIZE) / 2, 5, al_map_rgb(0, 170, 0), 1);
+
+   for(int y = 0; y < MAP_HEIGHT; y++)
+   {
+      for(int x = 0; x < MAP_WIDTH; x++)
+      {
+         if (m->position[x + y * MAP_WIDTH].item > 0)
+         {
+            //draw items
+            al_draw_pixel( (x / 2), (y / 2), al_map_rgb(85, 255, 85));
+         }
+      }
+   }
+
+   //al_draw_pixel( 1+ (p->x / TILE_SIZE) / 2, 1 + (p->y / TILE_SIZE) / 2, al_map_rgb(0, 170, 0));
+
+   //al_draw_circle( 1+ (p->x / TILE_SIZE) / 2, 1 + (p->y / TILE_SIZE) / 2, 3, al_map_rgb(0, 170, 0), 1);
+
 }

@@ -26,7 +26,7 @@ const int DISPLAY_HEIGHT = 200 * DISPLAY_MULTIPLIER;
 
 t_cam cam;
 t_map *map = NULL;
-t_player player;
+t_player player = { .cur_frame = 0, .state = STOPPED, .vel_x = 4 };
 
 unsigned char item_frame = 0;
 
@@ -48,6 +48,7 @@ ALLEGRO_BITMAP *stat_border = NULL;
 
 //Bitmaps that get drawn to
 ALLEGRO_BITMAP *view_port = NULL;
+ALLEGRO_BITMAP *console_map = NULL;
 ALLEGRO_BITMAP *game = NULL;
 
 //Sounds
@@ -71,10 +72,6 @@ ALLEGRO_SAMPLE_INSTANCE *music_instance;
  *************************************************/
 int init_game()
 {
-   player.cur_frame = 0;
-   player.state = STOPPED;
-   player.vel_x = 4;
-
 
    //Initialize Allegro
    if(!al_init())
@@ -172,7 +169,6 @@ int init_game()
       jlog("Couldn't load border.png!");
       return -1;
    }
-
    al_lock_bitmap(stat_border, al_get_bitmap_format(stat_border), ALLEGRO_LOCK_READONLY);
 
    bg = al_load_bitmap("data/bg_1.png");
@@ -217,6 +213,7 @@ int init_game()
    }
 
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+   console_map = al_create_bitmap(64, 45);
 
    //Load sounds
    al_reserve_samples(1);
@@ -247,9 +244,11 @@ int init_game()
    al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
    al_set_sample_instance_gain(music_instance, mus_volume);
    al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
-   al_play_sample_instance(music_instance);
+   //al_play_sample_instance(music_instance);
 
    jlog("Game initialized.");
+
+   printf("%d", sizeof(t_map_pos));
    return 0;
 }
 
@@ -267,10 +266,12 @@ void update_screen()
    draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
    draw_player(view_port, &cam, &player, player.direction);
    show_player_hotspot(view_port, &cam, &player);
+   draw_console_map(map, &player, console_map);
 
    //Draw view_port to game, then draw game scaled to display.
    al_set_target_bitmap(game);
    al_draw_bitmap(view_port, VIEWPORT_X, VIEWPORT_Y, 0);
+   al_draw_bitmap(console_map, 238, 100, 0);
    al_draw_textf(font, al_map_rgb(255,255,255), 303, 18, ALLEGRO_ALIGN_RIGHT, "%010d", player.score);
    al_set_target_backbuffer(display);
    al_draw_scaled_bitmap(game,
@@ -469,7 +470,6 @@ void update_player()
          player.x3 = x3;
       #endif // DEBUG
    }
-
 
    /* Horizontal Tile Collision
       Basically checks three points in the player's

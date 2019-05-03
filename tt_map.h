@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <allegro5/allegro.h>
 #include "tt_main.h"
+#include "tt_player.h"
 
 #define ITEM_BURGER     1
 #define ITEM_DISK       2
@@ -39,5 +40,6 @@ bool save_map(t_map *m, ALLEGRO_DISPLAY *display);
 t_map *load_map(const char *filename);
 void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *item_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m, unsigned char *item_frame);
 t_map_pos *get_map_position(t_map *m, int x, int y);
+void draw_console_map(t_map *m, t_player *p, ALLEGRO_BITMAP *bmp);
 
 #endif // SP_MAP_H
