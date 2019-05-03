@@ -16,7 +16,8 @@
 bool program_done = false;
 
 const float FPS = 30;
-const float ANIM_SPEED = 10;
+int frame_speed = ANIMATION_SPEED;
+int halftime_frame_speed = ANIMATION_SPEED * 2;
 
 bool redraw = true;
 
@@ -28,14 +29,12 @@ t_map *map = NULL;
 t_player player;
 
 unsigned char item_frame = 0;
-unsigned char frame_skip = 0;
 
 bool key[12] = {false};
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
 ALLEGRO_TIMER *FPS_TIMER = NULL;
-ALLEGRO_TIMER *ANIM_TIMER = NULL;
 ALLEGRO_MOUSE_STATE mouse;
 
 ALLEGRO_FONT *font = NULL;
@@ -113,12 +112,6 @@ int init_game()
    }
    jlog("FPS timer created.");
 
-   ANIM_TIMER = al_create_timer(1.0 / ANIM_SPEED);
-   if(!ANIM_TIMER)
-   {
-      jlog("Failed to create Animation timer!");
-      return -1;
-   }
    if (!al_install_keyboard())
    {
       jlog("Failed to install keyboard!");
@@ -243,7 +236,6 @@ int init_game()
 
    al_register_event_source(event_queue, al_get_display_event_source(display));
    al_register_event_source(event_queue, al_get_timer_event_source(FPS_TIMER));
-   al_register_event_source(event_queue, al_get_timer_event_source(ANIM_TIMER));
    al_register_event_source(event_queue, al_get_keyboard_event_source());
 
    al_clear_to_color(al_map_rgb(0, 0, 0));
@@ -711,8 +703,14 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
    //Frames
    if (ev->timer.source == FPS_TIMER)
    {
+      frame_speed--; //This eliminates the need for an animation timer.
+      halftime_frame_speed--; //This is for 2 frame animations like for blinking items
 
       update_player();
+      animate_player(&player, &frame_speed);
+
+      if (halftime_frame_speed == 0) { item_frame ^= 1; halftime_frame_speed = ANIMATION_SPEED * 2; }
+
       //Camera Look-ahead
       if (key[KEY_LEFT] && !key[KEY_RIGHT])
       {
@@ -722,32 +720,7 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
       {
          if (cam.look_ahead < 24) cam.look_ahead += 1;
       }
-//      if (!key[KEY_RIGHT] && !key[KEY_LEFT])
-//      {
-//         if (cam.look_ahead < 0) cam.look_ahead += 1;
-//         if (cam.look_ahead > 0) cam.look_ahead -= 1;
-//      }
    }
-   //Animation
-   if (ev->timer.source == ANIM_TIMER)
-   {
-
-      //Animate the player
-      animate_player(&player);
-
-      //This is so we can have some half-time animations.
-      frame_skip++;
-      if (frame_skip == 3) frame_skip = 0;
-      if (frame_skip == 0)
-      {
-         //Toggle the item frame (there's only two)
-         item_frame ^= 1;
-      }
-   }
-
-
-
-
 
    check_cam();
 }
@@ -778,12 +751,6 @@ void clean_up()
       al_destroy_timer(FPS_TIMER);
       FPS_TIMER = NULL;
       jlog("FPS_TIMER destroyed.");
-   }
-
-   if(ANIM_TIMER) {
-      al_destroy_timer(ANIM_TIMER);
-      ANIM_TIMER = NULL;
-      jlog("Animation timer destroyed.");
    }
 
    al_destroy_display(display);
@@ -825,8 +792,7 @@ int main(int argc, char **argv)
 
    al_start_timer(FPS_TIMER);
    jlog("FPS timer started.");
-   al_start_timer(ANIM_TIMER);
-   jlog("Animation timer started.");
+
    while(!program_done)
    {
 

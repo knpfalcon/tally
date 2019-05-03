@@ -22,7 +22,12 @@ void draw_player(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p, unsigned char direc
    #endif // DEBUG
 }
 
-void animate_player(t_player *p)
+/* Animating the player
+   Instantly change from to the right spot, but
+   only time the speed if there's more than one frame.
+   This is so we can instantly change the frame, but
+   time the animation. */
+void animate_player(t_player *p, int *speed)
 {
    if (p->state == JUMPING)
    {
@@ -39,13 +44,16 @@ void animate_player(t_player *p)
       if (p->cur_frame > 4) p->cur_frame = 2;
       if (p->cur_frame < 5)
       {
-         p->cur_frame++;
+         if (*speed <= 0)
+         {
+            *speed = ANIMATION_SPEED;
+            p->cur_frame++;
+         }
       }
       if (p->cur_frame == 5)
       {
          p->cur_frame = 1;
       }
-
    }
    if (p->state == STOPPED)
    {

@@ -15,6 +15,8 @@
 
 #define DISPLAY_MULTIPLIER 6
 
+#define ANIMATION_SPEED 3
+
 typedef struct t_cam
 {
    float x;

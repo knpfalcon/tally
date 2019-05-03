@@ -36,6 +36,6 @@ enum player_state {STOPPED = 0, WALKING = 1, JUMPING = 2, FALLING = 3};
 enum direction {RIGHT = 0, LEFT = 1};
 
 void draw_player(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p, unsigned char direction);
-void animate_player(t_player *p);
+void animate_player(t_player *p, int *speed);
 void show_player_hotspot(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p);
 #endif // SP_PLAYER_H
