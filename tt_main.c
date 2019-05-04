@@ -750,7 +750,11 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
 void clean_up()
 {
    destroy_map(map);
+   map = NULL;
+
    destroy_item_afterfx(item_fx);
+   item_fx = NULL;
+
    al_unlock_bitmap(tile_sheet);
    al_unlock_bitmap(item_sheet);
    al_unlock_bitmap(bg);
