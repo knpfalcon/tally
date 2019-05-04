@@ -11,7 +11,8 @@
 #define ITEM_VHS        3
 #define ITEM_SCREW      4
 #define ITEM_UNDERWEAR  5
-#define ITEM_WRENCH     6
+#define ITEM_PLIERS     6
+#define ITEM_WRENCH     7
 #define ITEM_HEALTH     10
 
 // This is a position on the map
@@ -21,6 +22,7 @@ typedef struct t_map_pos
    unsigned char tile;  //if empty_tile is false. What tile to use from a tile sheet? 0-255.
    unsigned char thing; //Does a thing reside in this slot? If so, what type? (Enemy, Door, etc.)
    unsigned char item;  //Is there an item in this slot? If so, What type? (Collectables, keys, etc.)
+   int item_index;      //This is for the item after effects index
 } t_map_pos;
 
 //This is the map struct

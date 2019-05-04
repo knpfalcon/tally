@@ -70,3 +70,4 @@ void show_player_hotspot(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p)
    al_unlock_bitmap(bmp);
 }
 
+void add_score(int amount);

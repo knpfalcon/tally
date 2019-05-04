@@ -12,6 +12,7 @@
 #include "tt_map.h"
 #include "tt_player.h"
 #include "tt_collision.h"
+#include "tt_items.h"
 
 bool program_done = false;
 
@@ -27,8 +28,10 @@ const int DISPLAY_HEIGHT = 200 * DISPLAY_MULTIPLIER;
 t_cam cam;
 t_map *map = NULL;
 t_player player = { .cur_frame = 0, .state = STOPPED, .vel_x = 4 };
+t_item_afterfx *item_fx = NULL;
 
 unsigned char item_frame = 0;
+unsigned char item_afterfx_frame = 0;
 
 bool key[12] = {false};
 
@@ -44,6 +47,7 @@ ALLEGRO_BITMAP *tile_sheet = NULL;
 ALLEGRO_BITMAP *item_sheet = NULL;
 ALLEGRO_BITMAP *bg = NULL;
 ALLEGRO_BITMAP *stat_border = NULL;
+ALLEGRO_BITMAP *item_fx_sheet = NULL;
 //ALLEGRO_BITMAP *player_start = NULL;
 
 //Bitmaps that get drawn to
@@ -212,6 +216,10 @@ int init_game()
       jlog("Player frame %d created and locked.", j);
    }
 
+   item_fx_sheet = al_load_bitmap("data/item_score.png");
+   if (item_fx_sheet == NULL) { jlog("Couldn't load item_score.png"); return -1; }
+   al_lock_bitmap(item_fx_sheet, al_get_bitmap_format(item_fx_sheet), ALLEGRO_LOCK_READONLY);
+
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
    console_map = al_create_bitmap(64, 45);
 
@@ -223,7 +231,7 @@ int init_game()
    snd_land = al_load_sample("data/sound/land.ogg");
    snd_hithead = al_load_sample("data/sound/hithead.ogg");
 
-   music = al_load_sample("data/music/music0.ogg");
+   music = al_load_sample("data/music/music1.ogg");
 
    //Create the game bitmap that needs to be stretched to display
    game = al_create_bitmap(320, 200);
@@ -244,7 +252,7 @@ int init_game()
    al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
    al_set_sample_instance_gain(music_instance, mus_volume);
    al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
-   //al_play_sample_instance(music_instance);
+   al_play_sample_instance(music_instance);
 
    jlog("Game initialized.");
 
@@ -265,6 +273,7 @@ void update_screen()
 
    draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
    draw_player(view_port, &cam, &player, player.direction);
+   draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame);
    show_player_hotspot(view_port, &cam, &player);
    draw_console_map(map, &player, console_map);
 
@@ -647,40 +656,49 @@ void update_player()
    {
       if (mp->item > 0 || mp2->item > 0 || mp3->item > 0)
       {
+
+
+
+
          //Burger
-         if (mp->item == ITEM_BURGER) { mp->item = 0; player.score += 10; if (player.health < 8) player.health++; jlog("Health: %d", player.health);}
-         if (mp2->item == ITEM_BURGER) { mp2->item = 0; player.score += 10; if (player.health < 8) player.health++; jlog("Health: %d", player.health);}
-         if (mp3->item == ITEM_BURGER) { mp3->item = 0; player.score += 10; if (player.health < 8) player.health++; jlog("Health: %d", player.health);}
+         if (mp->item == ITEM_BURGER) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100;   jlog("Health: %d", player.health); }
+         if (mp2->item == ITEM_BURGER) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; jlog("Health: %d", player.health); }
+         if (mp3->item == ITEM_BURGER) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; jlog("Health: %d", player.health); }
 
          //Disk
-         if (mp->item == ITEM_DISK) { mp->item = 0; player.score += 20; }
-         if (mp2->item == ITEM_DISK) { mp2->item = 0; player.score += 20; }
-         if (mp3->item == ITEM_DISK) { mp3->item = 0; player.score += 20; }
+         if (mp->item == ITEM_DISK) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100; }
+         if (mp2->item == ITEM_DISK) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; }
+         if (mp3->item == ITEM_DISK) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; }
 
          //VHS
-         if (mp->item == ITEM_VHS) { mp->item = 0; player.score += 20; }
-         if (mp2->item == ITEM_VHS) { mp2->item = 0; player.score += 20; }
-         if (mp3->item == ITEM_VHS) { mp3->item = 0; player.score += 20; }
+         if (mp->item == ITEM_VHS) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100; }
+         if (mp2->item == ITEM_VHS) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; }
+         if (mp3->item == ITEM_VHS) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; }
 
          //Screw
-         if (mp->item == ITEM_SCREW) { mp->item = 0; player.score += 10;}
-         if (mp2->item == ITEM_SCREW) { mp2->item = 0; player.score += 10; }
-         if (mp3->item == ITEM_SCREW) { mp3->item = 0; player.score += 10; }
+         if (mp->item == ITEM_SCREW) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100;}
+         if (mp2->item == ITEM_SCREW) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; }
+         if (mp3->item == ITEM_SCREW) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; }
 
          //Underwear
-         if (mp->item == ITEM_UNDERWEAR) { mp->item = 0; player.score += 20; }
-         if (mp2->item == ITEM_UNDERWEAR) { mp2->item = 0; player.score += 20; }
-         if (mp3->item == ITEM_UNDERWEAR) { mp3->item = 0; player.score += 20; }
+         if (mp->item == ITEM_UNDERWEAR) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100; }
+         if (mp2->item == ITEM_UNDERWEAR) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; }
+         if (mp3->item == ITEM_UNDERWEAR) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; }
 
-         //Underwear
-         if (mp->item == ITEM_WRENCH) { mp->item = 0; player.score += 50; }
-         if (mp2->item == ITEM_WRENCH) { mp2->item = 0; player.score += 50; }
-         if (mp3->item == ITEM_WRENCH) { mp3->item = 0; player.score += 50; }
+         //Pliers
+         if (mp->item == ITEM_PLIERS) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100; }
+         if (mp2->item == ITEM_PLIERS) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; }
+         if (mp3->item == ITEM_PLIERS) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; }
+
+         //Wrench
+         if (mp->item == ITEM_WRENCH) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100; }
+         if (mp2->item == ITEM_WRENCH) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; }
+         if (mp3->item == ITEM_WRENCH) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; }
 
          // Health
-         if (mp2->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp2->item = 0; jlog("Health: %d", player.health); play_sound(snd_pickup);}
-         if (mp->item == ITEM_HEALTH && player.health < 8) { player.health = 8;mp->item = 0;  jlog("Health: %d", player.health); play_sound(snd_pickup); }
-         if (mp3->item == ITEM_HEALTH && player.health < 8) { player.health = 8;mp3->item = 0; jlog("Health: %d", player.health); play_sound(snd_pickup);}
+         if (mp2->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp2->item = 0; activate_item_fx(mp2, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup);}
+         if (mp->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp->item = 0;  activate_item_fx(mp, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup); }
+         if (mp3->item == ITEM_HEALTH && player.health < 8) { player.health = 8;mp3->item = 0; activate_item_fx(mp3, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup);}
 
          // Not-Health
          if (mp->item != ITEM_HEALTH && mp2->item != ITEM_HEALTH && mp3->item != ITEM_HEALTH)
@@ -703,13 +721,18 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
    //Frames
    if (ev->timer.source == FPS_TIMER)
    {
+
+
       frame_speed--; //This eliminates the need for an animation timer.
       halftime_frame_speed--; //This is for 2 frame animations like for blinking items
 
       update_player();
       animate_player(&player, &frame_speed);
+      update_item_afterfx(item_fx);
 
       if (halftime_frame_speed == 0) { item_frame ^= 1; halftime_frame_speed = ANIMATION_SPEED * 2; }
+      if (halftime_frame_speed % 3 == 0) { item_afterfx_frame^= 1; }
+
 
       //Camera Look-ahead
       if (key[KEY_LEFT] && !key[KEY_RIGHT])
@@ -731,11 +754,13 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
 void clean_up()
 {
    destroy_map(map);
+   destroy_item_afterfx(item_fx);
    al_unlock_bitmap(tile_sheet);
    al_unlock_bitmap(item_sheet);
    al_unlock_bitmap(bg);
    al_unlock_bitmap(stat_border);
    al_unlock_bitmap(player.bitmap);
+   al_unlock_bitmap(item_fx_sheet);
    for (int j = 0; j < 7; j++)
    {
       al_unlock_bitmap(player.frame[j]);
@@ -784,6 +809,8 @@ int main(int argc, char **argv)
    player.x = map->player_start_x;
    player.y = map->player_start_y;
    check_cam();
+
+   item_fx = create_item_after_fx(map);
 
    al_set_target_bitmap(game);
    al_draw_bitmap(stat_border, 0, 0, 0);
