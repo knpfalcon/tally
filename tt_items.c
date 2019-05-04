@@ -66,7 +66,7 @@ void destroy_item_afterfx(t_item_afterfx *ifx)
 
 }
 
-void draw_item_fx(ALLEGRO_BITMAP *bmp, ALLEGRO_BITMAP *sheet, t_cam *c, t_item_afterfx *ifx, unsigned char *item_frame)
+void draw_item_fx(ALLEGRO_BITMAP *bmp, ALLEGRO_BITMAP *sheet, t_cam *c, t_item_afterfx *ifx, unsigned char *item_frame, t_player *p)
 {
    al_set_target_bitmap(bmp);
 
@@ -79,15 +79,20 @@ void draw_item_fx(ALLEGRO_BITMAP *bmp, ALLEGRO_BITMAP *sheet, t_cam *c, t_item_a
          {
             if (ifx->index[i].type < 4) // 100 points
             {
-               al_draw_bitmap_region(sheet, 0, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
+               if (ifx->index[i].type == ITEM_BURGER && p->health < 8) // If the player health isn't full give a health point, otherwise just give 100 points.
+               {
+                  al_draw_bitmap_region(sheet, 32, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
+               }
+               else al_draw_bitmap_region(sheet, 0, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
+
             }
             else if (ifx->index[i].type >= 4 && ifx->index[i].type < 9) // 1000 points
             {
                al_draw_bitmap_region(sheet, 16, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
             }
-            else if (ifx->index[i].type == ITEM_HEALTH)
+            else if (ifx->index[i].type == ITEM_HEALTH) // Health
             {
-               al_draw_bitmap_region(sheet, 32, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
+               al_draw_bitmap_region(sheet, 48, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
             }
          }
       }

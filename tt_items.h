@@ -21,7 +21,7 @@ typedef struct t_item_afterfx
 
 t_item_afterfx *create_item_after_fx(t_map *m);
 void destroy_item_afterfx(t_item_afterfx *ifx);
-void draw_item_fx(ALLEGRO_BITMAP *bmp, ALLEGRO_BITMAP *sheet, t_cam *c, t_item_afterfx *ifx, unsigned char *item_frame);
+void draw_item_fx(ALLEGRO_BITMAP *bmp, ALLEGRO_BITMAP *sheet, t_cam *c, t_item_afterfx *ifx, unsigned char *item_frame, t_player *p);
 void activate_item_fx(t_map_pos *mp, t_item_afterfx *ifx);
 void update_item_afterfx(t_item_afterfx *ifx);
 #endif // TT_ITEMS_H

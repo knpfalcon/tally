@@ -273,7 +273,7 @@ void update_screen()
 
    draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
    draw_player(view_port, &cam, &player, player.direction);
-   draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame);
+   draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
    show_player_hotspot(view_port, &cam, &player);
    draw_console_map(map, &player, console_map);
 
@@ -656,14 +656,10 @@ void update_player()
    {
       if (mp->item > 0 || mp2->item > 0 || mp3->item > 0)
       {
-
-
-
-
          //Burger
-         if (mp->item == ITEM_BURGER) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100;   jlog("Health: %d", player.health); }
-         if (mp2->item == ITEM_BURGER) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; jlog("Health: %d", player.health); }
-         if (mp3->item == ITEM_BURGER) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; jlog("Health: %d", player.health); }
+         if (mp->item == ITEM_BURGER) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100; if (player.health < 8) player.health++; jlog("Health: %d", player.health); }
+         if (mp2->item == ITEM_BURGER) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; if (player.health < 8) player.health++; jlog("Health: %d", player.health); }
+         if (mp3->item == ITEM_BURGER) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; if (player.health < 8) player.health++; jlog("Health: %d", player.health); }
 
          //Disk
          if (mp->item == ITEM_DISK) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100; }
@@ -681,19 +677,19 @@ void update_player()
          if (mp3->item == ITEM_SCREW) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; }
 
          //Underwear
-         if (mp->item == ITEM_UNDERWEAR) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100; }
-         if (mp2->item == ITEM_UNDERWEAR) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; }
-         if (mp3->item == ITEM_UNDERWEAR) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; }
+         if (mp->item == ITEM_UNDERWEAR) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 1000; }
+         if (mp2->item == ITEM_UNDERWEAR) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 1000; }
+         if (mp3->item == ITEM_UNDERWEAR) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 1000; }
 
          //Pliers
-         if (mp->item == ITEM_PLIERS) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100; }
-         if (mp2->item == ITEM_PLIERS) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; }
-         if (mp3->item == ITEM_PLIERS) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; }
+         if (mp->item == ITEM_PLIERS) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 1000; }
+         if (mp2->item == ITEM_PLIERS) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 1000; }
+         if (mp3->item == ITEM_PLIERS) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 1000; }
 
          //Wrench
-         if (mp->item == ITEM_WRENCH) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100; }
-         if (mp2->item == ITEM_WRENCH) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; }
-         if (mp3->item == ITEM_WRENCH) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; }
+         if (mp->item == ITEM_WRENCH) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 1000; }
+         if (mp2->item == ITEM_WRENCH) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 1000; }
+         if (mp3->item == ITEM_WRENCH) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 1000; }
 
          // Health
          if (mp2->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp2->item = 0; activate_item_fx(mp2, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup);}
