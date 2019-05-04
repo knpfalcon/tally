@@ -77,22 +77,33 @@ void draw_item_fx(ALLEGRO_BITMAP *bmp, ALLEGRO_BITMAP *sheet, t_cam *c, t_item_a
       {
          if ((c->x - 16) < ifx->index[i].x  && (c->y - 16) < ifx->index[i].y  && (c->x + VIEWPORT_WIDTH) > ifx->index[i].x && (c->y + VIEWPORT_HEIGHT) > ifx->index[i].y)
          {
-            if (ifx->index[i].type < 4) // 100 points
+            if (ifx->index[i].type < ITEM_VHS) // 100 points
             {
-               if (ifx->index[i].type == ITEM_BURGER && p->health < 8) // If the player health isn't full give a health point, otherwise just give 100 points.
-               {
-                  al_draw_bitmap_region(sheet, 32, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
-               }
-               else al_draw_bitmap_region(sheet, 0, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
-
+               al_draw_bitmap_region(sheet, 0, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
             }
-            else if (ifx->index[i].type >= 4 && ifx->index[i].type < 9) // 1000 points
+            else if (ifx->index[i].type >= ITEM_VHS && ifx->index[i].type < ITEM_UNDERWEAR) // 200 points
             {
                al_draw_bitmap_region(sheet, 16, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
             }
-            else if (ifx->index[i].type == ITEM_HEALTH) // Health
+            else if (ifx->index[i].type >= ITEM_UNDERWEAR && ifx->index[i].type < ITEM_WRENCH) // 500 points
+            {
+               al_draw_bitmap_region(sheet, 32, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
+            }
+            else if (ifx->index[i].type >= ITEM_WRENCH && ifx->index[i].type < ITEM_MONEY) // 1000 points
             {
                al_draw_bitmap_region(sheet, 48, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
+            }
+            else if (ifx->index[i].type == ITEM_MONEY) //2000 points
+            {
+               al_draw_bitmap_region(sheet, 64, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
+            }
+            else if (ifx->index[i].type == ITEM_DIAMOND) //5000 points
+            {
+               al_draw_bitmap_region(sheet, 80, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
+            }
+            else if (ifx->index[i].type == ITEM_HEALTH) // Health
+            {
+               al_draw_bitmap_region(sheet, 96, *item_frame * 16, 16, 16, ifx->index[i].x - c->x, (ifx->index[i].y) - c->y, 0);
             }
          }
       }

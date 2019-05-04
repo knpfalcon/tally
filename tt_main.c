@@ -667,34 +667,49 @@ void update_player()
          if (mp3->item == ITEM_DISK) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; }
 
          //VHS
-         if (mp->item == ITEM_VHS) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100; }
-         if (mp2->item == ITEM_VHS) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; }
-         if (mp3->item == ITEM_VHS) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; }
+         if (mp->item == ITEM_VHS) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 200; }
+         if (mp2->item == ITEM_VHS) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 200; }
+         if (mp3->item == ITEM_VHS) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 200; }
 
          //Screw
-         if (mp->item == ITEM_SCREW) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 100;}
-         if (mp2->item == ITEM_SCREW) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 100; }
-         if (mp3->item == ITEM_SCREW) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 100; }
+         if (mp->item == ITEM_SCREW) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 200;}
+         if (mp2->item == ITEM_SCREW) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 200; }
+         if (mp3->item == ITEM_SCREW) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 200; }
 
          //Underwear
-         if (mp->item == ITEM_UNDERWEAR) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 1000; }
-         if (mp2->item == ITEM_UNDERWEAR) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 1000; }
-         if (mp3->item == ITEM_UNDERWEAR) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 1000; }
+         if (mp->item == ITEM_UNDERWEAR) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 500; }
+         if (mp2->item == ITEM_UNDERWEAR) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 500; }
+         if (mp3->item == ITEM_UNDERWEAR) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 500; }
 
          //Pliers
-         if (mp->item == ITEM_PLIERS) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 1000; }
-         if (mp2->item == ITEM_PLIERS) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 1000; }
-         if (mp3->item == ITEM_PLIERS) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 1000; }
+         if (mp->item == ITEM_PLIERS) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 500; }
+         if (mp2->item == ITEM_PLIERS) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 500; }
+         if (mp3->item == ITEM_PLIERS) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 500; }
 
          //Wrench
          if (mp->item == ITEM_WRENCH) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 1000; }
          if (mp2->item == ITEM_WRENCH) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 1000; }
          if (mp3->item == ITEM_WRENCH) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 1000; }
 
+         //Screwdriver
+         if (mp->item == ITEM_SCREWDRIVER) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 1000; }
+         if (mp2->item == ITEM_SCREWDRIVER) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 1000; }
+         if (mp3->item == ITEM_SCREWDRIVER) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 1000; }
+
+         //Money
+         if (mp->item == ITEM_MONEY) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 2000; }
+         if (mp2->item == ITEM_MONEY) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 2000; }
+         if (mp3->item == ITEM_MONEY) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 2000; }
+
+         //Diamond
+         if (mp->item == ITEM_DIAMOND) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 5000; }
+         if (mp2->item == ITEM_DIAMOND) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 5000; }
+         if (mp3->item == ITEM_DIAMOND) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 5000; }
+
          // Health
-         if (mp2->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp2->item = 0; activate_item_fx(mp2, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup);}
-         if (mp->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp->item = 0;  activate_item_fx(mp, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup); }
-         if (mp3->item == ITEM_HEALTH && player.health < 8) { player.health = 8;mp3->item = 0; activate_item_fx(mp3, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup);}
+         if (mp2->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp2->item = 0; activate_item_fx(mp2, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup); player.score += 100;}
+         if (mp->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp->item = 0;  activate_item_fx(mp, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup); player.score += 100;}
+         if (mp3->item == ITEM_HEALTH && player.health < 8) { player.health = 8;mp3->item = 0; activate_item_fx(mp3, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup); player.score += 100;}
 
          // Not-Health
          if (mp->item != ITEM_HEALTH && mp2->item != ITEM_HEALTH && mp3->item != ITEM_HEALTH)

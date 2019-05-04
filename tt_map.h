@@ -6,14 +6,17 @@
 #include "tt_main.h"
 #include "tt_player.h"
 
-#define ITEM_BURGER     1
-#define ITEM_DISK       2
-#define ITEM_VHS        3
-#define ITEM_SCREW      4
-#define ITEM_UNDERWEAR  5
-#define ITEM_PLIERS     6
-#define ITEM_WRENCH     7
-#define ITEM_HEALTH     10
+#define ITEM_BURGER       1
+#define ITEM_DISK         2
+#define ITEM_VHS          3
+#define ITEM_SCREW        4
+#define ITEM_UNDERWEAR    5
+#define ITEM_PLIERS       6
+#define ITEM_WRENCH       7
+#define ITEM_SCREWDRIVER  8
+#define ITEM_MONEY        9
+#define ITEM_DIAMOND     10
+#define ITEM_HEALTH      11
 
 // This is a position on the map
 typedef struct t_map_pos
