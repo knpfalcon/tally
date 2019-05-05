@@ -446,6 +446,10 @@ void update_player()
    {
       if (player.on_ground) player.state = STOPPED;
    }
+   else if (key[KEY_LEFT] && key[KEY_RIGHT] && player.on_ground)
+   {
+      if (player.on_ground) player.state = STOPPED;
+   }
 
    /* These look like magic numbers, but they have
    to be fairly precise, or else when the player
