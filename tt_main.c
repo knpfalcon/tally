@@ -309,10 +309,27 @@ void check_cam() //Check to make sure camera is not out of bounds.
    {
       cam.x = player.x - ((VIEWPORT_WIDTH / 2) -16) + cam.look_ahead;
    }
-   if ( (player.y > (VIEWPORT_HEIGHT / 2) - 24) && (player.y < (MAP_HEIGHT * TILE_SIZE) - (VIEWPORT_HEIGHT / 2)) )
+
+   //Scroll when player is on ground or leaving view port.
+   //On ground
+   if ( player.on_ground && (cam.y < player.y - (VIEWPORT_HEIGHT / 2)) )
    {
-      cam.y = player.y - ((VIEWPORT_HEIGHT / 2) -16);
+      cam.y += 16;
    }
+   if ( player.on_ground && (cam.y > player.y - (VIEWPORT_HEIGHT / 2) + 24) )
+   {
+      cam.y -= 16;
+   }
+   //Leaving view port
+   if ( !player.on_ground && player.y < cam.y +8)
+   {
+      cam.y = player.y - 8;
+   }
+   if ( !player.on_ground && player.y + 32 > ((cam.y + (VIEWPORT_HEIGHT - 8))) )
+   {
+      cam.y = ((player.y + 32) - VIEWPORT_HEIGHT) + 8;
+   }
+
    if (cam.x < 0) cam.x = 0;
    if (cam.x > (MAP_WIDTH * TILE_SIZE) - VIEWPORT_WIDTH)
    {
@@ -587,8 +604,9 @@ void update_player()
       {
          play_sound(snd_jump);
       }
-      player.vel_y = -48;
+      player.vel_y = -46;
       player.jump_pressed = true;
+      player.on_ground = false;
    }
    if (!key[KEY_LCTRL])
    {
