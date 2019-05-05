@@ -1,6 +1,14 @@
+/*
+*    This module mainly consists of functions related
+*     to what happens when the player picks up an item.
+*/
 
 #include "tt_items.h"
 
+
+/*************************************************
+ * Allocates memory for the item after effects   *
+ *************************************************/
 t_item_afterfx *create_item_after_fx(t_map *m)
 {
    int item_count = 0;
@@ -54,6 +62,9 @@ t_item_afterfx *create_item_after_fx(t_map *m)
    return ifx;
 }
 
+/*************************************************
+ * Frees memory allocated for item after effects *
+ *************************************************/
 void destroy_item_afterfx(t_item_afterfx *ifx)
 {
    if (ifx->index == NULL) return;
@@ -66,6 +77,9 @@ void destroy_item_afterfx(t_item_afterfx *ifx)
 
 }
 
+/*************************************************
+ * Draws the proper graphic for activated item   *
+ *************************************************/
 void draw_item_fx(ALLEGRO_BITMAP *bmp, ALLEGRO_BITMAP *sheet, t_cam *c, t_item_afterfx *ifx, unsigned char *item_frame, t_player *p)
 {
    al_set_target_bitmap(bmp);
@@ -110,6 +124,9 @@ void draw_item_fx(ALLEGRO_BITMAP *bmp, ALLEGRO_BITMAP *sheet, t_cam *c, t_item_a
    }
 }
 
+/*************************************************
+ * Updates the position of activated effect      *
+ *************************************************/
 void update_item_afterfx(t_item_afterfx *ifx)
 {
    for (int i = 0; i < ifx->item_count; i++)
@@ -122,6 +139,10 @@ void update_item_afterfx(t_item_afterfx *ifx)
       }
    }
 }
+
+/*************************************************
+ * Activates the effect when item is picked up   *
+ *************************************************/
 void activate_item_fx(t_map_pos *mp, t_item_afterfx *ifx)
 {
 

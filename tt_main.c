@@ -14,6 +14,8 @@
 #include "tt_collision.h"
 #include "tt_items.h"
 
+/* At some point I'll see if I can prune these globals,
+   but they're staying for now. */
 bool program_done = false;
 
 const float FPS = 30;
@@ -260,11 +262,15 @@ int init_game()
    return 0;
 }
 
+/*************************************************
+ * Plays a sound without all the boilerplate     *
+ *************************************************/
 void play_sound(ALLEGRO_SAMPLE *s)
 {
    al_stop_samples();
    al_play_sample(s, sfx_volume, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
 }
+
 /************************************************
  * The drawing function, called at redraw       *
  ************************************************/
@@ -533,10 +539,10 @@ void update_player()
       }
    }
 
-   /*I added this in hopes that we could detect
+   /* I added this in hopes that we could detect
    when a player falls off edge. Working so far.
    also detects if player barely lands on ledge
-   and helps them out a little.*/
+   and helps them out a little. */
    if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && !key[KEY_LCTRL])
    {
       //Play fall off ledge sound
@@ -645,7 +651,8 @@ void update_player()
    }
 
    /* Check for items
-   Here we check if the player is over an item */
+      Here we check if the player is over an item
+      This get a little redundant. */
    tx = player.x + (player.direction ? 14 : 18);
    /* There are three of each of these so I can check
       Tally's head, feet, and middle. */

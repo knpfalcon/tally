@@ -1,5 +1,8 @@
 #include "tt_player.h"
 
+/*************************************************
+ * Draws the player                              *
+ *************************************************/
 void draw_player(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p, unsigned char direction)
 {
    al_set_target_bitmap(bmp);
@@ -22,8 +25,10 @@ void draw_player(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p, unsigned char direc
    #endif // DEBUG
 }
 
-/* Animating the player
-   Instantly change from to the right spot, but
+/*************************************************
+ * Animates the player                           *
+ *************************************************/
+/* Instantly change from to the right frame, but
    only time the speed if there's more than one frame.
    This is so we can instantly change the frame, but
    time the animation. */
@@ -59,9 +64,12 @@ void animate_player(t_player *p, int *speed)
    {
       p->cur_frame = 0;
    }
-
 }
 
+/*************************************************
+ * Debug stuff                                   *
+ *************************************************/
+ /* Shows some pixels on the player */
 void show_player_hotspot(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p)
 {
    al_set_target_bitmap(bmp);
@@ -69,5 +77,3 @@ void show_player_hotspot(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p)
    //al_put_pixel(p->hotspot_x - c->x, p->hotspot_y - c->y, al_map_rgb(255,0,0));
    al_unlock_bitmap(bmp);
 }
-
-void add_score(int amount);
