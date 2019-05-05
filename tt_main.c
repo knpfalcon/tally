@@ -18,7 +18,7 @@
    but they're staying for now. */
 bool program_done = false;
 
-const float FPS = 10;
+const float FPS = 30;
 int frame_speed = ANIMATION_SPEED;
 int halftime_frame_speed = ANIMATION_SPEED * 2;
 
@@ -312,13 +312,13 @@ void check_cam() //Check to make sure camera is not out of bounds.
 
    //Scroll when player is on ground or leaving view port.
    //On ground
-   if ( player.on_ground && (cam.y < player.y - (VIEWPORT_HEIGHT / 2) -24) )
+   if ( player.on_ground && (cam.y < player.y - (VIEWPORT_HEIGHT / 2) -16) )
    {
-      cam.y += 16;
+      cam.y += 8;
    }
-   if ( player.on_ground && (cam.y > player.y - (VIEWPORT_HEIGHT / 2) + 24) )
+   if ( player.on_ground && (cam.y > player.y - (VIEWPORT_HEIGHT / 2) + 16) )
    {
-      cam.y -= 16;
+      cam.y -= 8;
    }
    //Leaving view port
    if ( !player.on_ground && player.y < cam.y +8)
