@@ -1,4 +1,5 @@
 #include "tt_collision.h"
+#include <allegro5/allegro_primitives.h>
 
 /*************************************************
  * Checks for a solid tile at X/Y                *
@@ -23,12 +24,28 @@ bool is_ground(t_map *m, int x, int y)
 }
 
 /*************************************************
- * Basic AABB collision detection                *
+ * Basic Bounding Box collision detection        *
  *************************************************/
-bool collision(t_map *m, int al, int ar, int ab, int at, int bl, int br, int bb, int bt)
+//bool collision(t_map *m, int al, int ar, int ab, int at, int bl, int br, int bb, int bt)
+//{
+//   if (al < br || ar > bl ||  ab > bt ||  at < bb) return true;
+//
+//   return false;
+//}
+bool check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
 {
-   if (al < br || ar > bl ||  ab > bt ||  at < bb) return true;
 
-   return false;
+
+   if ( ((x1)>(x2+w2)) || ((x1+w1)<=(x2)) ||
+        ((y1)>(y2+h2)) || ((y1+h1)<=(y2))  ) return false;
+
+   return true;
 }
+#ifdef DEBUG
+void draw_bb(t_cam *c, int x1, int y1, int w1, int h1)
+{
+   al_draw_rectangle(x1 - c->x, y1 - c->y, (x1 + w1) - c->x, (y1 + h1) - c->y, al_map_rgb(170,0,0), 1);
+}
+#endif // DEBUG
+
 

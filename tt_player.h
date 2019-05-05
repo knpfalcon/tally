@@ -5,6 +5,8 @@
 
 #include "tt_main.h"
 
+#define PLAYER_HURT_TIME 64
+
 typedef struct t_player
 {
    ALLEGRO_BITMAP *bitmap;
@@ -18,10 +20,10 @@ typedef struct t_player
    //float speed;
    int vel_x;
    int vel_y;
-   int right;
-   int left;
-   int top;
-   int bottom;
+   int bb_left;
+   int bb_top;
+   unsigned char hurt;
+   bool draw;
    bool on_ground;
    bool jump_pressed;
    bool jumping;

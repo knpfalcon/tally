@@ -50,6 +50,7 @@ ALLEGRO_BITMAP *item_sheet = NULL;
 ALLEGRO_BITMAP *bg = NULL;
 ALLEGRO_BITMAP *stat_border = NULL;
 ALLEGRO_BITMAP *item_fx_sheet = NULL;
+ALLEGRO_BITMAP *health_bar = NULL;
 //ALLEGRO_BITMAP *player_start = NULL;
 
 //Bitmaps that get drawn to
@@ -222,6 +223,10 @@ int init_game()
    if (item_fx_sheet == NULL) { jlog("Couldn't load item_score.png"); return -1; }
    al_lock_bitmap(item_fx_sheet, al_get_bitmap_format(item_fx_sheet), ALLEGRO_LOCK_READONLY);
 
+   health_bar = al_load_bitmap("data/health_bar.png");
+   if (health_bar == NULL) { jlog("Couldn't load health_bar.png"); return -1; }
+   al_lock_bitmap(health_bar, al_get_bitmap_format(health_bar), ALLEGRO_LOCK_READONLY);
+
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
    console_map = al_create_bitmap(64, 45);
 
@@ -254,7 +259,7 @@ int init_game()
    al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
    al_set_sample_instance_gain(music_instance, mus_volume);
    al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
-   al_play_sample_instance(music_instance);
+   //al_play_sample_instance(music_instance);
 
    jlog("Game initialized.");
 
@@ -278,8 +283,11 @@ void update_screen()
 {
 
    draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
-   draw_player(view_port, &cam, &player, player.direction);
+   if (player.draw) draw_player(view_port, &cam, &player, player.direction);
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
+   #ifdef DEBUG
+   draw_bb(&cam, player.x + player.bb_left, player.y + player.bb_top, 8, 28);
+   #endif // DEBUG
    show_player_hotspot(view_port, &cam, &player);
    draw_console_map(map, &player, console_map);
 
@@ -287,7 +295,8 @@ void update_screen()
    al_set_target_bitmap(game);
    al_draw_bitmap(view_port, VIEWPORT_X, VIEWPORT_Y, 0);
    al_draw_bitmap(console_map, 238, 100, 0);
-   al_draw_textf(font, al_map_rgb(255,255,255), 303, 18, ALLEGRO_ALIGN_RIGHT, "%010d", player.score);
+   al_draw_textf(font, al_map_rgb(255,255,255), 301, 18, ALLEGRO_ALIGN_RIGHT, "%09d", player.score);
+   al_draw_bitmap_region(health_bar, 0, player.health * 16, 64, 16, 238, 42, 0);
    al_set_target_backbuffer(display);
    al_draw_scaled_bitmap(game,
                          0,0,
@@ -452,6 +461,8 @@ void update_player()
    bool landed = false;
    bool jump_snd = false;
 
+   player.bb_top = 4;
+
    //Horizontal Movement
    if (key[KEY_RIGHT] && !key[KEY_LEFT])
    {
@@ -488,6 +499,7 @@ void update_player()
       x1 = 19;
       x2 = 11;
       x3 = 15; //For detecting falling from edge.
+      player.bb_left = 12;
       #ifdef DEBUG
          player.x1 = x1;
          player.x2 = x2;
@@ -500,6 +512,7 @@ void update_player()
       x1 = 14;
       x2 = 22;
       x3 = 18; //For detecting falling from edge.
+      player.bb_left = 13;
       #ifdef DEBUG
          player.x1 = x1;
          player.x2 = x2;
@@ -748,6 +761,21 @@ void update_player()
          }
       }
    }
+
+   //Collision test
+
+   if (!player.hurt && check_collision(player.x + player.bb_left, player.y + player.bb_top, 8, 28, 304, 112, 16, 16))
+   {
+      play_sound(snd_hithead);
+      player.hurt = PLAYER_HURT_TIME;
+      if(player.health) player.health--;
+   }
+   if (player.hurt)
+   {
+      player.hurt--;
+   }
+
+
    //printf("player.state: %d\n", player.state);
    //printf("player.vel_y: %d\n", player.vel_y);
    //printf("player.x: %d\n", player.x);
@@ -762,7 +790,6 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
    if (ev->timer.source == FPS_TIMER)
    {
 
-
       frame_speed--; //This eliminates the need for an animation timer.
       halftime_frame_speed--; //This is for 2 frame animations like for blinking items
 
@@ -770,9 +797,19 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
       animate_player(&player, &frame_speed);
       update_item_afterfx(item_fx);
 
-      if (halftime_frame_speed == 0) { item_frame ^= 1; halftime_frame_speed = ANIMATION_SPEED * 2; }
+      if (halftime_frame_speed == 0)
+      {
+         item_frame ^= 1;
+
+         halftime_frame_speed = ANIMATION_SPEED * 2;
+      }
       if (halftime_frame_speed % 3 == 0) { item_afterfx_frame^= 1; }
 
+      if (frame_speed % 2 == 0)
+      {
+         if (player.hurt) player.draw ^= 1;
+         if (!player.hurt) player.draw = true;
+      }
 
       //Camera Look-ahead
       if (key[KEY_LEFT] && !key[KEY_RIGHT])
@@ -805,6 +842,7 @@ void clean_up()
    al_unlock_bitmap(stat_border);
    al_unlock_bitmap(player.bitmap);
    al_unlock_bitmap(item_fx_sheet);
+   al_unlock_bitmap(health_bar);
    for (int j = 0; j < 7; j++)
    {
       al_unlock_bitmap(player.frame[j]);
@@ -850,8 +888,12 @@ int main(int argc, char **argv)
       return -1;
    }
    jlog("Map loaded.");
+
    player.x = map->player_start_x;
    player.y = map->player_start_y;
+   player.draw = true;
+   player.health = 8;
+
    check_cam();
 
    item_fx = create_item_after_fx(map);
