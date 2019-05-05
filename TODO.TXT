@@ -1,5 +1,5 @@
 **********************************************************************
-*******************  TODO FOR PROJECT SPROCKET  **********************
+*******************    TODO FOR TALLY TRAUMA    **********************
 **********************************************************************
 
 
@@ -7,13 +7,14 @@
  EDITOR
 ===================
 - Add Thing Mode (Enemies, doors, switches)
-- Add Item Mode (Collectibles)
+
 
 
 ===================
  GAME
 ===================
-- Make it.
+- Possibly have the camera scroll on Y only when player lands on something.
+  Similar to the scrolling in Duke 1.
 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
