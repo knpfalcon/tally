@@ -259,7 +259,7 @@ int init_game()
    al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
    al_set_sample_instance_gain(music_instance, mus_volume);
    al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
-   //al_play_sample_instance(music_instance);
+   al_play_sample_instance(music_instance);
 
    jlog("Game initialized.");
 
@@ -763,7 +763,6 @@ void update_player()
    }
 
    //Collision test
-
    if (!player.hurt && check_collision(player.x + player.bb_left, player.y + player.bb_top, 8, 28, 304, 112, 16, 16))
    {
       play_sound(snd_hithead);
