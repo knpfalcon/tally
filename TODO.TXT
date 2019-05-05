@@ -13,8 +13,7 @@
 ===================
  GAME
 ===================
-- Possibly have the camera scroll on Y only when player lands on something.
-  Similar to the scrolling in Duke 1.
+
 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
