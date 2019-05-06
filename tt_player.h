@@ -22,6 +22,8 @@ typedef struct t_player
    int vel_y;
    int bb_left;
    int bb_top;
+   int bb_width;
+   int bb_height;
    unsigned char hurt;
    bool draw;
    bool on_ground;

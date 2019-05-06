@@ -286,7 +286,7 @@ void update_screen()
    if (player.draw) draw_player(view_port, &cam, &player, player.direction);
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
    #ifdef DEBUG
-   draw_bb(&cam, player.x + player.bb_left, player.y + player.bb_top, 8, 28);
+   draw_bb(&cam, player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height);
    #endif // DEBUG
    show_player_hotspot(view_port, &cam, &player);
    draw_console_map(map, &player, console_map);
@@ -763,7 +763,7 @@ void update_player()
    }
 
    //Collision test
-   if (!player.hurt && check_collision(player.x + player.bb_left, player.y + player.bb_top, 8, 28, 304, 112, 16, 16))
+   if (!player.hurt && check_collision(player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height, 304, 112, 16, 16))
    {
       play_sound(snd_hithead);
       player.hurt = PLAYER_HURT_TIME;
@@ -773,7 +773,6 @@ void update_player()
    {
       player.hurt--;
    }
-
 
    //printf("player.state: %d\n", player.state);
    //printf("player.vel_y: %d\n", player.vel_y);
@@ -890,6 +889,8 @@ int main(int argc, char **argv)
 
    player.x = map->player_start_x;
    player.y = map->player_start_y;
+   player.bb_width = 8;
+   player.bb_height = 28;
    player.draw = true;
    player.health = 8;
 
