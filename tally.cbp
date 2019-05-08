@@ -90,6 +90,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="jt_util.h" />
+		<Unit filename="tt_bullet.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tt_bullet.h" />
 		<Unit filename="tt_collision.c">
 			<Option compilerVar="CC" />
 		</Unit>

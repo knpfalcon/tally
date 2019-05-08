@@ -287,8 +287,8 @@ void update_screen()
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
    #ifdef DEBUG
    draw_bb(&cam, player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height);
-   #endif // DEBUG
    show_player_hotspot(view_port, &cam, &player);
+   #endif // DEBUG
    draw_console_map(map, &player, console_map);
 
    //Draw view_port to game, then draw game scaled to display.
