@@ -63,17 +63,17 @@ ALLEGRO_BITMAP *game = NULL;
 //Sounds
 float sfx_volume = 1.0;
 ALLEGRO_SAMPLE *snd_pickup = NULL;
+ALLEGRO_SAMPLE *snd_hurt = NULL;
+ALLEGRO_SAMPLE *snd_health = NULL;
 ALLEGRO_SAMPLE *snd_fall = NULL;
 ALLEGRO_SAMPLE *snd_jump = NULL;
 ALLEGRO_SAMPLE *snd_land = NULL;
 ALLEGRO_SAMPLE *snd_hithead = NULL;
-ALLEGRO_SAMPLE *snd_hurt = NULL;
-ALLEGRO_SAMPLE_INSTANCE *snd_hurt_instance = NULL;
 
 ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 
 //Music
-float mus_volume = 0.5;
+float mus_volume = 0.6;
 ALLEGRO_SAMPLE *music = NULL;
 ALLEGRO_SAMPLE_INSTANCE *music_instance = NULL;
 
@@ -239,19 +239,14 @@ int init_game()
    console_map = al_create_bitmap(64, 45);
 
    //Load sounds
-   al_reserve_samples(2);
-   snd_pickup = al_load_sample("data/sound/pickup.ogg");
+   al_reserve_samples(4);
    snd_fall = al_load_sample("data/sound/fall.ogg");
    snd_jump = al_load_sample("data/sound/jump.ogg");
    snd_land = al_load_sample("data/sound/land.ogg");
    snd_hithead = al_load_sample("data/sound/hithead.ogg");
-
+   snd_pickup = al_load_sample("data/sound/pickup.ogg");
+   snd_health = al_load_sample("data/sound/health.ogg");
    snd_hurt = al_load_sample("data/sound/hurt.ogg");
-   snd_hurt_instance = al_create_sample_instance(snd_hurt);
-   al_attach_sample_instance_to_mixer(snd_hurt_instance, al_get_default_mixer());
-   al_set_sample_instance_gain(snd_hurt_instance, sfx_volume);
-   al_set_sample_instance_playmode(snd_hurt_instance, ALLEGRO_PLAYMODE_ONCE);
-
 
    music = al_load_sample("data/music/music1.ogg");
 
@@ -285,13 +280,15 @@ int init_game()
 /*************************************************
  * Plays a sound without all the boilerplate     *
  *************************************************/
-void play_sound(ALLEGRO_SAMPLE *s)
+void play_sound(ALLEGRO_SAMPLE *s, bool interupt)
 {
-   if (!al_get_sample_instance_playing(snd_hurt_instance)) //If these samples aren't playing interrupt them
-   {
-      al_stop_samples();
+//   if ( !al_get_sample_instance_playing(snd_hurt_instance) ||
+//        !al_get_sample_instance_playing(snd_pickup_instance) ||
+//        !al_get_sample_instance_playing(snd_health_instance) ) //If these samples aren't playing interrupt them
+//   {
+      if (interupt) al_stop_samples();
       al_play_sample(s, sfx_volume, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
-   }
+   //}
 
 }
 
@@ -600,7 +597,7 @@ void update_player()
       if (is_ground(map, player.x + x1, player.y + 32))
       {
          landed = false;
-         play_sound(snd_land);
+         play_sound(snd_land, false);
          #ifdef DEBUG
             printf("TALLY SMACKED THE GROUND!\n");
          #endif // DEBUG
@@ -618,7 +615,7 @@ void update_player()
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
       player.vel_y += 24;
-      play_sound(snd_fall);
+      play_sound(snd_fall, false);
       #ifdef DEBUG
          printf("OOPS!\n");
       #endif // DEBUG
@@ -653,7 +650,7 @@ void update_player()
    {
       if (!is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
       {
-         play_sound(snd_jump);
+         play_sound(snd_jump, false);
       }
       player.vel_y = -46;
       player.jump_pressed = true;
@@ -702,20 +699,22 @@ void update_player()
    {
       player.y++;
       player.vel_y = 0;
-      if(!player.on_ground)
+      if(player.state == JUMPING)
       {
-         play_sound(snd_hithead);
+         play_sound(snd_hithead, false);
       }
+      player.state = FALLING;
 
    }
    while (is_ground(map, player.x + x2, player.y))
    {
       player.y++;
       player.vel_y = 0;
-      if(!player.on_ground)
+      if(player.state == JUMPING)
       {
-         play_sound(snd_hithead);
+         play_sound(snd_hithead, false);
       }
+      player.state = FALLING;
 
    }
 
@@ -787,14 +786,37 @@ void update_player()
          if (mp3->item == ITEM_DIAMOND) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 5000; }
 
          // Health
-         if (mp2->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp2->item = 0; activate_item_fx(mp2, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup); player.score += 100;}
-         if (mp->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp->item = 0;  activate_item_fx(mp, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup); player.score += 100;}
-         if (mp3->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp3->item = 0; activate_item_fx(mp3, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup); player.score += 100;}
-
-         // Not-Health
-         if (mp->item != ITEM_HEALTH && mp2->item != ITEM_HEALTH && mp3->item != ITEM_HEALTH)
+         if (mp->item == ITEM_HEALTH && player.health < 8)
          {
-            play_sound(snd_pickup);
+            player.health = 8;
+            mp->item = 0;
+            activate_item_fx(mp, item_fx);
+            jlog("Health: %d", player.health);
+            play_sound(snd_health, false);
+            player.score += 100;
+         }
+         else if (mp2->item == ITEM_HEALTH && player.health < 8)
+         {
+            player.health = 8;
+            mp2->item = 0;
+            activate_item_fx(mp2, item_fx);
+            jlog("Health: %d", player.health);
+            play_sound(snd_health, false);
+            player.score += 100;
+         }
+         else if (mp3->item == ITEM_HEALTH && player.health < 8)
+         {
+            player.health = 8;
+            mp3->item = 0;
+            activate_item_fx(mp3, item_fx);
+            jlog("Health: %d", player.health);
+            play_sound(snd_health, false);
+            player.score += 100;
+         }
+         // Not-Health sound
+         else if (mp->item != ITEM_HEALTH && mp2->item != ITEM_HEALTH && mp3->item != ITEM_HEALTH)
+         {
+            play_sound(snd_pickup, false);
             jlog("Score: %d", player.score);
          }
       }
@@ -803,7 +825,7 @@ void update_player()
    //Collision test
    if (!player.hurt && check_collision(player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height, 304, 112, 16, 16))
    {
-      al_play_sample_instance(snd_hurt_instance);
+      play_sound(snd_hurt, false);
       player.hurt = PLAYER_HURT_TIME;
       if(player.health) player.health--;
    }
