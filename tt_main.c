@@ -67,13 +67,15 @@ ALLEGRO_SAMPLE *snd_fall = NULL;
 ALLEGRO_SAMPLE *snd_jump = NULL;
 ALLEGRO_SAMPLE *snd_land = NULL;
 ALLEGRO_SAMPLE *snd_hithead = NULL;
+ALLEGRO_SAMPLE *snd_hurt = NULL;
+ALLEGRO_SAMPLE_INSTANCE *snd_hurt_instance = NULL;
 
 ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 
 //Music
 float mus_volume = 0.5;
 ALLEGRO_SAMPLE *music = NULL;
-ALLEGRO_SAMPLE_INSTANCE *music_instance;
+ALLEGRO_SAMPLE_INSTANCE *music_instance = NULL;
 
 
 /*************************************************
@@ -237,12 +239,19 @@ int init_game()
    console_map = al_create_bitmap(64, 45);
 
    //Load sounds
-   al_reserve_samples(1);
+   al_reserve_samples(2);
    snd_pickup = al_load_sample("data/sound/pickup.ogg");
    snd_fall = al_load_sample("data/sound/fall.ogg");
    snd_jump = al_load_sample("data/sound/jump.ogg");
    snd_land = al_load_sample("data/sound/land.ogg");
    snd_hithead = al_load_sample("data/sound/hithead.ogg");
+
+   snd_hurt = al_load_sample("data/sound/hurt.ogg");
+   snd_hurt_instance = al_create_sample_instance(snd_hurt);
+   al_attach_sample_instance_to_mixer(snd_hurt_instance, al_get_default_mixer());
+   al_set_sample_instance_gain(snd_hurt_instance, sfx_volume);
+   al_set_sample_instance_playmode(snd_hurt_instance, ALLEGRO_PLAYMODE_ONCE);
+
 
    music = al_load_sample("data/music/music1.ogg");
 
@@ -278,8 +287,12 @@ int init_game()
  *************************************************/
 void play_sound(ALLEGRO_SAMPLE *s)
 {
-   al_stop_samples();
-   al_play_sample(s, sfx_volume, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+   if (!al_get_sample_instance_playing(snd_hurt_instance)) //If these samples aren't playing interrupt them
+   {
+      al_stop_samples();
+      al_play_sample(s, sfx_volume, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+   }
+
 }
 
 /************************************************
@@ -790,7 +803,7 @@ void update_player()
    //Collision test
    if (!player.hurt && check_collision(player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height, 304, 112, 16, 16))
    {
-      play_sound(snd_hithead);
+      al_play_sample_instance(snd_hurt_instance);
       player.hurt = PLAYER_HURT_TIME;
       if(player.health) player.health--;
    }
