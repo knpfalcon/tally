@@ -24,6 +24,10 @@ typedef struct t_player
    int bb_top;
    int bb_width;
    int bb_height;
+   int muzzle_x;
+   int muzzle_y;
+   int muzzle_time;
+   int shoot_time;
    unsigned char hurt;
    bool draw;
    bool on_ground;

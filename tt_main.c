@@ -35,7 +35,7 @@ t_item_afterfx *item_fx = NULL;
 unsigned char item_frame = 0;
 unsigned char item_afterfx_frame = 0;
 
-bool key[12] = {false};
+bool key[13] = { false };
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -51,7 +51,9 @@ ALLEGRO_BITMAP *bg = NULL;
 ALLEGRO_BITMAP *stat_border = NULL;
 ALLEGRO_BITMAP *item_fx_sheet = NULL;
 ALLEGRO_BITMAP *health_bar = NULL;
-//ALLEGRO_BITMAP *player_start = NULL;
+ALLEGRO_BITMAP *bullet_blue = NULL;
+ALLEGRO_BITMAP *muzzle_flash = NULL;
+
 
 //Bitmaps that get drawn to
 ALLEGRO_BITMAP *view_port = NULL;
@@ -227,6 +229,10 @@ int init_game()
    if (health_bar == NULL) { jlog("Couldn't load health_bar.png"); return -1; }
    al_lock_bitmap(health_bar, al_get_bitmap_format(health_bar), ALLEGRO_LOCK_READONLY);
 
+   muzzle_flash = al_load_bitmap("data/muzzle_flash.png");
+   if (muzzle_flash == NULL) { jlog("Couldn't load muzzle_flash.png"); return -1; }
+   al_lock_bitmap(muzzle_flash, al_get_bitmap_format(health_bar), ALLEGRO_LOCK_READONLY);
+
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
    console_map = al_create_bitmap(64, 45);
 
@@ -284,6 +290,10 @@ void update_screen()
 
    draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
    if (player.draw) draw_player(view_port, &cam, &player, player.direction);
+
+   if (player.direction == RIGHT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
+   if (player.direction == LEFT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
+
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
    #ifdef DEBUG
    draw_bb(&cam, player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height);
@@ -389,6 +399,9 @@ void check_key_down(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_LSHIFT:
          key[KEY_LSHIFT] = true;
          break;
+      case ALLEGRO_KEY_ALT:
+         key[KEY_ALT] = true;
+         break;
       case ALLEGRO_KEY_Z:
          key[KEY_Z] = true;
          break;
@@ -431,6 +444,9 @@ void check_key_up(ALLEGRO_EVENT *ev)
          break;
       case ALLEGRO_KEY_LSHIFT:
          key[KEY_LSHIFT] = false;
+         break;
+      case ALLEGRO_KEY_ALT:
+         key[KEY_ALT] = false;
          break;
       case ALLEGRO_KEY_Z:
          key[KEY_Z] = false;
@@ -783,6 +799,16 @@ void update_player()
       player.hurt--;
    }
 
+   //Shooting time
+   if (key[KEY_ALT] && !player.shoot_time)
+   {
+      player.shoot_time = 10;
+      player.muzzle_time = 5;
+   }
+   if (player.muzzle_time) player.muzzle_time--;
+   if (player.shoot_time) player.shoot_time--;
+
+
    //printf("player.state: %d\n", player.state);
    //printf("player.vel_y: %d\n", player.vel_y);
    //printf("player.x: %d\n", player.x);
@@ -850,6 +876,7 @@ void clean_up()
    al_unlock_bitmap(player.bitmap);
    al_unlock_bitmap(item_fx_sheet);
    al_unlock_bitmap(health_bar);
+   al_unlock_bitmap(muzzle_flash);
    for (int j = 0; j < 7; j++)
    {
       al_unlock_bitmap(player.frame[j]);

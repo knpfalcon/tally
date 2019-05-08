@@ -32,10 +32,12 @@ void animate_player(t_player *p, int *speed)
    if (p->state == JUMPING)
    {
       p->cur_frame = 5;
+      p->muzzle_y = p->y + 9;
    }
    if (p->state == FALLING)
    {
       p->cur_frame = 6;
+      p->muzzle_y = p->y + 9;
    }
 
    if (p->state == WALKING)
@@ -55,9 +57,33 @@ void animate_player(t_player *p, int *speed)
          p->cur_frame = 1;
       }
    }
+
+
+    //Set the muzzle flash position according to frame of player
+   if (p->direction == RIGHT)
+   {
+      if (p->cur_frame == 1) { p->muzzle_x = p->x + 21; p->muzzle_y = p->y + 10; }
+      else if (p->cur_frame == 3) { p->muzzle_x = p->x + 24; p->muzzle_y = p->y + 10; }
+      else { p->muzzle_x = p->x + 23; p->muzzle_y = p->y + 9; }
+   }
+   if (p->direction == LEFT)
+   {
+      if (p->cur_frame == 1) { p->muzzle_x = p->x - 6; p->muzzle_y = p->y + 10; }
+      else if (p->cur_frame == 3) { p->muzzle_x = p->x - 8; p->muzzle_y = p->y + 10; }
+      else { p->muzzle_x = p->x + -7; p->muzzle_y = p->y + 9; }
+   }
+
    if (p->state == STOPPED)
    {
       p->cur_frame = 0;
+      p->muzzle_y = p->y + 9;
+      if(p->muzzle_time) //If player shoots and is stopped set the muzzle xy and frame
+      {
+         p->cur_frame = 7;
+         if (p->direction == RIGHT) p->muzzle_x = p->x + 21;
+         if (p->direction == LEFT) p->muzzle_x = p->x -5;
+      }
+
    }
 }
 
