@@ -435,6 +435,15 @@ void check_key_up(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_Z:
          key[KEY_Z] = false;
          break;
+
+      case ALLEGRO_KEY_P:
+         player.x = map->player_start_x;
+         player.y = map->player_start_y;
+         cam.x = player.x - VIEWPORT_WIDTH / 2 + 24;
+         cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
+         check_cam();
+         break;
+
       case ALLEGRO_KEY_ESCAPE:
          program_done = true;
          break;
@@ -751,7 +760,7 @@ void update_player()
          // Health
          if (mp2->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp2->item = 0; activate_item_fx(mp2, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup); player.score += 100;}
          if (mp->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp->item = 0;  activate_item_fx(mp, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup); player.score += 100;}
-         if (mp3->item == ITEM_HEALTH && player.health < 8) { player.health = 8;mp3->item = 0; activate_item_fx(mp3, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup); player.score += 100;}
+         if (mp3->item == ITEM_HEALTH && player.health < 8) { player.health = 8; mp3->item = 0; activate_item_fx(mp3, item_fx); jlog("Health: %d", player.health); play_sound(snd_pickup); player.score += 100;}
 
          // Not-Health
          if (mp->item != ITEM_HEALTH && mp2->item != ITEM_HEALTH && mp3->item != ITEM_HEALTH)
