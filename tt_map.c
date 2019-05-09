@@ -26,7 +26,7 @@ t_map *create_empty_map()
    {
       m->name[i] = 0;
    }
-   strcpy_s(m->name, 32, "EMPTY MAP");
+   strcpy(m->name, "EMPTY MAP");
    m->bg = 0;
    m->num_enemies = 0;
    m->player_start_x = 0;

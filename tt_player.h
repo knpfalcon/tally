@@ -16,8 +16,6 @@ typedef struct t_player
    unsigned char cur_frame;
    unsigned char direction;
    unsigned char state;
-   ALLEGRO_TIMER *timer;
-   //float speed;
    int vel_x;
    int vel_y;
    int bb_left;
@@ -32,7 +30,6 @@ typedef struct t_player
    bool draw;
    bool on_ground;
    bool jump_pressed;
-   bool jumping;
    unsigned char health;
    unsigned int score;
    #ifdef DEBUG

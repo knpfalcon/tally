@@ -24,8 +24,7 @@ int halftime_frame_speed = ANIMATION_SPEED * 2;
 
 bool redraw = true;
 
-const int DISPLAY_WIDTH = 320 * DISPLAY_MULTIPLIER;
-const int DISPLAY_HEIGHT = 200 * DISPLAY_MULTIPLIER;
+t_screen screen = { .unscaled_w = 320, .unscaled_h = 200 };
 
 t_cam cam;
 t_map *map = NULL;
@@ -45,6 +44,8 @@ ALLEGRO_MOUSE_STATE mouse;
 ALLEGRO_FONT *font = NULL;
 
 //Bitmaps that get loaded from disk
+ALLEGRO_BITMAP *loading = NULL;
+ALLEGRO_BITMAP *border = NULL;
 ALLEGRO_BITMAP *tile_sheet = NULL;
 ALLEGRO_BITMAP *item_sheet = NULL;
 ALLEGRO_BITMAP *bg = NULL;
@@ -73,7 +74,7 @@ ALLEGRO_SAMPLE *snd_hithead = NULL;
 ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 
 //Music
-float mus_volume = 0.6;
+float mus_volume = 0.5;
 ALLEGRO_SAMPLE *music = NULL;
 ALLEGRO_SAMPLE_INSTANCE *music_instance = NULL;
 
@@ -83,7 +84,6 @@ ALLEGRO_SAMPLE_INSTANCE *music_instance = NULL;
  *************************************************/
 int init_game()
 {
-
    //Initialize Allegro
    if(!al_init())
    {
@@ -97,6 +97,43 @@ int init_game()
    int release = version & 255;
    jlog("Allegro %d.%d.%d release %d", major, minor, revision, release);
 
+   if (!al_init_image_addon())
+   {
+      jlog("Failed to initialize image_addon!");
+      return -1;
+   }
+   jlog("Image add-on initialized.");
+   al_set_new_display_adapter(1);
+   al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
+   display = al_create_display(screen.width, screen.height);
+   if(!display)
+   {
+      jlog("Failed to create display!");
+      return -1;
+   }
+   //Special thanks to dthompson from the allegro.cc forums for the setup below
+   screen.factor_x = al_get_display_width(display) / screen.unscaled_w;
+   screen.factor_y = al_get_display_height(display) / screen.unscaled_h;
+   screen.factor = (screen.factor_y < screen.factor_x) ? screen.factor_y : screen.factor_x;
+   screen.width = screen.unscaled_w * screen.factor;
+   screen.height = screen.unscaled_h * screen.factor;
+   screen.x = (al_get_display_width(display) / 2) - (screen.width/2);
+   screen.y = (al_get_display_height(display) / 2) - (screen.height/2);
+   jlog("Display Created.");
+
+   //Loading BITMAP
+   loading = al_load_bitmap("data/loading.png");
+   if (loading == NULL)
+   {
+      jlog("Couldn't load loading.png!");
+   }
+   else
+   {
+      al_lock_bitmap(loading, al_get_bitmap_format(loading), ALLEGRO_LOCK_READONLY);
+      al_draw_scaled_bitmap(loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
+      al_flip_display();
+   }
+
    event_queue = al_create_event_queue();
    if (!event_queue)
    {
@@ -104,13 +141,6 @@ int init_game()
       return -1;
    }
    jlog("Event queue created.");
-
-   if (!al_init_image_addon())
-   {
-      jlog("Failed to initialize image_addon!");
-      return -1;
-   }
-   jlog("Image add-on initialized.");
 
    FPS_TIMER = al_create_timer(1.0 / FPS);
    if(!FPS_TIMER)
@@ -158,13 +188,7 @@ int init_game()
 
    //Create Display
    //al_set_new_display_flags(ALLEGRO_OPENGL);
-   display = al_create_display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
-   if(!display)
-   {
-      jlog("Failed to create display!");
-      return -1;
-   }
-   jlog("Display Created.");
+
 
    #ifdef DEBUG
       al_set_window_title(display, "Tally Trauma -- DEBUG");
@@ -173,6 +197,14 @@ int init_game()
    #ifdef RELEASE
       al_set_window_title(display, "Tally Trauma");
    #endif // RELEASE
+
+   border = al_load_bitmap("data/bg_border.png");
+   if (border == NULL)
+   {
+      jlog("Couldn't load bg_border.png!");
+      return -1;
+   }
+
 
    stat_border = al_load_bitmap("data/border.png");
    if (stat_border == NULL)
@@ -269,11 +301,18 @@ int init_game()
    al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
    al_set_sample_instance_gain(music_instance, mus_volume);
    al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
-   al_play_sample_instance(music_instance);
+   //al_play_sample_instance(music_instance);
 
    jlog("Game initialized.");
 
-   printf("%d", sizeof(t_map_pos));
+   for (int y = 0; y < (al_get_display_height(display) / (32 * screen.factor)) + 1; y++)
+   {
+      for (int x = 0; x < (al_get_display_width(display) / (32 * screen.factor)) + 1; x++)
+      {
+         al_draw_scaled_bitmap(border, 0, 0, 32, 32, x * (32 * screen.factor), y * (32 * screen.factor), 32 * screen.factor, 32 * screen.factor, 0);
+      }
+   }
+   jlog("%d", screen.factor);
    return 0;
 }
 
@@ -320,9 +359,9 @@ void update_screen()
    al_set_target_backbuffer(display);
    al_draw_scaled_bitmap(game,
                          0,0,
-                         320, 200,
-                         0,0,
-                         DISPLAY_WIDTH, DISPLAY_HEIGHT,
+                         screen.unscaled_w, screen.unscaled_h,
+                         screen.x, screen.y,
+                         screen.width, screen.height,
                          0);
    al_flip_display();
 }
@@ -912,6 +951,7 @@ void clean_up()
    al_unlock_bitmap(item_fx_sheet);
    al_unlock_bitmap(health_bar);
    al_unlock_bitmap(muzzle_flash);
+   al_unlock_bitmap(loading);
    for (int j = 0; j < 7; j++)
    {
       al_unlock_bitmap(player.frame[j]);

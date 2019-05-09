@@ -26,12 +26,6 @@ bool is_ground(t_map *m, int x, int y)
 /*************************************************
  * Basic Bounding Box collision detection        *
  *************************************************/
-//bool collision(t_map *m, int al, int ar, int ab, int at, int bl, int br, int bb, int bt)
-//{
-//   if (al < br || ar > bl ||  ab > bt ||  at < bb) return true;
-//
-//   return false;
-//}
 bool check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
 {
 
