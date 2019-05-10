@@ -7,14 +7,12 @@
 
 typedef struct t_bullet
 {
-   ALLEGRO_BITMAP *bitmap;
-   int x;
-   int y;
-   bool hurt_player;
-   int bb_top;
-   int bb_left;
-   int bb_width;
-   int bb_height;
+   int start_x;
+   int start_y;
+   int end_x;
+   int end_y;
+   bool draw;
+
 } t_bullet;
 
 

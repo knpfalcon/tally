@@ -13,6 +13,7 @@
 #include "tt_player.h"
 #include "tt_collision.h"
 #include "tt_items.h"
+#include "tt_bullet.h"
 
 /* At some point I'll see if I can prune these globals,
    but they're staying for now. */
@@ -23,6 +24,8 @@ int frame_speed = ANIMATION_SPEED;
 int halftime_frame_speed = ANIMATION_SPEED * 2;
 
 bool redraw = true;
+
+t_bullet player_bullet;
 
 t_screen screen = { .unscaled_w = 320, .unscaled_h = 200 };
 
@@ -70,6 +73,7 @@ ALLEGRO_SAMPLE *snd_fall = NULL;
 ALLEGRO_SAMPLE *snd_jump = NULL;
 ALLEGRO_SAMPLE *snd_land = NULL;
 ALLEGRO_SAMPLE *snd_hithead = NULL;
+ALLEGRO_SAMPLE *snd_shoot = NULL;
 
 ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 
@@ -279,6 +283,7 @@ int init_game()
    snd_pickup = al_load_sample("data/sound/pickup.ogg");
    snd_health = al_load_sample("data/sound/health.ogg");
    snd_hurt = al_load_sample("data/sound/hurt.ogg");
+   snd_shoot = al_load_sample("data/sound/shoot.ogg");
 
    music = al_load_sample("data/music/music1.ogg");
 
@@ -301,17 +306,17 @@ int init_game()
    al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
    al_set_sample_instance_gain(music_instance, mus_volume);
    al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
-   //al_play_sample_instance(music_instance);
-
-   jlog("Game initialized.");
+   al_play_sample_instance(music_instance);
 
    for (int y = 0; y < (al_get_display_height(display) / (32 * screen.factor)) + 1; y++)
    {
       for (int x = 0; x < (al_get_display_width(display) / (32 * screen.factor)) + 1; x++)
       {
-         al_draw_scaled_bitmap(border, 0, 0, 32, 32, x * (32 * screen.factor), y * (32 * screen.factor), 32 * screen.factor, 32 * screen.factor, 0);
+      al_draw_scaled_bitmap(border, 0, 0, 32, 32, x * (32 * screen.factor), y * (32 * screen.factor), 32 * screen.factor, 32 * screen.factor, 0);
       }
    }
+   jlog("Game initialized.");
+
    jlog("%d", screen.factor);
    return 0;
 }
@@ -336,12 +341,13 @@ void play_sound(ALLEGRO_SAMPLE *s, bool interupt)
  ************************************************/
 void update_screen()
 {
-
    draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
    if (player.draw) draw_player(view_port, &cam, &player, player.direction);
 
    if (player.direction == RIGHT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
    if (player.direction == LEFT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
+   if (player_bullet.draw)
+      al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, 4, al_map_rgb(170, 0 ,0));
 
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
    #ifdef DEBUG
@@ -513,6 +519,65 @@ void check_key_up(ALLEGRO_EVENT *ev)
          program_done = true;
          break;
    }
+}
+
+/************************************************
+ * Check bullet collisions                      *
+ ************************************************/
+bool check_bullet_collision()
+{
+   if (player.direction == RIGHT)
+   {
+      player_bullet.start_x = player.x + 25;
+      player_bullet.start_y = player.y + 18;
+      for (int x = player_bullet.start_x; x < cam.x + VIEWPORT_WIDTH + 16; x++)
+      {
+         if (is_ground(map, x, player_bullet.start_y))
+         {
+            player_bullet.end_x = x;
+            player_bullet.end_y = player_bullet.start_y;
+            printf("Bullet hit at %d, %d\n", player_bullet.end_x, player_bullet.end_y);
+            player_bullet.draw = true;
+            return true;
+         }
+      }
+   }
+
+   if (player.direction == LEFT)
+   {
+      player_bullet.start_x = player.x + 6;
+      player_bullet.start_y = player.y + 18;
+      for (int x = player_bullet.start_x; x > cam.x - 16; x--)
+      {
+         if (is_ground(map, x, player_bullet.start_y))
+         {
+            player_bullet.end_x = x;
+            player_bullet.end_y = player_bullet.start_y;
+            printf("Bullet hit at %d, %d\n", player_bullet.end_x, player_bullet.end_y);
+            player_bullet.draw = true;
+            return true;
+         }
+      }
+   }
+
+   if (player.direction == RIGHT)
+   {
+      player_bullet.start_x = player.x + 25;
+      player_bullet.start_y = player.y + 18;
+      player_bullet.end_x = player_bullet.start_x + ((cam.x + VIEWPORT_WIDTH) - player_bullet.start_x) + 16;
+      player_bullet.end_y = player_bullet.start_y;
+
+   }
+   if (player.direction == LEFT)
+   {
+      player_bullet.start_x = player.x + 6;
+      player_bullet.start_y = player.y + 18;
+      player_bullet.end_x = player_bullet.start_x - (cam.x + player_bullet.start_x) -16;
+      player_bullet.end_y = player_bullet.start_y;
+   }
+
+   player_bullet.draw = false;
+   return false;
 }
 
 /************************************************
@@ -876,12 +941,16 @@ void update_player()
    //Shooting time
    if (key[KEY_ALT] && !player.shoot_time)
    {
+      check_bullet_collision();
+      play_sound(snd_shoot, false);
       player.shoot_time = 10;
-      player.muzzle_time = 5;
+      player.muzzle_time = 3;
    }
    if (player.muzzle_time) player.muzzle_time--;
-   if (player.shoot_time) player.shoot_time--;
 
+
+   if (player.shoot_time) player.shoot_time--;
+   else player_bullet.draw = false;
 
    //printf("player.state: %d\n", player.state);
    //printf("player.vel_y: %d\n", player.vel_y);
