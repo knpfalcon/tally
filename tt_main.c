@@ -57,6 +57,7 @@ ALLEGRO_BITMAP *item_fx_sheet = NULL;
 ALLEGRO_BITMAP *health_bar = NULL;
 ALLEGRO_BITMAP *bullet_blue = NULL;
 ALLEGRO_BITMAP *muzzle_flash = NULL;
+ALLEGRO_BITMAP *bullet_particle = NULL;
 
 
 //Bitmaps that get drawn to
@@ -269,7 +270,12 @@ int init_game()
 
    muzzle_flash = al_load_bitmap("data/muzzle_flash.png");
    if (muzzle_flash == NULL) { jlog("Couldn't load muzzle_flash.png"); return -1; }
-   al_lock_bitmap(muzzle_flash, al_get_bitmap_format(health_bar), ALLEGRO_LOCK_READONLY);
+   al_lock_bitmap(muzzle_flash, al_get_bitmap_format(muzzle_flash), ALLEGRO_LOCK_READONLY);
+
+   bullet_particle = al_load_bitmap("data/particle.png");
+   if (bullet_particle == NULL) { jlog("Couldn't load particle.png"); return -1; }
+   al_lock_bitmap(bullet_particle, al_get_bitmap_format(bullet_particle), ALLEGRO_LOCK_READONLY);
+
 
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
    console_map = al_create_bitmap(64, 45);
@@ -347,7 +353,8 @@ void update_screen()
    if (player.direction == RIGHT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
    if (player.direction == LEFT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
    if (player_bullet.draw)
-      al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, 4, al_map_rgb(170, 0 ,0));
+      al_draw_bitmap_region(bullet_particle, (player.shoot_time / 2) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
+      //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
 
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
    #ifdef DEBUG
@@ -943,8 +950,8 @@ void update_player()
    {
       check_bullet_collision();
       play_sound(snd_shoot, false);
-      player.shoot_time = 10;
-      player.muzzle_time = 3;
+      player.shoot_time = 8;
+      player.muzzle_time = 4;
    }
    if (player.muzzle_time) player.muzzle_time--;
 
@@ -1021,6 +1028,7 @@ void clean_up()
    al_unlock_bitmap(health_bar);
    al_unlock_bitmap(muzzle_flash);
    al_unlock_bitmap(loading);
+   al_unlock_bitmap(bullet_particle);
    for (int j = 0; j < 7; j++)
    {
       al_unlock_bitmap(player.frame[j]);
