@@ -18,6 +18,7 @@
 /* At some point I'll see if I can prune these globals,
    but they're staying for now. */
 bool program_done = false;
+t_game game = { .state = LOAD_LEVEL, .next_state = LOAD_LEVEL };
 
 const float FPS = 30;
 int frame_speed = ANIMATION_SPEED;
@@ -63,7 +64,7 @@ ALLEGRO_BITMAP *bullet_particle = NULL;
 //Bitmaps that get drawn to
 ALLEGRO_BITMAP *view_port = NULL;
 ALLEGRO_BITMAP *console_map = NULL;
-ALLEGRO_BITMAP *game = NULL;
+ALLEGRO_BITMAP *game_bmp = NULL;
 
 //Sounds
 float sfx_volume = 1.0;
@@ -191,10 +192,6 @@ int init_game()
    }
    jlog("Audio initialized.");
 
-   //Create Display
-   //al_set_new_display_flags(ALLEGRO_OPENGL);
-
-
    #ifdef DEBUG
       al_set_window_title(display, "Tally Trauma -- DEBUG");
    #endif // DEBUG
@@ -209,92 +206,7 @@ int init_game()
       jlog("Couldn't load bg_border.png!");
       return -1;
    }
-
-
-   stat_border = al_load_bitmap("data/border.png");
-   if (stat_border == NULL)
-   {
-      jlog("Couldn't load border.png!");
-      return -1;
-   }
-   al_lock_bitmap(stat_border, al_get_bitmap_format(stat_border), ALLEGRO_LOCK_READONLY);
-
-   bg = al_load_bitmap("data/bg_1.png");
-   if (bg == NULL)
-   {
-      jlog("Couldn't load bg1.png!");
-      return -1;
-   }
-   al_lock_bitmap(bg, al_get_bitmap_format(bg), ALLEGRO_LOCK_READONLY);
-
-   tile_sheet = al_load_bitmap("data/tile_sheet.png");
-   if (tile_sheet == NULL)
-   {
-      jlog("Couldn't load tile_sheet.png!");
-      return -1;
-   }
-   al_lock_bitmap(tile_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
-
-   item_sheet = al_load_bitmap("data/item_sheet.png");
-   if (tile_sheet == NULL)
-   {
-      jlog("Couldn't load item_sheet.png!");
-      return -1;
-   }
-   jlog("item_sheet.png loaded.");
-   al_lock_bitmap(item_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
-
-
-   player.bitmap = al_load_bitmap("data/player.png");
-   if (player.bitmap == NULL) { jlog("Couldn't load player.png"); return -1; }
-   al_lock_bitmap(player.bitmap, al_get_bitmap_format(player.bitmap), ALLEGRO_LOCK_READONLY);
-   for (int j = 0; j < 8; j++)
-   {
-      player.frame[j] = al_create_sub_bitmap(player.bitmap, j * 32, 0, 32, 32);
-      if (player.frame[j] == NULL)
-      {
-         jlog("Couldn't create sub-bitmap from player bitmap!");
-         return -1;
-      }
-      al_lock_bitmap(player.frame[j], al_get_bitmap_format(player.frame[j]), ALLEGRO_LOCK_READONLY);
-      jlog("Player frame %d created and locked.", j);
-   }
-
-   item_fx_sheet = al_load_bitmap("data/item_score.png");
-   if (item_fx_sheet == NULL) { jlog("Couldn't load item_score.png"); return -1; }
-   al_lock_bitmap(item_fx_sheet, al_get_bitmap_format(item_fx_sheet), ALLEGRO_LOCK_READONLY);
-
-   health_bar = al_load_bitmap("data/health_bar.png");
-   if (health_bar == NULL) { jlog("Couldn't load health_bar.png"); return -1; }
-   al_lock_bitmap(health_bar, al_get_bitmap_format(health_bar), ALLEGRO_LOCK_READONLY);
-
-   muzzle_flash = al_load_bitmap("data/muzzle_flash.png");
-   if (muzzle_flash == NULL) { jlog("Couldn't load muzzle_flash.png"); return -1; }
-   al_lock_bitmap(muzzle_flash, al_get_bitmap_format(muzzle_flash), ALLEGRO_LOCK_READONLY);
-
-   bullet_particle = al_load_bitmap("data/particle.png");
-   if (bullet_particle == NULL) { jlog("Couldn't load particle.png"); return -1; }
-   al_lock_bitmap(bullet_particle, al_get_bitmap_format(bullet_particle), ALLEGRO_LOCK_READONLY);
-
-
-   view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-   console_map = al_create_bitmap(64, 45);
-
-   //Load sounds
-   al_reserve_samples(4);
-   snd_fall = al_load_sample("data/sound/fall.ogg");
-   snd_jump = al_load_sample("data/sound/jump.ogg");
-   snd_land = al_load_sample("data/sound/land.ogg");
-   snd_hithead = al_load_sample("data/sound/hithead.ogg");
-   snd_pickup = al_load_sample("data/sound/pickup.ogg");
-   snd_health = al_load_sample("data/sound/health.ogg");
-   snd_hurt = al_load_sample("data/sound/hurt.ogg");
-   snd_shoot = al_load_sample("data/sound/shoot.ogg");
-
-   music = al_load_sample("data/music/music1.ogg");
-
-   //Create the game bitmap that needs to be stretched to display
-   game = al_create_bitmap(320, 200);
+   al_lock_bitmap(border, al_get_bitmap_format(border), ALLEGRO_LOCK_READONLY);
 
    //Load font
    font = al_load_bitmap_font("data/fonts/font.png");
@@ -304,15 +216,7 @@ int init_game()
    al_register_event_source(event_queue, al_get_keyboard_event_source());
 
    al_clear_to_color(al_map_rgb(0, 0, 0));
-
    al_flip_display();
-
-   //Play music (Make this into a function at some point.
-   music_instance = al_create_sample_instance(music);
-   al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
-   al_set_sample_instance_gain(music_instance, mus_volume);
-   al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
-   al_play_sample_instance(music_instance);
 
    for (int y = 0; y < (al_get_display_height(display) / (32 * screen.factor)) + 1; y++)
    {
@@ -321,62 +225,15 @@ int init_game()
       al_draw_scaled_bitmap(border, 0, 0, 32, 32, x * (32 * screen.factor), y * (32 * screen.factor), 32 * screen.factor, 32 * screen.factor, 0);
       }
    }
+
+   //Create the game bitmap that needs to be stretched to display
+   game_bmp = al_create_bitmap(320, 200);
+   al_reserve_samples(4);
+
    jlog("Game initialized.");
-
    jlog("%d", screen.factor);
+
    return 0;
-}
-
-/*************************************************
- * Plays a sound without all the boilerplate     *
- *************************************************/
-void play_sound(ALLEGRO_SAMPLE *s, bool interupt)
-{
-//   if ( !al_get_sample_instance_playing(snd_hurt_instance) ||
-//        !al_get_sample_instance_playing(snd_pickup_instance) ||
-//        !al_get_sample_instance_playing(snd_health_instance) ) //If these samples aren't playing interrupt them
-//   {
-      if (interupt) al_stop_samples();
-      al_play_sample(s, sfx_volume, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
-   //}
-
-}
-
-/************************************************
- * The drawing function, called at redraw       *
- ************************************************/
-void update_screen()
-{
-   draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
-   if (player.draw) draw_player(view_port, &cam, &player, player.direction);
-
-   if (player.direction == RIGHT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
-   if (player.direction == LEFT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
-   if (player_bullet.draw)
-      al_draw_bitmap_region(bullet_particle, (player.shoot_time ) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
-      //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
-
-   draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
-   #ifdef DEBUG
-   draw_bb(&cam, player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height);
-   show_player_hotspot(view_port, &cam, &player);
-   #endif // DEBUG
-   draw_console_map(map, &player, console_map);
-
-   //Draw view_port to game, then draw game scaled to display.
-   al_set_target_bitmap(game);
-   al_draw_bitmap(view_port, VIEWPORT_X, VIEWPORT_Y, 0);
-   al_draw_bitmap(console_map, 238, 100, 0);
-   al_draw_textf(font, al_map_rgb(255,255,255), 301, 18, ALLEGRO_ALIGN_RIGHT, "%09d", player.score);
-   al_draw_bitmap_region(health_bar, 0, player.health * 16, 64, 16, 238, 42, 0);
-   al_set_target_backbuffer(display);
-   al_draw_scaled_bitmap(game,
-                         0,0,
-                         screen.unscaled_w, screen.unscaled_h,
-                         screen.x, screen.y,
-                         screen.width, screen.height,
-                         0);
-   al_flip_display();
 }
 
 /************************************************
@@ -423,6 +280,302 @@ void check_cam() //Check to make sure camera is not out of bounds.
       cam.y = (MAP_HEIGHT * TILE_SIZE) - VIEWPORT_HEIGHT;
    }
 }
+
+/*************************************************
+ * Loads a level up at LOAD_LEVEL game state     *
+ *************************************************/
+ bool load_level()
+ {
+   //Display loading image
+   //al_set_target_backbuffer(display);
+   al_draw_scaled_bitmap(loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
+   al_flip_display();
+
+   //Load map
+   map = load_map("data/maps/map.spl"); //Create an empty map
+   if (map == NULL)
+   {
+      jlog("In file %s, Line %d. Couldn't create an empty map!" __FILE__, __LINE__);
+      return false;
+   }
+   jlog("Map loaded.");
+
+   //Set player stuff
+   player.x = map->player_start_x;
+   player.y = map->player_start_y;
+   player.bb_width = 8;
+   player.bb_height = 28;
+   player.draw = true;
+   player.health = 8;
+
+   //Check cam position
+   check_cam();
+
+   //Create item after effects for items in map
+   item_fx = create_item_after_fx(map);
+
+   //Load the graphics for a level
+   stat_border = al_load_bitmap("data/border.png");
+   if (stat_border == NULL)
+   {
+      jlog("Couldn't load border.png!");
+      return false;
+   }
+   al_lock_bitmap(stat_border, al_get_bitmap_format(stat_border), ALLEGRO_LOCK_READONLY);
+
+   bg = al_load_bitmap("data/bg_1.png");
+   if (bg == NULL)
+   {
+      jlog("Couldn't load bg1.png!");
+      return false;
+   }
+   al_lock_bitmap(bg, al_get_bitmap_format(bg), ALLEGRO_LOCK_READONLY);
+
+   tile_sheet = al_load_bitmap("data/tile_sheet.png");
+   if (tile_sheet == NULL)
+   {
+      jlog("Couldn't load tile_sheet.png!");
+      return false;
+   }
+   al_lock_bitmap(tile_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
+
+   item_sheet = al_load_bitmap("data/item_sheet.png");
+   if (tile_sheet == NULL)
+   {
+      jlog("Couldn't load item_sheet.png!");
+      return false;
+   }
+   jlog("item_sheet.png loaded.");
+   al_lock_bitmap(item_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
+
+   player.bitmap = al_load_bitmap("data/player.png");
+   if (player.bitmap == NULL) { jlog("Couldn't load player.png"); return -1; }
+   al_lock_bitmap(player.bitmap, al_get_bitmap_format(player.bitmap), ALLEGRO_LOCK_READONLY);
+   for (int j = 0; j < 8; j++)
+   {
+      player.frame[j] = al_create_sub_bitmap(player.bitmap, j * 32, 0, 32, 32);
+      if (player.frame[j] == NULL)
+      {
+         jlog("Couldn't create sub-bitmap from player bitmap!");
+         return false;
+      }
+      al_lock_bitmap(player.frame[j], al_get_bitmap_format(player.frame[j]), ALLEGRO_LOCK_READONLY);
+      jlog("Player frame %d created and locked.", j);
+   }
+
+   item_fx_sheet = al_load_bitmap("data/item_score.png");
+   if (item_fx_sheet == NULL) { jlog("Couldn't load item_score.png"); return false;; }
+   al_lock_bitmap(item_fx_sheet, al_get_bitmap_format(item_fx_sheet), ALLEGRO_LOCK_READONLY);
+
+   health_bar = al_load_bitmap("data/health_bar.png");
+   if (health_bar == NULL) { jlog("Couldn't load health_bar.png"); return false; }
+   al_lock_bitmap(health_bar, al_get_bitmap_format(health_bar), ALLEGRO_LOCK_READONLY);
+
+   muzzle_flash = al_load_bitmap("data/muzzle_flash.png");
+   if (muzzle_flash == NULL) { jlog("Couldn't load muzzle_flash.png"); return false; }
+   al_lock_bitmap(muzzle_flash, al_get_bitmap_format(muzzle_flash), ALLEGRO_LOCK_READONLY);
+
+   bullet_particle = al_load_bitmap("data/particle.png");
+   if (bullet_particle == NULL) { jlog("Couldn't load particle.png"); return false; }
+   al_lock_bitmap(bullet_particle, al_get_bitmap_format(bullet_particle), ALLEGRO_LOCK_READONLY);
+
+   //Create viewport and console map bitmaps
+   view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+   console_map = al_create_bitmap(64, 45);
+
+   //Load sounds
+   snd_fall = al_load_sample("data/sound/fall.ogg");
+   snd_jump = al_load_sample("data/sound/jump.ogg");
+   snd_land = al_load_sample("data/sound/land.ogg");
+   snd_hithead = al_load_sample("data/sound/hithead.ogg");
+   snd_pickup = al_load_sample("data/sound/pickup.ogg");
+   snd_health = al_load_sample("data/sound/health.ogg");
+   snd_hurt = al_load_sample("data/sound/hurt.ogg");
+   snd_shoot = al_load_sample("data/sound/shoot.ogg");
+
+   music = al_load_sample("data/music/music1.ogg");
+
+   //Play music (Make this into a function at some point.
+   music_instance = al_create_sample_instance(music);
+   al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
+   al_set_sample_instance_gain(music_instance, mus_volume);
+   al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
+   al_play_sample_instance(music_instance);
+
+   //draw the status border
+   al_set_target_bitmap(game_bmp);
+   al_draw_bitmap(stat_border, 0, 0, 0);
+
+   game.level_needs_unloaded = true;
+   return true; //Returns true on success
+ }
+
+/*************************************************
+ * Unloads a level                               *
+ *************************************************/
+bool unload_level()
+{
+   destroy_map(map);
+   map = NULL;
+   if (map == NULL) jlog("map unloaded.");
+
+   destroy_item_afterfx(item_fx);
+   item_fx = NULL;
+   if (item_fx == NULL) jlog("item_fx unloaded.");
+
+   al_unlock_bitmap(tile_sheet);
+   al_destroy_bitmap(tile_sheet);
+   tile_sheet = NULL;
+   if (tile_sheet == NULL) jlog("tile_sheet unloaded.");
+
+   al_unlock_bitmap(item_sheet);
+   al_destroy_bitmap(item_sheet);
+   item_sheet = NULL;
+   if (item_sheet == NULL) jlog("item_sheet unloaded.");
+
+   al_unlock_bitmap(bg);
+   al_destroy_bitmap(bg);
+   bg = NULL;
+   if (bg == NULL) jlog("bg unloaded.");
+
+   al_unlock_bitmap(stat_border);
+   al_destroy_bitmap(stat_border);
+   stat_border = NULL;
+   if (stat_border == NULL) jlog("stat_border unloaded.");
+
+   al_unlock_bitmap(player.bitmap);
+   al_destroy_bitmap(player.bitmap);
+   player.bitmap = NULL;
+   if (player.bitmap == NULL) jlog("player.bitmap unloaded.");
+
+   al_unlock_bitmap(item_fx_sheet);
+   al_destroy_bitmap(item_fx_sheet);
+   item_fx_sheet = NULL;
+   if (item_fx_sheet == NULL) jlog("item_fx_sheet unloaded.");
+
+   al_unlock_bitmap(health_bar);
+   al_destroy_bitmap(health_bar);
+   health_bar = NULL;
+   if (health_bar == NULL) jlog("health_bar unloaded.");
+
+   al_unlock_bitmap(muzzle_flash);
+   al_destroy_bitmap(muzzle_flash);
+   muzzle_flash = NULL;
+   if (muzzle_flash == NULL) jlog("muzzle_flash unloaded.");
+
+   al_unlock_bitmap(bullet_particle);
+   al_destroy_bitmap(bullet_particle);
+   bullet_particle = NULL;
+   if (bullet_particle == NULL) jlog("bullet_particle unloaded.");
+
+   for (int j = 0; j < 7; j++)
+   {
+      al_unlock_bitmap(player.frame[j]);
+      al_destroy_bitmap(player.frame[j]);
+      player.frame[j] = NULL;
+      if (player.frame[j] == NULL) jlog("player.frame[%d] unloaded.", j);
+   }
+
+   al_destroy_bitmap(view_port);
+   view_port = NULL;
+   if (view_port == NULL) jlog("view_port unloaded.");
+
+   al_destroy_bitmap(console_map);
+   console_map = NULL;
+   if (console_map == NULL) jlog("console_map unloaded.");
+
+   //Unload sounds
+   al_destroy_sample(snd_fall);
+   snd_fall = NULL;
+
+   al_destroy_sample(snd_jump);
+   snd_jump = NULL;
+
+   al_destroy_sample(snd_land);
+   snd_land = NULL;
+
+   al_destroy_sample(snd_hithead);
+   snd_hithead = NULL;
+
+   al_destroy_sample(snd_pickup);
+   snd_pickup = NULL;
+
+   al_destroy_sample(snd_health);
+   snd_health = NULL;
+
+   al_destroy_sample(snd_hurt);
+   snd_hurt = NULL;
+
+   al_destroy_sample(snd_shoot);
+   snd_shoot = NULL;
+
+
+   //Play music (Make this into a function at some point.
+   music_instance = al_create_sample_instance(music);
+   al_destroy_sample_instance(music_instance);
+   music_instance = NULL;
+
+   al_destroy_sample(music);
+   music = NULL;
+
+   game.level_needs_unloaded = false;
+   return true; //Returns true on success
+}
+
+
+/*************************************************
+ * Plays a sound without all the boilerplate     *
+ *************************************************/
+void play_sound(ALLEGRO_SAMPLE *s, bool interupt)
+{
+//   if ( !al_get_sample_instance_playing(snd_hurt_instance) ||
+//        !al_get_sample_instance_playing(snd_pickup_instance) ||
+//        !al_get_sample_instance_playing(snd_health_instance) ) //If these samples aren't playing interrupt them
+//   {
+      if (interupt) al_stop_samples();
+      al_play_sample(s, sfx_volume, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
+   //}
+
+}
+
+/************************************************
+ * The drawing function, called at redraw       *
+ ************************************************/
+void update_screen()
+{
+   draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
+   if (player.draw) draw_player(view_port, &cam, &player, player.direction);
+
+   if (player.direction == RIGHT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
+   if (player.direction == LEFT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
+   if (player_bullet.draw)
+      al_draw_bitmap_region(bullet_particle, (player.shoot_time ) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
+      //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
+
+   draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
+   #ifdef DEBUG
+   draw_bb(&cam, player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height);
+   show_player_hotspot(view_port, &cam, &player);
+   #endif // DEBUG
+   draw_console_map(map, &player, console_map);
+
+   //Draw view_port to game, then draw game scaled to display.
+   al_set_target_bitmap(game_bmp);
+   al_draw_bitmap(view_port, VIEWPORT_X, VIEWPORT_Y, 0);
+   al_draw_bitmap(console_map, 238, 100, 0);
+   al_draw_textf(font, al_map_rgb(255,255,255), 301, 18, ALLEGRO_ALIGN_RIGHT, "%09d", player.score);
+   al_draw_textf(font, al_map_rgb(255,255,255), 18, 185, ALLEGRO_ALIGN_LEFT, "THIS_IS_SOME_TEXT!_AAAAAAAAAA");
+   al_draw_bitmap_region(health_bar, 0, player.health * 16, 64, 16, 238, 42, 0);
+   al_set_target_backbuffer(display);
+   al_draw_scaled_bitmap(game_bmp,
+                         0,0,
+                         screen.unscaled_w, screen.unscaled_h,
+                         screen.x, screen.y,
+                         screen.width, screen.height,
+                         0);
+   al_flip_display();
+}
+
 
 /************************************************
  * Checks "Key Down" events                     *
@@ -523,7 +676,7 @@ void check_key_up(ALLEGRO_EVENT *ev)
          break;
 
       case ALLEGRO_KEY_ESCAPE:
-         program_done = true;
+         game.state = QUIT;
          break;
    }
 }
@@ -1013,26 +1166,40 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
  ************************************************/
 void clean_up()
 {
-   destroy_map(map);
-   map = NULL;
-
-   destroy_item_afterfx(item_fx);
-   item_fx = NULL;
-
-   al_unlock_bitmap(tile_sheet);
-   al_unlock_bitmap(item_sheet);
-   al_unlock_bitmap(bg);
-   al_unlock_bitmap(stat_border);
-   al_unlock_bitmap(player.bitmap);
-   al_unlock_bitmap(item_fx_sheet);
-   al_unlock_bitmap(health_bar);
-   al_unlock_bitmap(muzzle_flash);
-   al_unlock_bitmap(loading);
-   al_unlock_bitmap(bullet_particle);
-   for (int j = 0; j < 7; j++)
+   if (game.level_needs_unloaded)
    {
-      al_unlock_bitmap(player.frame[j]);
+      if(!unload_level())
+      {
+         jlog("Error unloading level!");
+      }
+      jlog("Level unloaded.");
    }
+
+//   destroy_map(map);
+//   map = NULL;
+//
+//   destroy_item_afterfx(item_fx);
+//   item_fx = NULL;
+//
+//   al_unlock_bitmap(tile_sheet);
+//   al_unlock_bitmap(item_sheet);
+//   al_unlock_bitmap(bg);
+//   al_unlock_bitmap(stat_border);
+//   al_unlock_bitmap(player.bitmap);
+//   al_unlock_bitmap(item_fx_sheet);
+//   al_unlock_bitmap(health_bar);
+//   al_unlock_bitmap(muzzle_flash);
+//   al_unlock_bitmap(bullet_particle);
+//   for (int j = 0; j < 7; j++)
+//   {
+//      al_unlock_bitmap(player.frame[j]);
+//   }
+
+   al_unlock_bitmap(loading);
+//   al_destroy_bitmap(loading);
+//   loading = NULL;
+   al_unlock_bitmap(border);
+
 
    if(event_queue) {
       al_destroy_event_queue(event_queue);
@@ -1060,41 +1227,26 @@ void clean_up()
  ************************************************/
 int main(int argc, char **argv)
 {
-
    if (init_game() != 0)
    {
       jlog("Failed to init game!\n");
       return -1;
    }
 
-   map = load_map("data/maps/map.spl"); //Create an empty map
-   if (map == NULL)
+   if (game.state == LOAD_LEVEL)
    {
-      jlog("In file %s, Line %d. Couldn't create an empty map!" __FILE__, __LINE__);
-      return -1;
+      if (!load_level())
+      {
+         jlog("Level failed to load!");
+         return -1;
+      }
+      jlog("Level Loaded.");
    }
-   jlog("Map loaded.");
-
-   player.x = map->player_start_x;
-   player.y = map->player_start_y;
-   player.bb_width = 8;
-   player.bb_height = 28;
-   player.draw = true;
-   player.health = 8;
-
-   check_cam();
-
-   item_fx = create_item_after_fx(map);
-
-   al_set_target_bitmap(game);
-   al_draw_bitmap(stat_border, 0, 0, 0);
-
-   //This is the main loop for now
 
    al_start_timer(FPS_TIMER);
    jlog("FPS timer started.");
 
-   while(!program_done)
+   while(game.state != QUIT)
    {
 
       ALLEGRO_EVENT ev;
@@ -1107,7 +1259,7 @@ int main(int argc, char **argv)
       }
       else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
       {
-         program_done = true;
+         game.state = QUIT;
       }
 
       if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
@@ -1128,6 +1280,7 @@ int main(int argc, char **argv)
    }
 
    clean_up();
+
    return 0;
 }
 

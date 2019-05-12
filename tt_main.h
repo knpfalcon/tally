@@ -20,7 +20,10 @@
 typedef struct t_game
 {
    unsigned char state;
-
+   unsigned char next_state;
+   unsigned int episode;
+   unsigned int level;
+   bool level_needs_unloaded;
 } t_game;
 
 typedef struct t_cam
@@ -43,6 +46,8 @@ typedef struct t_screen
    int height;
 
 } t_screen;
+
+enum STATE { QUIT, SPLASH, TILE, DEMO, MENU, LOAD_LEVEL, PLAY_LEVEL, QUIT_LEVEL };
 
 enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_ALT, KEY_Z, KEY_N, KEY_PAD_PLUS, KEY_PAD_MINUS, KEY_E, KEY_R};
 
