@@ -17,12 +17,18 @@
 
 #define ANIMATION_SPEED 3
 
+#define LEVEL_1 "data/maps/map.spl"
+
+#define MUSIC_0 "data/music/music0.ogg"
+#define MUSIC_1 "data/music/music1.ogg"
+
 typedef struct t_game
 {
    unsigned char state;
    unsigned char next_state;
    unsigned int episode;
-   unsigned int level;
+   char *level;
+   char *music;
    bool level_needs_unloaded;
 } t_game;
 

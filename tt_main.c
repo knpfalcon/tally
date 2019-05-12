@@ -109,7 +109,7 @@ int init_game()
       return -1;
    }
    jlog("Image add-on initialized.");
-   al_set_new_display_adapter(1);
+   //al_set_new_display_adapter(1);
    al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
    display = al_create_display(screen.width, screen.height);
    if(!display)
@@ -231,7 +231,10 @@ int init_game()
    al_reserve_samples(4);
 
    jlog("Game initialized.");
-   jlog("%d", screen.factor);
+   jlog("Screen size factor: %d", screen.factor);
+
+   game.level = LEVEL_1;
+   game.music = MUSIC_1;
 
    return 0;
 }
@@ -284,7 +287,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
 /*************************************************
  * Loads a level up at LOAD_LEVEL game state     *
  *************************************************/
- bool load_level()
+ bool load_level(char *map_file, char *music_file)
  {
    //Display loading image
    //al_set_target_backbuffer(display);
@@ -292,7 +295,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
    al_flip_display();
 
    //Load map
-   map = load_map("data/maps/map.spl"); //Create an empty map
+   map = load_map(map_file); //Create an empty map
    if (map == NULL)
    {
       jlog("In file %s, Line %d. Couldn't create an empty map!" __FILE__, __LINE__);
@@ -315,10 +318,10 @@ void check_cam() //Check to make sure camera is not out of bounds.
    item_fx = create_item_after_fx(map);
 
    //Load the graphics for a level
-   stat_border = al_load_bitmap("data/border.png");
+   stat_border = al_load_bitmap("data/stat_border.png");
    if (stat_border == NULL)
    {
-      jlog("Couldn't load border.png!");
+      jlog("Couldn't load stat_border.png!");
       return false;
    }
    al_lock_bitmap(stat_border, al_get_bitmap_format(stat_border), ALLEGRO_LOCK_READONLY);
@@ -393,7 +396,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
    snd_hurt = al_load_sample("data/sound/hurt.ogg");
    snd_shoot = al_load_sample("data/sound/shoot.ogg");
 
-   music = al_load_sample("data/music/music1.ogg");
+   music = al_load_sample(music_file);
 
    //Play music (Make this into a function at some point.
    music_instance = al_create_sample_instance(music);
@@ -443,11 +446,6 @@ bool unload_level()
    stat_border = NULL;
    if (stat_border == NULL) jlog("stat_border unloaded.");
 
-   al_unlock_bitmap(player.bitmap);
-   al_destroy_bitmap(player.bitmap);
-   player.bitmap = NULL;
-   if (player.bitmap == NULL) jlog("player.bitmap unloaded.");
-
    al_unlock_bitmap(item_fx_sheet);
    al_destroy_bitmap(item_fx_sheet);
    item_fx_sheet = NULL;
@@ -468,13 +466,19 @@ bool unload_level()
    bullet_particle = NULL;
    if (bullet_particle == NULL) jlog("bullet_particle unloaded.");
 
-   for (int j = 0; j < 7; j++)
+   for (int j = 0; j < 8; ++j)
    {
       al_unlock_bitmap(player.frame[j]);
       al_destroy_bitmap(player.frame[j]);
       player.frame[j] = NULL;
       if (player.frame[j] == NULL) jlog("player.frame[%d] unloaded.", j);
    }
+
+   al_unlock_bitmap(player.bitmap);
+   al_destroy_bitmap(player.bitmap);
+   player.bitmap = NULL;
+   if (player.bitmap == NULL) jlog("player.bitmap unloaded.");
+
 
    al_destroy_bitmap(view_port);
    view_port = NULL;
@@ -528,14 +532,8 @@ bool unload_level()
  *************************************************/
 void play_sound(ALLEGRO_SAMPLE *s, bool interupt)
 {
-//   if ( !al_get_sample_instance_playing(snd_hurt_instance) ||
-//        !al_get_sample_instance_playing(snd_pickup_instance) ||
-//        !al_get_sample_instance_playing(snd_health_instance) ) //If these samples aren't playing interrupt them
-//   {
-      if (interupt) al_stop_samples();
-      al_play_sample(s, sfx_volume, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
-   //}
-
+   if (interupt) al_stop_samples();
+   al_play_sample(s, sfx_volume, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
 }
 
 /************************************************
@@ -564,7 +562,7 @@ void update_screen()
    al_draw_bitmap(view_port, VIEWPORT_X, VIEWPORT_Y, 0);
    al_draw_bitmap(console_map, 238, 100, 0);
    al_draw_textf(font, al_map_rgb(255,255,255), 301, 18, ALLEGRO_ALIGN_RIGHT, "%09d", player.score);
-   al_draw_textf(font, al_map_rgb(255,255,255), 18, 185, ALLEGRO_ALIGN_LEFT, "THIS_IS_SOME_TEXT!_AAAAAAAAAA");
+   al_draw_textf(font, al_map_rgb(255,255,255), 18, 185, ALLEGRO_ALIGN_LEFT, map->name);
    al_draw_bitmap_region(health_bar, 0, player.health * 16, 64, 16, 238, 42, 0);
    al_set_target_backbuffer(display);
    al_draw_scaled_bitmap(game_bmp,
@@ -1196,8 +1194,6 @@ void clean_up()
 //   }
 
    al_unlock_bitmap(loading);
-//   al_destroy_bitmap(loading);
-//   loading = NULL;
    al_unlock_bitmap(border);
 
 
@@ -1233,9 +1229,9 @@ int main(int argc, char **argv)
       return -1;
    }
 
-   if (game.state == LOAD_LEVEL)
+   if (game.state == LOAD_LEVEL && !game.level_needs_unloaded)
    {
-      if (!load_level())
+      if (!load_level(game.level, game.music))
       {
          jlog("Level failed to load!");
          return -1;
