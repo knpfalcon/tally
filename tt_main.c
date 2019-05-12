@@ -79,7 +79,7 @@ ALLEGRO_SAMPLE *snd_shoot = NULL;
 ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 
 //Music
-float mus_volume = 0.5;
+float mus_volume = 1;
 ALLEGRO_SAMPLE *music = NULL;
 ALLEGRO_SAMPLE_INSTANCE *music_instance = NULL;
 
@@ -353,7 +353,7 @@ void update_screen()
    if (player.direction == RIGHT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
    if (player.direction == LEFT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
    if (player_bullet.draw)
-      al_draw_bitmap_region(bullet_particle, (player.shoot_time / 2) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
+      al_draw_bitmap_region(bullet_particle, (player.shoot_time ) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
       //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
 
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
@@ -950,8 +950,8 @@ void update_player()
    {
       check_bullet_collision();
       play_sound(snd_shoot, false);
-      player.shoot_time = 8;
-      player.muzzle_time = 4;
+      player.shoot_time = 4;
+      player.muzzle_time = 3;
    }
    if (player.muzzle_time) player.muzzle_time--;
 
