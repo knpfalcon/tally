@@ -109,7 +109,7 @@ int init_game()
       return -1;
    }
    jlog("Image add-on initialized.");
-   //al_set_new_display_adapter(1);
+   al_set_new_display_adapter(1);
    al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
    display = al_create_display(screen.width, screen.height);
    if(!display)
@@ -127,7 +127,22 @@ int init_game()
    screen.y = (al_get_display_height(display) / 2) - (screen.height/2);
    jlog("Display Created.");
 
-   //Loading BITMAP
+   // Load/Draw the fill-in border
+   border = al_load_bitmap("data/bg_border.png");
+   if (border == NULL)
+   {
+      jlog("Couldn't load bg_border.png!");
+      return -1;
+   }
+   al_lock_bitmap(border, al_get_bitmap_format(border), ALLEGRO_LOCK_READONLY);
+   for (int y = 0; y < (al_get_display_height(display) / (32 * screen.factor)) + 1; y++)
+   {
+      for (int x = 0; x < (al_get_display_width(display) / (32 * screen.factor)) + 1; x++)
+      {
+         al_draw_scaled_bitmap(border, 0, 0, 32, 32, x * (32 * screen.factor), y * (32 * screen.factor), 32 * screen.factor, 32 * screen.factor, 0);
+      }
+   }
+   //Load/Draw Loading bitmap and flip the display
    loading = al_load_bitmap("data/loading.png");
    if (loading == NULL)
    {
@@ -200,14 +215,6 @@ int init_game()
       al_set_window_title(display, "Tally Trauma");
    #endif // RELEASE
 
-   border = al_load_bitmap("data/bg_border.png");
-   if (border == NULL)
-   {
-      jlog("Couldn't load bg_border.png!");
-      return -1;
-   }
-   al_lock_bitmap(border, al_get_bitmap_format(border), ALLEGRO_LOCK_READONLY);
-
    //Load font
    font = al_load_bitmap_font("data/fonts/font.png");
 
@@ -215,16 +222,10 @@ int init_game()
    al_register_event_source(event_queue, al_get_timer_event_source(FPS_TIMER));
    al_register_event_source(event_queue, al_get_keyboard_event_source());
 
-   al_clear_to_color(al_map_rgb(0, 0, 0));
-   al_flip_display();
+   //al_clear_to_color(al_map_rgb(0, 0, 0));
+   //al_flip_display();
 
-   for (int y = 0; y < (al_get_display_height(display) / (32 * screen.factor)) + 1; y++)
-   {
-      for (int x = 0; x < (al_get_display_width(display) / (32 * screen.factor)) + 1; x++)
-      {
-      al_draw_scaled_bitmap(border, 0, 0, 32, 32, x * (32 * screen.factor), y * (32 * screen.factor), 32 * screen.factor, 32 * screen.factor, 0);
-      }
-   }
+
 
    //Create the game bitmap that needs to be stretched to display
    game_bmp = al_create_bitmap(320, 200);
@@ -547,7 +548,7 @@ void update_screen()
    if (player.direction == RIGHT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
    if (player.direction == LEFT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
    if (player_bullet.draw)
-      al_draw_bitmap_region(bullet_particle, (player.shoot_time ) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
+      al_draw_bitmap_region(bullet_particle, (player.muzzle_time) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
       //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
 
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
@@ -1101,18 +1102,13 @@ void update_player()
    {
       check_bullet_collision();
       play_sound(snd_shoot, false);
-      player.shoot_time = 4;
-      player.muzzle_time = 3;
+      player.shoot_time = 5;
+      player.muzzle_time = 4;
    }
    if (player.muzzle_time) player.muzzle_time--;
-
-
-   if (player.shoot_time) player.shoot_time--;
    else player_bullet.draw = false;
 
-   //printf("player.state: %d\n", player.state);
-   //printf("player.vel_y: %d\n", player.vel_y);
-   //printf("player.x: %d\n", player.x);
+   if (player.shoot_time) player.shoot_time--;
 }
 
 /************************************************
@@ -1173,26 +1169,6 @@ void clean_up()
       jlog("Level unloaded.");
    }
 
-//   destroy_map(map);
-//   map = NULL;
-//
-//   destroy_item_afterfx(item_fx);
-//   item_fx = NULL;
-//
-//   al_unlock_bitmap(tile_sheet);
-//   al_unlock_bitmap(item_sheet);
-//   al_unlock_bitmap(bg);
-//   al_unlock_bitmap(stat_border);
-//   al_unlock_bitmap(player.bitmap);
-//   al_unlock_bitmap(item_fx_sheet);
-//   al_unlock_bitmap(health_bar);
-//   al_unlock_bitmap(muzzle_flash);
-//   al_unlock_bitmap(bullet_particle);
-//   for (int j = 0; j < 7; j++)
-//   {
-//      al_unlock_bitmap(player.frame[j]);
-//   }
-
    al_unlock_bitmap(loading);
    al_unlock_bitmap(border);
 
@@ -1248,6 +1224,15 @@ int main(int argc, char **argv)
       ALLEGRO_EVENT ev;
       al_wait_for_event(event_queue, &ev);
 
+      if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
+      {
+         check_key_down(&ev);
+      }
+      else if (ev.type == ALLEGRO_EVENT_KEY_UP)
+      {
+         check_key_up(&ev);
+      }
+
       if (ev.type == ALLEGRO_EVENT_TIMER)
       {
          check_timer_logic(&ev);
@@ -1258,18 +1243,8 @@ int main(int argc, char **argv)
          game.state = QUIT;
       }
 
-      if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
-      {
-         check_key_down(&ev);
-      }
-      else if (ev.type == ALLEGRO_EVENT_KEY_UP)
-      {
-         check_key_up(&ev);
-      }
-
       if (redraw && al_is_event_queue_empty(event_queue))
       {
-
          redraw = false;
          update_screen();
       }

@@ -695,7 +695,9 @@ void check_key_up(ALLEGRO_EVENT *ev)
          cond.map_load = true;
          break;
       case ALLEGRO_KEY_F12:
-         cond.name_map = true;
+         printf("Enter map name: ");
+         fgets(map->name, 32, stdin);
+         map->name[strlen(map->name) - 1] = '\0';
          break;
       case ALLEGRO_KEY_F:
          for (int y = 0; y < MAP_HEIGHT; y++)
@@ -1001,10 +1003,10 @@ int main(int argc, char **argv)
 
       if (ev.type == ALLEGRO_EVENT_KEY_CHAR && al_is_event_queue_empty(event_queue))
       {
-         if (cond.name_map == true)
-         {
-            check_map_naming(&ev);
-         }
+//         if (cond.name_map == true)
+//         {
+//            check_map_naming(&ev);
+//         }
       }
 
       if (redraw && al_is_event_queue_empty(event_queue))
