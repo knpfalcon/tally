@@ -1,8 +1,10 @@
 Tally Trauma
 ------------
 
-This is something I've been working on, and haven't had time to
+This is something I've been working on and haven't had time to
 really do much else on it. Maybe I'm just bored with the project.
 Anyway, I'm making the source code public.
 
-It's a EGA-Styled retro platformer. Programmed in C with Allegro 5.
+It's an EGA-Styled retro platformer. Programmed in C with Allegro 5.
+
+Copyright © 2019 Joshua Daniel Taylor
