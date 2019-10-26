@@ -63,7 +63,7 @@ ALLEGRO_BITMAP *bullet_particle = NULL;
 
 //Bitmaps that get drawn to
 ALLEGRO_BITMAP *view_port = NULL;
-ALLEGRO_BITMAP *console_map = NULL;
+//ALLEGRO_BITMAP *console_map = NULL;
 ALLEGRO_BITMAP *game_bmp = NULL;
 
 //Sounds
@@ -79,10 +79,10 @@ ALLEGRO_SAMPLE *snd_shoot = NULL;
 
 ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 
-//Music
-float mus_volume = 1;
-ALLEGRO_SAMPLE *music = NULL;
-ALLEGRO_SAMPLE_INSTANCE *music_instance = NULL;
+////Music
+//float mus_volume = 1;
+//ALLEGRO_SAMPLE *music = NULL;
+//ALLEGRO_SAMPLE_INSTANCE *music_instance = NULL;
 
 
 /*************************************************
@@ -109,8 +109,9 @@ int init_game()
       return -1;
    }
    jlog("Image add-on initialized.");
-   al_set_new_display_adapter(1);
-   al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
+   //al_set_new_display_adapter(1);
+   screen.width = 1280 ;
+   screen.height = 800;
    display = al_create_display(screen.width, screen.height);
    if(!display)
    {
@@ -163,7 +164,7 @@ int init_game()
    }
    jlog("Event queue created.");
 
-   FPS_TIMER = al_create_timer(1.0 / FPS);
+   FPS_TIMER = al_create_timer(ALLEGRO_BPS_TO_SECS(FPS));
    if(!FPS_TIMER)
    {
       jlog("Failed to create FPS timer!");
@@ -385,7 +386,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
 
    //Create viewport and console map bitmaps
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-   console_map = al_create_bitmap(64, 45);
+//   console_map = al_create_bitmap(64, 45);
 
    //Load sounds
    snd_fall = al_load_sample("data/sound/fall.ogg");
@@ -397,14 +398,14 @@ void check_cam() //Check to make sure camera is not out of bounds.
    snd_hurt = al_load_sample("data/sound/hurt.ogg");
    snd_shoot = al_load_sample("data/sound/shoot.ogg");
 
-   music = al_load_sample(music_file);
+//   music = al_load_sample(music_file);
 
    //Play music (Make this into a function at some point.
-   music_instance = al_create_sample_instance(music);
-   al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
-   al_set_sample_instance_gain(music_instance, mus_volume);
-   al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
-   al_play_sample_instance(music_instance);
+//   music_instance = al_create_sample_instance(music);
+//   al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
+//   al_set_sample_instance_gain(music_instance, mus_volume);
+//   al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
+//   al_play_sample_instance(music_instance);
 
    //draw the status border
    al_set_target_bitmap(game_bmp);
@@ -485,9 +486,9 @@ bool unload_level()
    view_port = NULL;
    if (view_port == NULL) jlog("view_port unloaded.");
 
-   al_destroy_bitmap(console_map);
-   console_map = NULL;
-   if (console_map == NULL) jlog("console_map unloaded.");
+//   al_destroy_bitmap(console_map);
+//   console_map = NULL;
+//   if (console_map == NULL) jlog("console_map unloaded.");
 
    //Unload sounds
    al_destroy_sample(snd_fall);
@@ -516,12 +517,12 @@ bool unload_level()
 
 
    //Play music (Make this into a function at some point.
-   music_instance = al_create_sample_instance(music);
-   al_destroy_sample_instance(music_instance);
-   music_instance = NULL;
+//   music_instance = al_create_sample_instance(music);
+//   al_destroy_sample_instance(music_instance);
+//   music_instance = NULL;
 
-   al_destroy_sample(music);
-   music = NULL;
+//   al_destroy_sample(music);
+//   music = NULL;
 
    game.level_needs_unloaded = false;
    return true; //Returns true on success
@@ -556,12 +557,12 @@ void update_screen()
    draw_bb(&cam, player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height);
    show_player_hotspot(view_port, &cam, &player);
    #endif // DEBUG
-   draw_console_map(map, &player, console_map);
+//   draw_console_map(map, &player, console_map);
 
    //Draw view_port to game, then draw game scaled to display.
    al_set_target_bitmap(game_bmp);
    al_draw_bitmap(view_port, VIEWPORT_X, VIEWPORT_Y, 0);
-   al_draw_bitmap(console_map, 238, 100, 0);
+//   al_draw_bitmap(console_map, 238, 100, 0);
    al_draw_textf(font, al_map_rgb(255,255,255), 301, 18, ALLEGRO_ALIGN_RIGHT, "%09d", player.score);
    al_draw_textf(font, al_map_rgb(255,255,255), 18, 185, ALLEGRO_ALIGN_LEFT, map->name);
    al_draw_bitmap_region(health_bar, 0, player.health * 16, 64, 16, 238, 42, 0);
@@ -1114,42 +1115,38 @@ void update_player()
 /************************************************
  * Checks logic that needs to be timed by FPS   *
  ************************************************/
-void check_timer_logic(ALLEGRO_EVENT *ev)
+void check_timer_logic()
 {
    //Frames
-   if (ev->timer.source == FPS_TIMER)
+   frame_speed--; //This eliminates the need for an animation timer.
+   halftime_frame_speed--; //This is for 2 frame animations like for blinking items
+
+   update_player();
+   animate_player(&player, &frame_speed);
+   update_item_afterfx(item_fx);
+
+   if (halftime_frame_speed == 0)
    {
+      item_frame ^= 1;
 
-      frame_speed--; //This eliminates the need for an animation timer.
-      halftime_frame_speed--; //This is for 2 frame animations like for blinking items
+      halftime_frame_speed = ANIMATION_SPEED * 2;
+   }
+   if (halftime_frame_speed % 3 == 0) { item_afterfx_frame^= 1; }
 
-      update_player();
-      animate_player(&player, &frame_speed);
-      update_item_afterfx(item_fx);
+   if (frame_speed % 2 == 0)
+   {
+      if (player.hurt) player.draw ^= 1;
+      if (!player.hurt) player.draw = true;
+   }
 
-      if (halftime_frame_speed == 0)
-      {
-         item_frame ^= 1;
-
-         halftime_frame_speed = ANIMATION_SPEED * 2;
-      }
-      if (halftime_frame_speed % 3 == 0) { item_afterfx_frame^= 1; }
-
-      if (frame_speed % 2 == 0)
-      {
-         if (player.hurt) player.draw ^= 1;
-         if (!player.hurt) player.draw = true;
-      }
-
-      //Camera Look-ahead
-      if (key[KEY_LEFT] && !key[KEY_RIGHT])
-      {
-         if (cam.look_ahead > -24) cam.look_ahead -=1;
-      }
-      if (key[KEY_RIGHT] && !key[KEY_LEFT])
-      {
-         if (cam.look_ahead < 24) cam.look_ahead += 1;
-      }
+   //Camera Look-ahead
+   if (key[KEY_LEFT] && !key[KEY_RIGHT])
+   {
+      if (cam.look_ahead > -24) cam.look_ahead -=1;
+   }
+   if (key[KEY_RIGHT] && !key[KEY_LEFT])
+   {
+      if (cam.look_ahead < 24) cam.look_ahead += 1;
    }
 
    check_cam();
@@ -1224,23 +1221,27 @@ int main(int argc, char **argv)
       ALLEGRO_EVENT ev;
       al_wait_for_event(event_queue, &ev);
 
+
       if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
       {
          check_key_down(&ev);
       }
-      else if (ev.type == ALLEGRO_EVENT_KEY_UP)
+
+      if (ev.type == ALLEGRO_EVENT_KEY_UP)
       {
          check_key_up(&ev);
       }
 
-      if (ev.type == ALLEGRO_EVENT_TIMER)
-      {
-         check_timer_logic(&ev);
-         redraw = true;
-      }
-      else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+      if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
       {
          game.state = QUIT;
+      }
+
+      if (ev.type == ALLEGRO_EVENT_TIMER)
+      {
+         al_wait_for_vsync();
+         check_timer_logic();
+         redraw = true;
       }
 
       if (redraw && al_is_event_queue_empty(event_queue))

@@ -14,6 +14,7 @@
  **********************************************/
 void jlog(char *format, ...)
 {
+   #ifdef DEBUG
    va_list v_ptr;
    FILE *fp;
 
@@ -32,6 +33,7 @@ void jlog(char *format, ...)
 
       fclose(fp);
     }
+    #endif // DEBUG
 }
 
 /***********************************************

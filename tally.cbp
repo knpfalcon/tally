@@ -36,19 +36,27 @@
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
+					<Add option="-march=pentium3" />
 					<Add option="-fomit-frame-pointer" />
 					<Add option="-fexpensive-optimizations" />
-					<Add option="-O2" />
+					<Add option="-O3" />
+					<Add option="-m32" />
 					<Add option="-DRELEASE" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-static-libstdc++" />
+					<Add option="-static-libgcc" />
+					<Add option="-static" />
+					<Add option="-m32" />
 					<Add library="C:/libs/allegro525/lib/liballegro_monolith-static.a" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-march=i686" />
+			<Add option="-pedantic" />
+			<Add option="-std=c99" />
 			<Add option="-m32" />
 			<Add option="-std=gnu11" />
 			<Add option="-Werror" />
