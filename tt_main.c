@@ -80,9 +80,9 @@ ALLEGRO_SAMPLE *snd_shoot = NULL;
 ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 
 ////Music
-//float mus_volume = 1;
-//ALLEGRO_SAMPLE *music = NULL;
-//ALLEGRO_SAMPLE_INSTANCE *music_instance = NULL;
+float mus_volume = 1;
+ALLEGRO_SAMPLE *music = NULL;
+ALLEGRO_SAMPLE_INSTANCE *music_instance = NULL;
 
 
 /*************************************************
@@ -398,14 +398,14 @@ void check_cam() //Check to make sure camera is not out of bounds.
    snd_hurt = al_load_sample("data/sound/hurt.ogg");
    snd_shoot = al_load_sample("data/sound/shoot.ogg");
 
-//   music = al_load_sample(music_file);
+   music = al_load_sample(music_file);
 
    //Play music (Make this into a function at some point.
-//   music_instance = al_create_sample_instance(music);
-//   al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
-//   al_set_sample_instance_gain(music_instance, mus_volume);
-//   al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
-//   al_play_sample_instance(music_instance);
+   music_instance = al_create_sample_instance(music);
+   al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
+   al_set_sample_instance_gain(music_instance, mus_volume);
+   al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
+   al_play_sample_instance(music_instance);
 
    //draw the status border
    al_set_target_bitmap(game_bmp);
