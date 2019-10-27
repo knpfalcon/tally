@@ -7,16 +7,16 @@ Anyway, I'm making the source code public.
 
 It's an EGA-Styled retro platformer. Programmed in C with Allegro 5.
 
-Please read the MIT license. All the art is made and owned by me, but if 
-you wish to use it, or decide to do anything with the source, just
-give me some credit somewhere. And feel free to show me what you did,
+Please read the MIT license. All the art, music, and sound is made and owned 
+by me, but if you wish to use it, or decide to do anything with the source, 
+just give me some credit somewhere. And feel free to show me what you did,
 I'd love to see it. 
 
 I studied some code by Johan Pietz from Alex the Allegator 4, and I 
 borrowed some concepts from that. It is noted as comments in the 
 source files where appropriate.
 
-I'm not liable what this may do to you or anyone else's computer. So
+I'm not liable for what this may do to you or anyone else's computer. So
 don't blame me if things go awry! ;)
 
 Copyright © 2019 Joshua Daniel Taylor
