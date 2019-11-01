@@ -36,6 +36,9 @@ apt update
 sudo apt liballegro5-dev:i386
 sudo apt liballegro5.2:i386
 
+*Make sure you have multilib GCC installed
+sudo apt install g++-multilib gcc-multilib libc6-dev-i386
+
 *In the terminal set the environment variable below
 export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig
 
