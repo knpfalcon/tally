@@ -608,17 +608,14 @@ void check_key_down(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_D:
          key[KEY_RIGHT] = true;
          break;
-      case ALLEGRO_KEY_LCTRL:
+      case ALLEGRO_KEY_Z:
          key[KEY_LCTRL] = true;
          break;
       case ALLEGRO_KEY_LSHIFT:
          key[KEY_LSHIFT] = true;
          break;
-      case ALLEGRO_KEY_ALT:
+      case ALLEGRO_KEY_X:
          key[KEY_ALT] = true;
-         break;
-      case ALLEGRO_KEY_Z:
-         key[KEY_Z] = true;
          break;
    }
 }
@@ -654,17 +651,14 @@ void check_key_up(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_D:
          key[KEY_RIGHT] = false;
          break;
-      case ALLEGRO_KEY_LCTRL:
+      case ALLEGRO_KEY_Z:
          key[KEY_LCTRL] = false;
          break;
       case ALLEGRO_KEY_LSHIFT:
          key[KEY_LSHIFT] = false;
          break;
-      case ALLEGRO_KEY_ALT:
+      case ALLEGRO_KEY_X:
          key[KEY_ALT] = false;
-         break;
-      case ALLEGRO_KEY_Z:
-         key[KEY_Z] = false;
          break;
 
       case ALLEGRO_KEY_P:
@@ -1255,4 +1249,3 @@ int main(int argc, char **argv)
 
    return 0;
 }
-

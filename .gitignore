@@ -3,5 +3,6 @@
 *.layout
 *.log
 
+.vscode
 /obj/
 /Working Copies/
