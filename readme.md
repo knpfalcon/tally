@@ -23,7 +23,7 @@ source files where appropriate.
 I'm not liable for what this may do to you or anyone else's computer. So
 don't blame me if things go awry! ;)
 
-UPDATE 10-31-2019
+Linux
 -----------------
 I've switched my main OS to Debian Buster because of REASONS, 
 and I've finally successfully compiled this in linux. 
@@ -31,14 +31,12 @@ and I've finally successfully compiled this in linux.
 It has to be compiled in 32-bit for now because of pointer sizes
 in the map data.
 
-These are instructions for Debian Buster (10.1)
+These are instructions for **Debian Buster (10.1)**
 
 In a terminal do the following
     
     dpkg --add-architecture i386
-
-    
-    apt update`
+    apt update
 
 Install the 32-bit Allegro libraries
     
@@ -55,8 +53,6 @@ In the terminal set the environment variable below
 Clone the git repo
     
     git clone https://github.com/knpfalcon/tally.git
-
-
     cd tally
 
 Compile with the long-ass command below (I didn't feel like making a makefile)
@@ -68,11 +64,7 @@ Compile with the long-ass command below (I didn't feel like making a makefile)
 Simply use the shell script provided like so:   
     
     ./com.sh
-
-
     cd bin
-
-
     ./tally
 
 
