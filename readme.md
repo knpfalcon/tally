@@ -20,6 +20,9 @@ I studied some code by Johan Pietz from Alex the Allegator 4, and I
 borrowed some concepts from that. It is noted as comments in the 
 source files where appropriate.
 
+**Warning**
+This game is far from finished, and the editor had many errors.
+
 I'm not liable for what this may do to you or anyone else's computer. So
 don't blame me if things go awry! ;)
 
@@ -55,17 +58,15 @@ Clone the git repo
     git clone https://github.com/knpfalcon/tally.git
     cd tally
 
-Compile with the long-ass command below (I didn't feel like making a makefile)
-    
-    gcc jt_util.c tt_main.c tt_collision.c tt_items.c tt_map.c tt_player.c -o bin/tally $(pkg-config allegro-5 allegro_font-5 allegro_acodec-5 allegro_audio-5 allegro_color-5 allegro_dialog-5 allegro_image-5 allegro_main-5 allegro_memfile-5 allegro_primitives-5  --libs --cflags) -m32
-
--OR-
-
-Simply use the shell script provided like so:   
-    
-    ./com.sh
+Compile the editor and the game
+    make
     cd bin
+
+To run the game
     ./tally
+
+To run the editor
+    ./tedit
 
 
 Excuse the mess

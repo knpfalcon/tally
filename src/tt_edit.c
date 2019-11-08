@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_font.h>
@@ -31,7 +33,7 @@ unsigned char item_frame = 0;
 
 t_conditional cond = {false, false, false, false};
 
-const char *filename;
+//const char *filename = NULL;
 
 //enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_N,KEY_PAD_PLUS, KEY_PAD_MINUS};
 bool key[13] = {false};
@@ -325,7 +327,7 @@ void show_info_stuff()
       al_draw_textf(reg_font,
                     al_map_rgb(255,255,255),
                     226 * DISPLAY_MULTIPLIER,
-                    48 * DISPLAY_MULTIPLIER,
+                    150 * DISPLAY_MULTIPLIER,
                     0,
                     "Item: %d",
                     item_selected);
@@ -408,7 +410,7 @@ void update_screen()
                                TILE_SIZE,
                                TILE_SIZE,
                                226,
-                               52,
+                               152,
                                0);
    }
 
@@ -550,8 +552,8 @@ bool open_file_dialog()
 {
    ALLEGRO_PATH *path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
    al_append_path_component(path, "data/maps");
-   al_set_path_filename(path, (const char *)"map.spl");
-   filename = al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP);
+   al_set_path_filename(path, NULL);
+   const char *filename = al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP);
 
    ALLEGRO_FILECHOOSER *file_dialog = al_create_native_file_dialog(filename,
                                                                    "Open Map",
@@ -560,15 +562,30 @@ bool open_file_dialog()
    if(!file_dialog) return false;
 
    if(!al_show_native_file_dialog(display, file_dialog)) {
-      if(file_dialog) al_destroy_native_file_dialog(file_dialog);
+      al_destroy_native_file_dialog(file_dialog);
       jlog("Open File dialog closed.");
       return false;
    }
-
+   
    filename = al_get_native_file_dialog_path(file_dialog, 0);
-   jlog("%s", filename);
+   //jlog("%s", filename);
+   printf("%s\n", filename);
+   destroy_map(map);
+   map = NULL;
+   map = load_map(filename);
+   if (map == NULL)
+   {
+      jlog("Something went wrong with map loading!");
+      destroy_map(map);
+      map = NULL;
+   }
+   player.x = map->player_start_x;
+   player.y = map->player_start_y;
+   cam.x = player.x - VIEWPORT_WIDTH / 2 + 16;
+   cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
+   cond.map_saved = true;
 
-   al_destroy_native_file_dialog(file_dialog);
+   if (file_dialog) al_destroy_native_file_dialog(file_dialog);
 
    return true;
 }
@@ -817,24 +834,7 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
                                       "If you open a map, it will clear your current changes. Consider saving first!",
                                      NULL, ALLEGRO_MESSAGEBOX_WARN);
          }
-
-         if (open_file_dialog())
-         {
-            destroy_map(map);
-            map = NULL;
-            map = load_map(filename);
-            if (map == NULL)
-            {
-               jlog("Something went wrong with map loading!");
-               destroy_map(map);
-               map = NULL;
-            }
-            player.x = map->player_start_x;
-            player.y = map->player_start_y;
-            cam.x = player.x - VIEWPORT_WIDTH / 2 + 16;
-            cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
-            cond.map_saved = true;
-         }
+         open_file_dialog();
       }
 
       check_cam_bounds();

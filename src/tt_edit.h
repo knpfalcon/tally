@@ -3,6 +3,7 @@
 
 #define FONT_FILE "data/hack.ttf"
 
+#define DISPLAY_MULTIPLIER 2
 
 typedef struct t_conditional
 {

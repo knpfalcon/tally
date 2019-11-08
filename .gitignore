@@ -2,6 +2,7 @@
 *.depend
 *.layout
 *.log
+*.json
 
 .vscode
 /obj/

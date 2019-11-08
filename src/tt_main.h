@@ -13,8 +13,6 @@
 #define MAP_WIDTH 128
 #define MAP_HEIGHT 90
 
-#define DISPLAY_MULTIPLIER 3
-
 #define ANIMATION_SPEED 3
 
 #define LEVEL_1 "data/maps/map.spl"
