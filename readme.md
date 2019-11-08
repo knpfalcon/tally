@@ -33,43 +33,48 @@ in the map data.
 
 These are instructions for Debian Buster (10.1)
 
-*In a terminal do the following
+In a terminal do the following
     
-    `dpkg --add-architecture i386`
-    `apt update`
+    dpkg --add-architecture i386
 
-*Use apt 
     
-    `sudo apt liballegro5-dev:i386`
-    `sudo apt liballegro5.2:i386`
+    apt update`
 
-*Make sure you have multilib GCC installed
+Install the 32-bit Allegro libraries
     
-    `sudo apt install g++-multilib gcc-multilib libc6-dev-i386`
+    sudo apt liballegro5-dev:i386 liballegro5.2:i386
 
-*In the terminal set the environment variable below
+Make sure you have multilib GCC installed
     
-    `export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig`
+    sudo apt install g++-multilib gcc-multilib libc6-dev-i386
 
-*Clone the git repo
+In the terminal set the environment variable below
     
-    `git clone https://github.com/knpfalcon/tally.git`
+    export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig
 
-*CD to where you cloned the repo
-
-*Compile with the long-ass command below (I didn't feel like making a makefile)
+Clone the git repo
     
-    `gcc jt_util.c tt_main.c tt_collision.c tt_items.c tt_map.c tt_player.c -o bin/tally $(pkg-config allegro-5 allegro_font-5 allegro_acodec-5 allegro_audio-5 allegro_color-5 allegro_dialog-5 allegro_image-5 allegro_main-5 allegro_memfile-5 allegro_primitives-5  --libs --cflags) -m32`
+    git clone https://github.com/knpfalcon/tally.git
+
+
+    cd tally
+
+Compile with the long-ass command below (I didn't feel like making a makefile)
+    
+    gcc jt_util.c tt_main.c tt_collision.c tt_items.c tt_map.c tt_player.c -o bin/tally $(pkg-config allegro-5 allegro_font-5 allegro_acodec-5 allegro_audio-5 allegro_color-5 allegro_dialog-5 allegro_image-5 allegro_main-5 allegro_memfile-5 allegro_primitives-5  --libs --cflags) -m32
 
 -OR-
 
 Simply use the shell script provided like so:   
     
-    `./com.sh`
+    ./com.sh
 
-    `CD to bin`
 
-    `type ./tally`
+    cd bin
+
+
+    ./tally
+
 
 Excuse the mess
 ---------------
