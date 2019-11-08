@@ -1,5 +1,7 @@
 Tally Trauma
-------------
+============
+
+![Tally Screenshot](http://suitorgames.com/images/tallyt.png)
 
 This is something I've been working on and haven't had time to
 really do much else on it. Maybe I'm just bored with the project.
@@ -29,34 +31,34 @@ It has to be compiled in 32-bit.
 These are instructions for Debian Buster (10.1)
 
 *In a terminal do the following
-dpkg --add-architecture i386
-apt update
+`dpkg --add-architecture i386`
+`apt update`
 
 *Use apt 
-sudo apt liballegro5-dev:i386
-sudo apt liballegro5.2:i386
+`sudo apt liballegro5-dev:i386`
+`sudo apt liballegro5.2:i386`
 
 *Make sure you have multilib GCC installed
-sudo apt install g++-multilib gcc-multilib libc6-dev-i386
+`sudo apt install g++-multilib gcc-multilib libc6-dev-i386`
 
 *In the terminal set the environment variable below
-export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig
+`export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig`
 
 *Clone the git repo
-git clone https://github.com/knpfalcon/tally.git
+`git clone https://github.com/knpfalcon/tally.git`
 
 *CD to where you cloned the repo
 
 *Compile with the long-ass command below (I didn't feel like making a makefile)
-gcc jt_util.c tt_main.c tt_collision.c tt_items.c tt_map.c tt_player.c -o bin/tally $(pkg-config allegro-5 allegro_font-5 allegro_acodec-5 allegro_audio-5 allegro_color-5 allegro_dialog-5 allegro_image-5 allegro_main-5 allegro_memfile-5 allegro_primitives-5  --libs --cflags) -m32
+`gcc jt_util.c tt_main.c tt_collision.c tt_items.c tt_map.c tt_player.c -o bin/tally $(pkg-config allegro-5 allegro_font-5 allegro_acodec-5 allegro_audio-5 allegro_color-5 allegro_dialog-5 allegro_image-5 allegro_main-5 allegro_memfile-5 allegro_primitives-5  --libs --cflags) -m32`
 
 -OR-
 
-Simply use the shell script provided like so: ./com.sh
+Simply use the shell script provided like so: `./com.sh`
 
-*CD to bin
+`CD to bin`
 
-*type ./tally
+`type ./tally`
 
 Excuse the mess
 ---------------
