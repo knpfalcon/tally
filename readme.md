@@ -54,18 +54,21 @@ In the terminal set the environment variable below
     export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig
 
 Clone the git repo
-    
+
     git clone https://github.com/knpfalcon/tally.git
     cd tally
 
 Compile the editor and the game
+    
     make
     cd bin
 
 To run the game
+    
     ./tally
 
 To run the editor
+    
     ./tedit
 
 
