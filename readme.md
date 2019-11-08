@@ -28,7 +28,8 @@ UPDATE 10-31-2019
 I've switched my main OS to Debian Buster because of REASONS, 
 and I've finally successfully compiled this in linux. 
 
-It has to be compiled in 32-bit.
+It has to be compiled in 32-bit for now because of pointer sizes
+in the map data.
 
 These are instructions for Debian Buster (10.1)
 
