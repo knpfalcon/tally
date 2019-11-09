@@ -6,7 +6,7 @@ Tally Trauma
 </p>
 
 This is something I've been working on and haven't had time to
-really do much else on it. Maybe I'm just bored with the project.
+really do much on it. Maybe I'm just bored with the project.
 Anyway, I'm making the source code public.
 
 It's an EGA-Styled retro platformer. Programmed in C with Allegro 5.
@@ -21,7 +21,7 @@ borrowed some concepts from that. It is noted as comments in the
 source files where appropriate.
 
 **Warning**
-This game is far from finished, and the editor had many errors.
+This game is far from finished, and the editor has many errors.
 
 I'm not liable for what this may do to you or anyone else's computer. So
 don't blame me if things go awry! ;)
