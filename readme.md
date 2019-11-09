@@ -43,7 +43,7 @@ In a terminal do the following
 
 Install the 32-bit Allegro libraries
     
-    sudo apt liballegro5-dev:i386 liballegro5.2:i386
+    sudo apt install liballegro5-dev:i386 liballegro5.2:i386
 
 Make sure you have multilib GCC installed
     

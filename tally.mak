@@ -2,7 +2,7 @@
 #
 
 CC = gcc
-CFLAGS = -m32 -O2 -Wall -fomit-frame-pointer -fexpensive-optimizations -g -DRELEASE
+CFLAGS = -m32 -O2 -Wall -fomit-frame-pointer -fexpensive-optimizations -g -DDEBUG
 LIBDIR = -L/usr/lib/i386-linux-gnu 
 
 ALLEGRO_LIBS = allegro-5 allegro_acodec-5 allegro_image-5 \
@@ -12,7 +12,7 @@ allegro_ttf-5 allegro_video-5
 
 ALLEGRO_FLAGS = $(shell pkg-config --cflags --libs $(ALLEGRO_LIBS)) -lm -lphysfs
 
-INC = -I/usr/include/ -I/usr/include/i386-linux-gnu
+INC = -I/usr/include/
 
 ODIR = obj
 SRCDIR = src

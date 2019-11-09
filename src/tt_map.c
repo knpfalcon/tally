@@ -97,9 +97,13 @@ bool save_map(t_map *m, ALLEGRO_DISPLAY *display)
       return false;
    }
 
-   filename = al_get_native_file_dialog_path(file_dialog, 0);
+   if (al_get_native_file_dialog_count(file_dialog) == 0)
+   {
+      al_destroy_native_file_dialog(file_dialog);
+      return false;
+   }
 
-   al_destroy_native_file_dialog(file_dialog);
+   filename = al_get_native_file_dialog_path(file_dialog, 0);
 
    ALLEGRO_FILE *fp = NULL;
 
@@ -116,6 +120,7 @@ bool save_map(t_map *m, ALLEGRO_DISPLAY *display)
    al_fclose(fp);
 
    jlog("Map Saved.");
+   al_destroy_native_file_dialog(file_dialog);
    return true;
 }
 

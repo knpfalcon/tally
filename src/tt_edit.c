@@ -35,6 +35,7 @@ t_conditional cond = {false, false, false, false};
 
 //const char *filename = NULL;
 
+
 //enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_N,KEY_PAD_PLUS, KEY_PAD_MINUS};
 bool key[13] = {false};
 
@@ -150,8 +151,7 @@ int init_game()
       jlog("Failed to initialize native dialog addon!");
    }
    jlog("Native dialog addon add-on initialized.");
-
-
+   
    //Create Display
    //al_set_new_display_flags(ALLEGRO_OPENGL);
    display = al_create_display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -550,40 +550,43 @@ void check_tile_selection()
  ************************************************/
 bool open_file_dialog()
 {
+   const char *filename = NULL;
+
    ALLEGRO_PATH *path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
    al_append_path_component(path, "data/maps");
    al_set_path_filename(path, NULL);
-   const char *filename = al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP);
+   filename = al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP);
 
-   ALLEGRO_FILECHOOSER *file_dialog = al_create_native_file_dialog(filename,
-                                                                   "Open Map",
-                                                                   "*.spl",
-                                                                   ALLEGRO_FILECHOOSER_FILE_MUST_EXIST);
+   ALLEGRO_FILECHOOSER *file_dialog = al_create_native_file_dialog(filename, "Open Map", "*.spl", ALLEGRO_FILECHOOSER_FILE_MUST_EXIST);
+  
    if(!file_dialog) return false;
-
-   if(!al_show_native_file_dialog(display, file_dialog)) {
-      al_destroy_native_file_dialog(file_dialog);
+   
+   if(!al_show_native_file_dialog(NULL, file_dialog)) {
+      if (file_dialog) al_destroy_native_file_dialog(file_dialog);
       jlog("Open File dialog closed.");
       return false;
    }
-   
-   filename = al_get_native_file_dialog_path(file_dialog, 0);
-   //jlog("%s", filename);
-   printf("%s\n", filename);
-   destroy_map(map);
-   map = NULL;
-   map = load_map(filename);
-   if (map == NULL)
+
+   if (al_get_native_file_dialog_count(file_dialog) > 0)
    {
-      jlog("Something went wrong with map loading!");
+      filename = al_get_native_file_dialog_path(file_dialog, 0);
+
       destroy_map(map);
       map = NULL;
-   }
-   player.x = map->player_start_x;
-   player.y = map->player_start_y;
-   cam.x = player.x - VIEWPORT_WIDTH / 2 + 16;
-   cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
-   cond.map_saved = true;
+      map = load_map(filename);
+      if (map == NULL)
+      {
+         jlog("Something went wrong with map loading!");
+         destroy_map(map);
+         map = NULL;
+      }
+      player.x = map->player_start_x;
+      player.y = map->player_start_y;
+      cam.x = player.x - VIEWPORT_WIDTH / 2 + 16;
+      cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
+      cond.map_saved = true;
+   }   
+   
 
    if (file_dialog) al_destroy_native_file_dialog(file_dialog);
 
