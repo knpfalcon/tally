@@ -2,7 +2,7 @@
 #
 
 CC = gcc
-CFLAGS = -m32 -O2 -Wall -fomit-frame-pointer -fexpensive-optimizations -g
+CFLAGS = -m32 -O2 -Wall -fomit-frame-pointer -fexpensive-optimizations -g -DDEBUG
 LIBDIR = -L/usr/lib/i386-linux-gnu
 
 ALLEGRO_LIBS = allegro-5 allegro_acodec-5 allegro_image-5 \

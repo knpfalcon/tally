@@ -120,7 +120,9 @@ bool save_map(t_map *m, ALLEGRO_DISPLAY *display)
    al_fclose(fp);
 
    jlog("Map Saved.");
+
    al_destroy_native_file_dialog(file_dialog);
+   
    return true;
 }
 

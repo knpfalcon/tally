@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
@@ -309,14 +310,24 @@ void show_info_stuff()
          al_draw_filled_circle(16 * DISPLAY_MULTIPLIER - 2 * DISPLAY_MULTIPLIER, 4 * DISPLAY_MULTIPLIER,
                                2 * DISPLAY_MULTIPLIER,
                                al_map_rgb(255, 0, 0));
-      }
-      al_draw_textf(reg_font,
+         al_draw_textf(reg_font,
                     al_map_rgb(255,255,255),
                     16 * DISPLAY_MULTIPLIER,
                     2 * DISPLAY_MULTIPLIER,
                     ALLEGRO_ALIGN_LEFT,
-                    "%s",
+                    "%s*",
                     map->name);
+      }
+      if (!cond.name_map)
+      {
+         al_draw_textf(reg_font,
+                     al_map_rgb(255,255,255),
+                     16 * DISPLAY_MULTIPLIER,
+                     2 * DISPLAY_MULTIPLIER,
+                     ALLEGRO_ALIGN_LEFT,
+                     "%s",
+                     map->name);
+      }
       al_draw_textf(reg_font,
                     al_map_rgb(255,255,255),
                     226 * DISPLAY_MULTIPLIER,
@@ -563,7 +574,6 @@ bool open_file_dialog()
    
    if(!al_show_native_file_dialog(NULL, file_dialog)) {
       if (file_dialog) al_destroy_native_file_dialog(file_dialog);
-      jlog("Open File dialog closed.");
       return false;
    }
 
@@ -587,7 +597,6 @@ bool open_file_dialog()
       cond.map_saved = true;
    }   
    
-
    if (file_dialog) al_destroy_native_file_dialog(file_dialog);
 
    return true;
@@ -714,10 +723,8 @@ void check_key_up(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_F5:
          cond.map_load = true;
          break;
-      case ALLEGRO_KEY_F12:
-         printf("Enter map name: ");
-         fgets(map->name, 32, stdin);
-         map->name[strlen(map->name) - 1] = '\0';
+      case ALLEGRO_KEY_F12: //1NameMap
+         cond.name_map = true;
          break;
       case ALLEGRO_KEY_F:
          for (int y = 0; y < MAP_HEIGHT; y++)
@@ -850,8 +857,7 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
 void check_map_naming(ALLEGRO_EVENT *ev)
 {
    static int caret_pos;
-   caret_pos = strlen(map->name);
-
+   caret_pos = (int)strlen(map->name);
    switch (ev->keyboard.keycode)
    {
       case ALLEGRO_KEY_ENTER:
@@ -861,20 +867,17 @@ void check_map_naming(ALLEGRO_EVENT *ev)
          break;
 
       case ALLEGRO_KEY_BACKSPACE:
-         if (caret_pos > 0)
-         {
-            map->name[caret_pos-1] = '\0';
-            --caret_pos;
-            break;
-         }
+         if (caret_pos > 0) caret_pos--;
+         map->name[caret_pos] = '\0';
          break;
       default:
          if (ev->keyboard.unichar >= 32 && ev->keyboard.unichar < 127)
          {
             if (caret_pos < 31)
             {
-               map->name[caret_pos] = ev->keyboard.unichar;
-               map->name[caret_pos+1] = '\0';
+               map->name[caret_pos] = (char)toupper((int)ev->keyboard.unichar);
+               caret_pos++;
+               map->name[caret_pos] = '\0';
                break;
             }
          }
@@ -965,7 +968,7 @@ int main(int argc, char **argv)
          if (!cond.name_map)
          {
             check_timer_logic(&ev);
-         }
+         }     
 
          redraw = true;
       }
@@ -989,11 +992,11 @@ int main(int argc, char **argv)
       }
       else if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
       {
-         check_key_down(&ev);
+         if (!cond.name_map) check_key_down(&ev);
       }
       else if (ev.type == ALLEGRO_EVENT_KEY_UP)
       {
-         check_key_up(&ev);
+         if (!cond.name_map) check_key_up(&ev);
       }
       else if (ev.type == ALLEGRO_EVENT_MOUSE_AXES)
       {
@@ -1004,12 +1007,12 @@ int main(int argc, char **argv)
       check_click_in_viewport();
       check_tile_selection();
 
-      if (ev.type == ALLEGRO_EVENT_KEY_CHAR && al_is_event_queue_empty(event_queue))
+      if (ev.type == ALLEGRO_EVENT_KEY_CHAR )
       {
-//         if (cond.name_map == true)
-//         {
-//            check_map_naming(&ev);
-//         }
+        if (cond.name_map == true)
+        {
+           check_map_naming(&ev);
+        }
       }
 
       if (redraw && al_is_event_queue_empty(event_queue))
