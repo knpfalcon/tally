@@ -21,11 +21,13 @@ Name Map.....F12 (ENTER to set)
 Center cam
 on Player....P
 
-Scrol through
+Select 
 Items........1 or 2
 
 Place item...E
 
+Show
+Minimap......Hold Shift
 
 Mouse
 -----
