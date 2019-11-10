@@ -6,6 +6,7 @@
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_primitives.h>
 
 #include "tt_main.h"
@@ -25,6 +26,10 @@ int frame_speed = ANIMATION_SPEED;
 int halftime_frame_speed = ANIMATION_SPEED * 2;
 
 bool redraw = true;
+
+#ifdef DEBUG
+double fps;
+#endif
 
 t_bullet player_bullet;
 
@@ -46,6 +51,7 @@ ALLEGRO_TIMER *FPS_TIMER = NULL;
 ALLEGRO_MOUSE_STATE mouse;
 
 ALLEGRO_FONT *font = NULL;
+ALLEGRO_FONT *fps_font = NULL;
 
 //Bitmaps that get loaded from disk
 ALLEGRO_BITMAP *loading = NULL;
@@ -185,6 +191,12 @@ int init_game()
       jlog("Failed to install fonts addon!");
       return -1;
    }
+   //Font Add-ons
+   if(!al_init_ttf_addon())
+   {
+      jlog("Failed to install ttf addon!");
+      return -1;
+   }
    jlog("Fonts add-on installed.");
 
    //Primitives
@@ -218,6 +230,7 @@ int init_game()
 
    //Load font
    font = al_load_bitmap_font("data/fonts/font.png");
+   fps_font = al_load_font("data/hack.ttf", 12, 0);
 
    al_register_event_source(event_queue, al_get_display_event_source(display));
    al_register_event_source(event_queue, al_get_timer_event_source(FPS_TIMER));
@@ -558,21 +571,27 @@ void update_screen()
    show_player_hotspot(view_port, &cam, &player);
    #endif // DEBUG
 //   draw_console_map(map, &player, console_map);
-
+   #ifdef DEBUG
+      if (fps < 30) al_draw_textf(fps_font, al_map_rgb(255,0,0), 0, 0, ALLEGRO_ALIGN_LEFT, "FPS: %d", (int)fps);
+      if (fps >= 30) al_draw_textf(fps_font, al_map_rgb(0,255,0), 0, 0, ALLEGRO_ALIGN_LEFT, "FPS: %d", (int)fps);
+   #endif
    //Draw view_port to game, then draw game scaled to display.
    al_set_target_bitmap(game_bmp);
+    
    al_draw_bitmap(view_port, VIEWPORT_X, VIEWPORT_Y, 0);
 //   al_draw_bitmap(console_map, 238, 100, 0);
    al_draw_textf(font, al_map_rgb(255,255,255), 301, 18, ALLEGRO_ALIGN_RIGHT, "%09d", player.score);
    al_draw_textf(font, al_map_rgb(255,255,255), 18, 185, ALLEGRO_ALIGN_LEFT, map->name);
    al_draw_bitmap_region(health_bar, 0, player.health * 16, 64, 16, 238, 42, 0);
    al_set_target_backbuffer(display);
+   
    al_draw_scaled_bitmap(game_bmp,
                          0,0,
                          screen.unscaled_w, screen.unscaled_h,
                          screen.x, screen.y,
                          screen.width, screen.height,
                          0);
+   
    al_flip_display();
 }
 
@@ -1211,7 +1230,7 @@ int main(int argc, char **argv)
 
    while(game.state != QUIT)
    {
-
+      double old_time = al_get_time();
       ALLEGRO_EVENT ev;
       al_wait_for_event(event_queue, &ev);
 
@@ -1233,8 +1252,14 @@ int main(int argc, char **argv)
 
       if (ev.type == ALLEGRO_EVENT_TIMER)
       {
-         al_wait_for_vsync();
+         //al_wait_for_vsync();
          check_timer_logic();
+         #ifdef DEBUG
+            double new_time = al_get_time();
+            double delta = new_time - old_time;
+            fps = 1/(delta);
+            old_time = new_time; 
+         #endif
          redraw = true;
       }
 
