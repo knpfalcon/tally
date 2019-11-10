@@ -3,6 +3,9 @@
 *.layout
 *.log
 *.json
+*.o
+tally
+tedit
 
 .vscode
 /Working Copies/
