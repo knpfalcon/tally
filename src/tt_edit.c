@@ -38,7 +38,7 @@ t_conditional cond = {false, false, false, false};
 
 
 //enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_N,KEY_PAD_PLUS, KEY_PAD_MINUS};
-bool key[13] = {false};
+bool key[14] = {false};
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -246,6 +246,8 @@ int init_game()
 
    al_draw_text(reg_font, al_map_rgb(255,255,255), 16, 16 , 0, "Loading...");
    al_flip_display();
+
+   al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_PRECISION);
 
    jlog("Game initialized.");
    return 0;
@@ -496,6 +498,13 @@ void check_click_in_viewport()
          {
             map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].item = 0;
          }
+         else if (key[KEY_Q])
+         {
+            //Tile dropper
+            al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+            sp_mouse.tile_selection = map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].tile;
+            
+         }
       }
       else
       {
@@ -660,6 +669,9 @@ void check_key_down(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_R:
          key[KEY_R] = true;
          break;
+      case ALLEGRO_KEY_Q:
+         key[KEY_Q] = true;
+         break;
    }
 }
 
@@ -752,6 +764,10 @@ void check_key_up(ALLEGRO_EVENT *ev)
          break;
       case ALLEGRO_KEY_R:
          key[KEY_R] = false;
+         break;
+      case ALLEGRO_KEY_Q:
+         key[KEY_Q] = false;
+         al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_PRECISION);
          break;
       case ALLEGRO_KEY_ESCAPE:
          //program_done = true;
