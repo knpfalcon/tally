@@ -1,38 +1,47 @@
-Sprocket Level Editor Reference
+Tally Trauma Level Editor Reference
 =================================
+**Scroll Map**
+>W,S,A,D
+>ARROW KEYS
+>
+**Save Map**
+>F2
+>
+**Open Map**
+>F5
 
-Keyboard
---------
-Scroll.........W,S,A,D/ARROW KEYS
+**New Map**
+>LEFT CTRL + N
 
-Save...........F2
+**Show Zoomed-Out Map**
+>HOLD LEFT SHIFT
 
-Open...........F5
+**Tile Select**
+>NUMPAD -/+
+>Mouse Scroll Wheel
 
-New............LEFT CTRL + N
+**Name Map**
+>F12
+>ENTER to set when finished typing
 
-Full Map.......LEFT SHIFT
+**Center Camera on Player**
+>P
 
-Tile Select....NUMPAD -/+
+**Select/Scroll Through Items**
+>Numerical 1 
+>Numerical 2
 
-Name Map.......F12 (ENTER to set)
+**Place item**
+>E
 
-Center cam
-on Player......P
+**Tile Dropper**
+>Press Q over a tile on the map
 
-Select 
-Items..........1 or 2
+**Place Tile**
+>LEFT MOUSE BUTTON
 
-Place item.....E
+**Erase Tile**
+>RIGHT MOUSE BUTTON
 
-Tile Dropper...Q
-
-Mouse
------
-Place Tile.....LEFT BUTTON
-
-Erase Tile.....RIGHT BUTTON
-
-Set Player.....MIDDLE BUTTON
-
-Tile Select....SCROLL WHEEL
+**Set Player Start**
+>MIDDLE MOUSE BUTTON
