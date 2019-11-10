@@ -528,15 +528,6 @@ bool unload_level()
    al_destroy_sample(snd_shoot);
    snd_shoot = NULL;
 
-
-   //Play music (Make this into a function at some point.
-//   music_instance = al_create_sample_instance(music);
-//   al_destroy_sample_instance(music_instance);
-//   music_instance = NULL;
-
-//   al_destroy_sample(music);
-//   music = NULL;
-
    game.level_needs_unloaded = false;
    return true; //Returns true on success
 }
