@@ -16,6 +16,7 @@ typedef struct t_player
    unsigned char cur_frame;
    unsigned char direction;
    unsigned char state;
+   unsigned char hurt;
    int vel_x;
    int vel_y;
    int bb_left;
@@ -26,7 +27,6 @@ typedef struct t_player
    int muzzle_y;
    int muzzle_time;
    int shoot_time;
-   unsigned char hurt;
    bool draw;
    bool on_ground;
    bool jump_pressed;
@@ -36,6 +36,7 @@ typedef struct t_player
       int x1, x2, x3;
    #endif // DEBUG
 } t_player;
+
 
 enum player_state {STOPPED = 0, WALKING = 1, JUMPING = 2, FALLING = 3};
 enum direction {RIGHT = 0, LEFT = 1};

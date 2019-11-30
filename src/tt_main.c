@@ -898,7 +898,7 @@ void update_player()
          printf("FLY TALLY!\n");
       #endif // DEBUG
    }
-   else if(player.on_ground == true && is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32))
+   else if(player.on_ground == true && is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) )
    {
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
@@ -914,7 +914,7 @@ void update_player()
       a vertical upwards boost while the Y velocity is
       still being pulled in the opposite direction,
       simulating gravity. */
-   if (key[KEY_LCTRL] && player.on_ground && !player.jump_pressed)
+   if (key[KEY_LCTRL] && player.on_ground && !player.jump_pressed && !is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
    {
       if (!is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
       {
@@ -1219,6 +1219,7 @@ int main(int argc, char **argv)
    al_start_timer(FPS_TIMER);
    jlog("FPS timer started.");
 
+   int ticks = 0;
    while(game.state != QUIT)
    {
       double old_time = al_get_time();
@@ -1243,14 +1244,17 @@ int main(int argc, char **argv)
 
       if (ev.type == ALLEGRO_EVENT_TIMER)
       {
-         //al_wait_for_vsync();
-         check_timer_logic();
-         #ifdef DEBUG
+         ++ticks;
+         if (ticks == 1)
+         {
+            check_timer_logic();
+            #ifdef DEBUG
             double new_time = al_get_time();
             double delta = new_time - old_time;
             fps = 1/(delta);
             old_time = new_time; 
-         #endif
+            #endif 
+         }
          redraw = true;
       }
 
@@ -1258,6 +1262,7 @@ int main(int argc, char **argv)
       {
          redraw = false;
          update_screen();
+         ticks = 0;
       }
    }
 

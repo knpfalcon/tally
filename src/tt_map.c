@@ -142,14 +142,14 @@ t_map *load_map(const char *fname)
       return NULL;
    }
 
-   m = malloc(sizeof(t_map)); //Allocate memory for map
+   m = malloc(sizeof(*m)); //Allocate memory for map
    if (m == NULL)
    {
       jlog("In file %s, Line %d. Couldn't create an empty map! m returns NULL." __FILE__, __LINE__);
       al_fclose(fp);
       return NULL; //Return NULL on failure
    }
-   al_fread(fp, m, sizeof(t_map));
+   al_fread(fp, m, sizeof *m);
 
    m->position = malloc( (MAP_WIDTH * MAP_HEIGHT) * sizeof(t_map_pos));
    if (m->position == NULL)
