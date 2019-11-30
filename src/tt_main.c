@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <string.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_audio.h>
@@ -18,6 +19,9 @@
 
 /* At some point I'll see if I can prune these globals,
    but they're staying for now. */
+
+bool dbg = false; 
+
 bool program_done = false;
 t_game game = { .state = LOAD_LEVEL, .next_state = LOAD_LEVEL };
 
@@ -28,7 +32,7 @@ int halftime_frame_speed = ANIMATION_SPEED * 2;
 bool redraw = true;
 
 #ifdef DEBUG
-double fps;
+   double fps;
 #endif
 
 t_bullet player_bullet;
@@ -557,14 +561,21 @@ void update_screen()
       //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
 
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
-   #ifdef DEBUG
-   draw_bb(&cam, player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height);
-   show_player_hotspot(view_port, &cam, &player);
-   #endif // DEBUG
+   
+      #ifdef DEBUG
+      if (dbg == true)
+      {
+         draw_bb(&cam, player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height);
+         show_player_hotspot(view_port, &cam, &player);
+      }
+      #endif // DEBUG
 //   draw_console_map(map, &player, console_map);
    #ifdef DEBUG
+   if (dbg == true)
+   {
       if (fps < 30) al_draw_textf(fps_font, al_map_rgb(255,0,0), 0, 0, ALLEGRO_ALIGN_LEFT, "FPS: %d", (int)fps);
       if (fps >= 30) al_draw_textf(fps_font, al_map_rgb(0,255,0), 0, 0, ALLEGRO_ALIGN_LEFT, "FPS: %d", (int)fps);
+   }
    #endif
    //Draw view_port to game, then draw game scaled to display.
    al_set_target_bitmap(game_bmp);
@@ -627,6 +638,9 @@ void check_key_down(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_X:
          key[KEY_ALT] = true;
          break;
+      case ALLEGRO_KEY_T:
+         key[KEY_T] = true;
+         break;
    }
 }
 
@@ -677,6 +691,11 @@ void check_key_up(ALLEGRO_EVENT *ev)
          cam.x = player.x - VIEWPORT_WIDTH / 2 + 24;
          cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
          check_cam();
+         break;
+
+      case ALLEGRO_KEY_T:
+         key[KEY_T] = false;
+         dbg ^= 1;
          break;
 
       case ALLEGRO_KEY_ESCAPE:
@@ -929,13 +948,6 @@ void update_player()
       //player.jump_pressed = false;
       if (player.vel_y < 0) player.vel_y /= 2;
    }
-
-   #ifdef DEBUG
-   if (key[KEY_Z])
-   {
-      player.vel_y = -8;
-   }
-   #endif // DEBUG
 
    /* Apply vertical force
       This is where the player's Y position is changed
@@ -1200,6 +1212,20 @@ void clean_up()
  ************************************************/
 int main(int argc, char **argv)
 {
+
+   if (argc > 1)
+   {
+      for (int d = 1; d < argc; d++)
+       {
+         if (strcmp(argv[d], "-tdbg") == 0)
+         {
+            dbg = true;
+         }  
+      }
+   }
+   printf("\n\ndbg = %d\n\n", dbg);
+   
+
    if (init_game() != 0)
    {
       jlog("Failed to init game!\n");

@@ -2,7 +2,7 @@
 #
 
 CC = gcc
-CFLAGS = -m32 -O2 -Wall -fomit-frame-pointer -fexpensive-optimizations -g -DDEBUG
+CFLAGS = -std=c99 -m32 -Wall -g -DDEBUG
 LIBDIR = -L/usr/lib/i386-linux-gnu 
 
 ALLEGRO_LIBS = allegro-5 allegro_acodec-5 allegro_image-5 \
@@ -52,7 +52,7 @@ $(ODIR)/%.o: $(SRC) $(DEPS)
 
 #Link Objects and output to executable
 $(BINDIR)/$(OUTFILE): $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(ALLEGRO_FLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) $(ALLEGRO_FLAGS) 
 
 .PHONY: clean
 
