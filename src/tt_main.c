@@ -237,6 +237,10 @@ int init_game()
 
    //ADLMIDI
    midi_player = adl_init(22050);
+   adl_setTempo(midi_player, 0.40);
+   adl_setVolumeRangeModel(midi_player, ADLMIDI_VolumeModel_APOGEE);
+   //adl_setLoopEnabled(midi_player, 1);
+   
    
    adl_switchEmulator(midi_player, ADLMIDI_EMU_NUKED);
 
@@ -258,7 +262,7 @@ int init_game()
    //al_flip_display();
 
 
-   if (adl_openFile(midi_player, "data/music/1.imf") < 0)
+   if (adl_openFile(midi_player, "data/music/test3.imf") < 0)
    {
       fprintf(stderr, "Couldn't open music file: %s\n", adl_errorInfo(midi_player));
       adl_close(midi_player);
@@ -266,6 +270,7 @@ int init_game()
    }
 
    music_stream = al_create_audio_stream(1, 1024, 44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_1);
+   al_set_audio_stream_playing(music_stream, false);
 
    al_register_event_source(event_queue, al_get_display_event_source(display));
    al_register_event_source(event_queue, al_get_timer_event_source(FPS_TIMER));
@@ -274,7 +279,7 @@ int init_game()
 
    //Create the game bitmap that needs to be stretched to display
    game_bmp = al_create_bitmap(320, 200);
-   al_reserve_samples(20);
+   al_reserve_samples(4);
 
    jlog("Game initialized.");
    jlog("Screen size factor: %d", screen.factor);
@@ -285,9 +290,10 @@ int init_game()
 
    music_mixer = al_create_mixer(44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_1);
    
-
+   al_set_audio_stream_gain(music_stream, 3.0f);
 
    al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
+
 
    return 0;
 }
@@ -462,6 +468,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
    al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
    al_play_sample_instance(music_instance); */
 
+   al_set_audio_stream_playing(music_stream, true);
 
    //draw the status border
    al_set_target_bitmap(game_bmp);
@@ -1200,9 +1207,6 @@ void check_timer_logic()
    }
 
    check_cam();
-
-   
-   
 }
 
 /************************************************
@@ -1307,14 +1311,17 @@ int main(int argc, char **argv)
       
       if (ev.type == ALLEGRO_EVENT_AUDIO_STREAM_FRAGMENT)
       {
-         //al_get_audio_stream_fragment(music_stream);
-         do{
-            samples_count = adl_play(midi_player, 1024, buffer);
-            if (samples_count > 0)
-            {
-               al_set_audio_stream_fragment(music_stream, buffer);
-            }
-         } while (samples_count <= 0);
+
+         samples_count = adl_play(midi_player, 1024, buffer);
+         if (samples_count > 0)
+         {
+            al_set_audio_stream_fragment(music_stream, buffer);
+         }
+         else if (samples_count <= 0)
+         {
+            al_set_audio_stream_playing(music_stream, false);
+         }
+
       }
 
       if (ev.type == ALLEGRO_EVENT_TIMER)
@@ -1329,6 +1336,9 @@ int main(int argc, char **argv)
             fps = 1/(delta);
             old_time = new_time; 
             #endif 
+            if (al_get_audio_stream_playing(music_stream)) printf("Playing\n");
+            if (!al_get_audio_stream_playing(music_stream)) printf("NOT Playing\n");
+            printf("Sample count: %d\n", samples_count);
          }
          redraw = true;
       }
