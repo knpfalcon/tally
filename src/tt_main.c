@@ -131,8 +131,8 @@ int init_game()
    }
    jlog("Image add-on initialized.");
    //al_set_new_display_adapter(1);
-   screen.width = 1280 ;
-   screen.height = 800;
+   screen.width = 1280;
+   screen.height = 720;
    display = al_create_display(screen.width, screen.height);
    if(!display)
    {
@@ -237,9 +237,9 @@ int init_game()
 
    //ADLMIDI
    midi_player = adl_init(22050);
-   adl_setTempo(midi_player, 0.40);
+   //adl_setTempo(midi_player, 0.40);
    adl_setVolumeRangeModel(midi_player, ADLMIDI_VolumeModel_APOGEE);
-   //adl_setLoopEnabled(midi_player, 1);
+   adl_setLoopEnabled(midi_player, 1);
    
    
    adl_switchEmulator(midi_player, ADLMIDI_EMU_NUKED);
@@ -262,7 +262,7 @@ int init_game()
    //al_flip_display();
 
 
-   if (adl_openFile(midi_player, "data/music/test3.imf") < 0)
+   if (adl_openFile(midi_player, "data/music/1.imf") < 0)
    {
       fprintf(stderr, "Couldn't open music file: %s\n", adl_errorInfo(midi_player));
       adl_close(midi_player);
@@ -279,7 +279,7 @@ int init_game()
 
    //Create the game bitmap that needs to be stretched to display
    game_bmp = al_create_bitmap(320, 200);
-   al_reserve_samples(4);
+   al_reserve_samples(8);
 
    jlog("Game initialized.");
    jlog("Screen size factor: %d", screen.factor);
@@ -288,9 +288,9 @@ int init_game()
    /* game.music = MUSIC_1; */
 
 
-   music_mixer = al_create_mixer(44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_1);
+   music_mixer = al_create_mixer(44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
    
-   al_set_audio_stream_gain(music_stream, 3.0f);
+   al_set_audio_stream_gain(music_stream, 5.0f);
 
    al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
 
@@ -450,14 +450,14 @@ void check_cam() //Check to make sure camera is not out of bounds.
 //   console_map = al_create_bitmap(64, 45);
 
    //Load sounds
-   snd_fall = al_load_sample("data/sound/fall.ogg");
-   snd_jump = al_load_sample("data/sound/jump.ogg");
-   snd_land = al_load_sample("data/sound/land.ogg");
-   snd_hithead = al_load_sample("data/sound/hithead.ogg");
-   snd_pickup = al_load_sample("data/sound/pickup.ogg");
-   snd_health = al_load_sample("data/sound/health.ogg");
-   snd_hurt = al_load_sample("data/sound/hurt.ogg");
-   snd_shoot = al_load_sample("data/sound/shoot.ogg");
+   snd_fall = al_load_sample("data/sound/fall.wav");
+   snd_jump = al_load_sample("data/sound/jump.wav");
+   snd_land = al_load_sample("data/sound/land.wav");
+   snd_hithead = al_load_sample("data/sound/hithead.wav");
+   snd_pickup = al_load_sample("data/sound/pickup.wav");
+   snd_health = al_load_sample("data/sound/health.wav");
+   snd_hurt = al_load_sample("data/sound/hurt.wav");
+   snd_shoot = al_load_sample("data/sound/shoot.wav");
 
    /* music = al_load_sample(music_file); */
 
@@ -1226,6 +1226,7 @@ void clean_up()
    al_unlock_bitmap(loading);
    al_unlock_bitmap(border);
 
+   adl_close(midi_player);
 
    if(event_queue) {
       al_destroy_event_queue(event_queue);
