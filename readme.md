@@ -26,6 +26,15 @@ This game is far from finished, and the editor has many errors.
 I'm not liable for what this may do to you or anyone else's computer. So
 don't blame me if things go awry! ;)
 
+Testing and experiments with OPL3 emulation uses the libADLMIDI library.
+It's a mess, but I finally figured out how to feed it into Allegro's audio stream.
+I'm using an IMF song I composed in midi format, then fed it through IMF Creator by Adam Biser.
+(Only the music uses libADLMIDI, Sound effects are still ogg files.)
+
+    https://github.com/Wohlstand/libADLMIDI
+
+Please read its license.
+
 Linux
 -----------------
 I've switched my main OS to Debian Buster because of REASONS, 
