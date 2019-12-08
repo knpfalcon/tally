@@ -37,7 +37,7 @@ t_conditional cond = {false, false, false, false};
 //const char *filename = NULL;
 
 
-//enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_LCTRL, KEY_LSHIFT, KEY_N,KEY_PAD_PLUS, KEY_PAD_MINUS};
+//enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_Z, KEY_LSHIFT, KEY_N,KEY_PAD_PLUS, KEY_PAD_MINUS};
 bool key[14] = {false};
 
 ALLEGRO_DISPLAY *display = NULL;
@@ -642,8 +642,8 @@ void check_key_down(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_D:
          key[KEY_RIGHT] = true;
          break;
-      case ALLEGRO_KEY_LCTRL:
-         key[KEY_LCTRL] = true;
+      case ALLEGRO_KEY_Z:
+         key[KEY_Z] = true;
          break;
       case ALLEGRO_KEY_N:
          key[KEY_N] = true;
@@ -706,8 +706,8 @@ void check_key_up(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_D:
          key[KEY_RIGHT] = false;
          break;
-      case ALLEGRO_KEY_LCTRL:
-         key[KEY_LCTRL] = false;
+      case ALLEGRO_KEY_Z:
+         key[KEY_Z] = false;
          break;
       case ALLEGRO_KEY_N:
          key[KEY_N] = false;
@@ -824,9 +824,9 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
          cam.x += scroll_speed;
       }
 
-      if (key[KEY_LCTRL] && key[KEY_N])
+      if (key[KEY_Z] && key[KEY_N])
       {
-         key[KEY_LCTRL] = false;
+         key[KEY_Z] = false;
          key[KEY_N] = false;
          int button = al_show_native_message_box(display,
                                                  "Create New Map",

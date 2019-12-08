@@ -19,11 +19,15 @@
 #include "tt_items.h"
 #include "tt_bullet.h"
 
+#define PLAY
+
+#define BUFFER_SAMPLES 2048
 /* At some point I'll see if I can prune these globals,
    but they're staying for now. */
 
 bool dbg = false; 
 
+FILE *demo_file = NULL;
 bool program_done = false;
 t_game game = { .state = LOAD_LEVEL, .next_state = LOAD_LEVEL };
 
@@ -50,6 +54,8 @@ unsigned char item_frame = 0;
 unsigned char item_afterfx_frame = 0;
 
 bool key[14] = { false };
+
+ALLEGRO_EVENT_SOURCE usr_src;
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -101,7 +107,7 @@ ALLEGRO_MIXER *music_mixer = NULL;
 ALLEGRO_AUDIO_STREAM *music_stream = NULL;
 struct ADL_MIDIPlayer *midi_player = NULL;
 
-short buffer[1024];
+short buffer[BUFFER_SAMPLES];
 int samples_count = 0;
 
 
@@ -237,8 +243,8 @@ int init_game()
 
    //ADLMIDI
    midi_player = adl_init(22050);
-   //adl_setTempo(midi_player, 0.40);
-   adl_setVolumeRangeModel(midi_player, ADLMIDI_VolumeModel_APOGEE);
+   adl_setTempo(midi_player, 0.40);
+
    adl_setLoopEnabled(midi_player, 1);
    
    
@@ -262,20 +268,23 @@ int init_game()
    //al_flip_display();
 
 
-   if (adl_openFile(midi_player, "data/music/1.imf") < 0)
+   if (adl_openFile(midi_player, "data/duke2music/rangea.imf") < 0)
    {
       fprintf(stderr, "Couldn't open music file: %s\n", adl_errorInfo(midi_player));
       adl_close(midi_player);
       return 1;
    }
 
-   music_stream = al_create_audio_stream(1, 1024, 44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_1);
+   music_stream = al_create_audio_stream(1, BUFFER_SAMPLES, 44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_1);
    al_set_audio_stream_playing(music_stream, false);
+
+   al_init_user_event_source(&usr_src);
 
    al_register_event_source(event_queue, al_get_display_event_source(display));
    al_register_event_source(event_queue, al_get_timer_event_source(FPS_TIMER));
    al_register_event_source(event_queue, al_get_keyboard_event_source());
    al_register_event_source(event_queue, al_get_audio_stream_event_source(music_stream));
+   al_register_event_source(event_queue, &usr_src);
 
    //Create the game bitmap that needs to be stretched to display
    game_bmp = al_create_bitmap(320, 200);
@@ -290,7 +299,7 @@ int init_game()
 
    music_mixer = al_create_mixer(44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
    
-   al_set_audio_stream_gain(music_stream, 5.0f);
+   al_set_audio_stream_gain(music_stream, 2.0f);
 
    al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
 
@@ -644,6 +653,7 @@ void update_screen()
  ************************************************/
 void check_key_down(ALLEGRO_EVENT *ev)
 {
+    
    switch(ev->keyboard.keycode)
    {
       case ALLEGRO_KEY_UP:
@@ -671,18 +681,19 @@ void check_key_down(ALLEGRO_EVENT *ev)
          key[KEY_RIGHT] = true;
          break;
       case ALLEGRO_KEY_Z:
-         key[KEY_LCTRL] = true;
+         key[KEY_Z] = true;
          break;
       case ALLEGRO_KEY_LSHIFT:
          key[KEY_LSHIFT] = true;
          break;
       case ALLEGRO_KEY_X:
-         key[KEY_ALT] = true;
+         key[KEY_X] = true;
          break;
       case ALLEGRO_KEY_T:
          key[KEY_T] = true;
          break;
    }
+   
 }
 
 /************************************************
@@ -717,13 +728,13 @@ void check_key_up(ALLEGRO_EVENT *ev)
          key[KEY_RIGHT] = false;
          break;
       case ALLEGRO_KEY_Z:
-         key[KEY_LCTRL] = false;
+         key[KEY_Z] = false;
          break;
       case ALLEGRO_KEY_LSHIFT:
          key[KEY_LSHIFT] = false;
          break;
       case ALLEGRO_KEY_X:
-         key[KEY_ALT] = false;
+         key[KEY_X] = false;
          break;
 
       case ALLEGRO_KEY_P:
@@ -740,7 +751,7 @@ void check_key_up(ALLEGRO_EVENT *ev)
          break;
 
       case ALLEGRO_KEY_ESCAPE:
-         game.state = QUIT;
+         //game.state = QUIT;
          break;
    }
 }
@@ -936,7 +947,7 @@ void update_player()
    when a player falls off edge. Working so far.
    also detects if player barely lands on ledge
    and helps them out a little. */
-   if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && !key[KEY_LCTRL])
+   if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && !key[KEY_Z])
    {
       //Play fall off ledge sound
       player.state = FALLING;
@@ -948,7 +959,7 @@ void update_player()
          printf("OOPS!\n");
       #endif // DEBUG
    }
-   else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && key[KEY_LCTRL])
+   else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && key[KEY_Z])
    {
       //Play fall off ledge sound
       if (player.direction == RIGHT) player.x += 4;
@@ -974,7 +985,7 @@ void update_player()
       a vertical upwards boost while the Y velocity is
       still being pulled in the opposite direction,
       simulating gravity. */
-   if (key[KEY_LCTRL] && player.on_ground && !player.jump_pressed && !is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
+   if (key[KEY_Z] && player.on_ground && !player.jump_pressed && !is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
    {
       if (!is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
       {
@@ -984,7 +995,7 @@ void update_player()
       player.jump_pressed = true;
       player.on_ground = false;
    }
-   if (!key[KEY_LCTRL])
+   if (!key[KEY_Z])
    {
       //player.jump_pressed = false;
       if (player.vel_y < 0) player.vel_y /= 2;
@@ -1156,7 +1167,7 @@ void update_player()
    }
 
    //Shooting time
-   if (key[KEY_ALT] && !player.shoot_time)
+   if (key[KEY_X] && !player.shoot_time)
    {
       check_bullet_collision();
       play_sound(snd_shoot, false);
@@ -1174,6 +1185,7 @@ void update_player()
  ************************************************/
 void check_timer_logic()
 {
+   
    //Frames
    frame_speed--; //This eliminates the need for an animation timer.
    halftime_frame_speed--; //This is for 2 frame animations like for blinking items
@@ -1254,7 +1266,23 @@ void clean_up()
  ************************************************/
 int main(int argc, char **argv)
 {
+   unsigned char key_buffer[640000] = { 0 };
+   int demo_file_pos = 0;
+   long filesize = 0;
+   
+   #ifdef RECORD
+   demo_file = fopen("demo.dmo", "wb");
+   #endif
+   
+   #ifdef PLAY
+   demo_file = fopen("demo.dmo", "rb");
+   fseek(demo_file, 0, SEEK_END);
+   filesize = ftell(demo_file);
+   rewind(demo_file);
+   fread(key_buffer, filesize, 1, demo_file);
+   #endif
 
+   
    if (argc > 1)
    {
       for (int d = 1; d < argc; d++)
@@ -1287,14 +1315,17 @@ int main(int argc, char **argv)
    al_start_timer(FPS_TIMER);
    jlog("FPS timer started.");
 
+   //Demo Recording
+
    int ticks = 0;
    while(game.state != QUIT)
    {
 
       double old_time = al_get_time();
       ALLEGRO_EVENT ev;
-      al_wait_for_event(event_queue, &ev);
 
+      al_wait_for_event(event_queue, &ev);
+      
       if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
       {
          check_key_down(&ev);
@@ -1313,7 +1344,7 @@ int main(int argc, char **argv)
       if (ev.type == ALLEGRO_EVENT_AUDIO_STREAM_FRAGMENT)
       {
 
-         samples_count = adl_play(midi_player, 1024, buffer);
+         samples_count = adl_play(midi_player, BUFFER_SAMPLES, buffer);
          if (samples_count > 0)
          {
             al_set_audio_stream_fragment(music_stream, buffer);
@@ -1327,9 +1358,30 @@ int main(int argc, char **argv)
 
       if (ev.type == ALLEGRO_EVENT_TIMER)
       {
+         #ifdef PLAY
+         key[KEY_RIGHT] = key_buffer[demo_file_pos];
+         key[KEY_LEFT] = key_buffer[demo_file_pos + 1];
+         key[KEY_Z] = key_buffer[demo_file_pos + 2];
+         key[KEY_X] = key_buffer[demo_file_pos + 3];
+         demo_file_pos += 4;
+         #endif
+
+
+         #ifdef RECORD
+         if (demo_file_pos < 640000)
+         {
+            key_buffer[demo_file_pos] = key[KEY_RIGHT];
+            key_buffer[demo_file_pos + 1] = key[KEY_LEFT];
+            key_buffer[demo_file_pos + 2] = key[KEY_Z];
+            key_buffer[demo_file_pos + 3] = key[KEY_X];
+            demo_file_pos +=4 ;
+         }
+         #endif
+
          ++ticks;
          if (ticks == 1)
          {
+
             check_timer_logic();
             #ifdef DEBUG
             double new_time = al_get_time();
@@ -1337,9 +1389,9 @@ int main(int argc, char **argv)
             fps = 1/(delta);
             old_time = new_time; 
             #endif 
-            if (al_get_audio_stream_playing(music_stream)) printf("Playing\n");
-            if (!al_get_audio_stream_playing(music_stream)) printf("NOT Playing\n");
-            printf("Sample count: %d\n", samples_count);
+            //if (al_get_audio_stream_playing(music_stream)) printf("Playing\n");
+            //if (!al_get_audio_stream_playing(music_stream)) printf("NOT Playing\n");
+            //printf("Sample count: %d\n", samples_count);
          }
          redraw = true;
       }
@@ -1349,10 +1401,16 @@ int main(int argc, char **argv)
          redraw = false;
          update_screen();
          ticks = 0;
+         
       }
-   }
 
+   }
    clean_up();
 
+   #ifdef RECORD
+   fwrite(key_buffer, sizeof(key_buffer), 1, demo_file);
+   #endif
+
+   fclose(demo_file);
    return 0;
 }
