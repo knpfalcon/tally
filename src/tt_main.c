@@ -11,7 +11,6 @@
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_primitives.h>
 
-
 #include "tt_main.h"
 #include "tt_map.h"
 #include "tt_player.h"
@@ -25,8 +24,7 @@ int minutes = 0;
 int seconds = 0;
 int centiseconds = 0;
 
-
-#define BUFFER_SAMPLES 1024
+#define BUFFER_SAMPLES 4096
 /* At some point I'll see if I can prune these globals,
    but they're staying for now. */
 int demo_file_pos = 0;
@@ -44,7 +42,7 @@ int halftime_frame_speed = ANIMATION_SPEED * 2;
 bool redraw = true;
 
 #ifdef DEBUG
-   double fps;
+double fps;
 #endif
 
 t_bullet player_bullet;
@@ -60,8 +58,6 @@ unsigned char item_frame = 0;
 unsigned char item_afterfx_frame = 0;
 
 bool key[14] = { false };
-
-ALLEGRO_EVENT_SOURCE usr_src;
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -84,10 +80,8 @@ ALLEGRO_BITMAP *bullet_blue = NULL;
 ALLEGRO_BITMAP *muzzle_flash = NULL;
 ALLEGRO_BITMAP *bullet_particle = NULL;
 
-
 //Bitmaps that get drawn to
 ALLEGRO_BITMAP *view_port = NULL;
-//ALLEGRO_BITMAP *console_map = NULL;
 ALLEGRO_BITMAP *game_bmp = NULL;
 
 //Sounds
@@ -103,17 +97,10 @@ ALLEGRO_SAMPLE *snd_shoot = NULL;
 
 ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 
-
-////Music
-/* float mus_volume = 1;
-ALLEGRO_SAMPLE *music = NULL;
-ALLEGRO_SAMPLE_INSTANCE *music_instance = NULL; */
-
-ALLEGRO_MIXER *music_mixer = NULL;
 ALLEGRO_AUDIO_STREAM *music_stream = NULL;
 struct ADL_MIDIPlayer *midi_player = NULL;
 
-short buffer[BUFFER_SAMPLES];
+short opl_buffer[BUFFER_SAMPLES];
 int samples_count = 0;
 
 
@@ -145,7 +132,7 @@ int init_game()
    //al_set_new_display_adapter(1);
    screen.width = 320;
    screen.height = 200;
-   al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
+   //al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
    display = al_create_display(screen.width, screen.height);
    if(!display)
    {
@@ -248,33 +235,25 @@ int init_game()
    }
    jlog("Audio initialized.");
 
-   //ADLMIDI
-   midi_player = adl_init(22050);
-   adl_setTempo(midi_player, 1.0);
-
-   adl_setLoopEnabled(midi_player, 1);
    
-   
-   adl_switchEmulator(midi_player, ADLMIDI_EMU_NUKED);
 
    #ifdef DEBUG
-      al_set_window_title(display, "Tally Trauma -- DEBUG");
+   al_set_window_title(display, "Tally Trauma -- DEBUG");
    #endif // DEBUG
 
    #ifdef RELEASE
-      al_set_window_title(display, "Tally Trauma");
+   al_set_window_title(display, "Tally Trauma");
    #endif // RELEASE
 
    //Load font
    font = al_load_bitmap_font("data/fonts/font.png");
    fps_font = al_load_font("data/hack.ttf", 12, 0);
 
-  
-
-   //al_clear_to_color(al_map_rgb(0, 0, 0));
-   //al_flip_display();
-
-
+   //ADLMIDI
+   midi_player = adl_init(44100);
+   adl_setTempo(midi_player, 1.0);
+   adl_setLoopEnabled(midi_player, 1);
+   adl_switchEmulator(midi_player, ADLMIDI_EMU_DOSBOX);
    if (adl_openFile(midi_player, "data/music/1.imf") < 0)
    {
       fprintf(stderr, "Couldn't open music file: %s\n", adl_errorInfo(midi_player));
@@ -282,19 +261,16 @@ int init_game()
       return 1;
    }
 
-   music_stream = al_create_audio_stream(1, BUFFER_SAMPLES, 44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_1);
-   al_set_audio_stream_playing(music_stream, false);
-
-   al_init_user_event_source(&usr_src);
-
+   music_stream = al_create_audio_stream(1, BUFFER_SAMPLES / 2, 44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
+   
    al_register_event_source(event_queue, al_get_display_event_source(display));
    al_register_event_source(event_queue, al_get_timer_event_source(FPS_TIMER));
    al_register_event_source(event_queue, al_get_keyboard_event_source());
    al_register_event_source(event_queue, al_get_audio_stream_event_source(music_stream));
-   al_register_event_source(event_queue, &usr_src);
 
    //Create the game bitmap that needs to be stretched to display
    game_bmp = al_create_bitmap(320, 200);
+
    al_reserve_samples(8);
 
    jlog("Game initialized.");
@@ -302,14 +278,11 @@ int init_game()
 
    game.level = LEVEL_1;
    /* game.music = MUSIC_1; */
-
-
-   music_mixer = al_create_mixer(44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
    
-   al_set_audio_stream_gain(music_stream, 2.0f);
-
+   al_set_audio_stream_gain(music_stream, 3.0f);
    al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
-
+   al_set_audio_stream_playing(music_stream, false);
+   printf("DEPTH: %d\n", al_get_mixer_depth(al_get_default_mixer()));
    return 0;
 }
 
@@ -364,7 +337,6 @@ void check_cam() //Check to make sure camera is not out of bounds.
  bool load_level(char *map_file, char *music_file)
  {
    //Display loading image
-   //al_set_target_backbuffer(display);
    al_draw_scaled_bitmap(loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
    al_flip_display();
 
@@ -456,13 +428,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
    if (bullet_particle == NULL) { jlog("Couldn't load particle.png"); return false; }
    al_lock_bitmap(bullet_particle, al_get_bitmap_format(bullet_particle), ALLEGRO_LOCK_READONLY);
 
-   //Create viewport and console map bitmapsmusic_instance = al_create_sample_instance(music);
-   //al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
-   //al_set_sample_instance_gain(music_instance, mus_volume);
-   //al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
-   //al_play_sample_instance(music_instance);
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-//   console_map = al_create_bitmap(64, 45);
 
    //Load sounds
    snd_fall = al_load_sample("data/sound/fall.wav");
@@ -473,15 +439,6 @@ void check_cam() //Check to make sure camera is not out of bounds.
    snd_health = al_load_sample("data/sound/health.wav");
    snd_hurt = al_load_sample("data/sound/hurt.wav");
    snd_shoot = al_load_sample("data/sound/shoot.wav");
-
-   /* music = al_load_sample(music_file); */
-
-   //Play music (Make this into a function at some point.
-   /* music_instance = al_create_sample_instance(music);
-   al_attach_sample_instance_to_mixer(music_instance, al_get_default_mixer());
-   al_set_sample_instance_gain(music_instance, mus_volume);
-   al_set_sample_instance_playmode(music_instance, ALLEGRO_PLAYMODE_LOOP);
-   al_play_sample_instance(music_instance); */
 
    al_set_audio_stream_playing(music_stream, true);
 
@@ -568,9 +525,6 @@ bool unload_level()
    view_port = NULL;
    if (view_port == NULL) jlog("view_port unloaded.");
 
-//   al_destroy_bitmap(console_map);
-//   console_map = NULL;
-//   if (console_map == NULL) jlog("console_map unloaded.");
    al_destroy_sample(snd_jump);
    snd_jump = NULL;
 
@@ -622,14 +576,14 @@ void update_screen()
 
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
    
-      #ifdef DEBUG
-      if (dbg == true)
-      {
-         draw_bb(&cam, player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height);
-         show_player_hotspot(view_port, &cam, &player);
-      }
-      #endif // DEBUG
-//   draw_console_map(map, &player, console_map);
+   #ifdef DEBUG
+   if (dbg == true)
+   {
+      draw_bb(&cam, player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height);
+      show_player_hotspot(view_port, &cam, &player);
+   }
+   #endif // DEBUG
+
    #ifdef DEBUG
    if (dbg == true)
    {
@@ -899,9 +853,9 @@ void update_player()
       x3 = 15; //For detecting falling from edge.
       player.bb_left = 12;
       #ifdef DEBUG
-         player.x1 = x1;
-         player.x2 = x2;
-         player.x3 = x3;
+      player.x1 = x1;
+      player.x2 = x2;
+      player.x3 = x3;
       #endif // DEBUG
 
    }
@@ -912,9 +866,9 @@ void update_player()
       x3 = 18; //For detecting falling from edge.
       player.bb_left = 13;
       #ifdef DEBUG
-         player.x1 = x1;
-         player.x2 = x2;
-         player.x3 = x3;
+      player.x1 = x1;
+      player.x2 = x2;
+      player.x3 = x3;
       #endif // DEBUG
    }
 
@@ -962,7 +916,7 @@ void update_player()
          landed = false;
          play_sound(snd_land, false);
          #ifdef DEBUG
-            printf("TALLY SMACKED THE GROUND!\n");
+         printf("TALLY SMACKED THE GROUND!\n");
          #endif // DEBUG
       }
    }
@@ -980,7 +934,7 @@ void update_player()
       player.vel_y += 24;
       play_sound(snd_fall, false);
       #ifdef DEBUG
-         printf("OOPS!\n");
+      printf("OOPS!\n");
       #endif // DEBUG
    }
    else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && key[KEY_Z])
@@ -990,7 +944,7 @@ void update_player()
       if (player.direction == LEFT) player.x -= 4;
       //player.vel_y = -24;
       #ifdef DEBUG
-         printf("FLY TALLY!\n");
+      printf("FLY TALLY!\n");
       #endif // DEBUG
    }
    else if(player.on_ground == true && is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) )
@@ -998,7 +952,7 @@ void update_player()
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
       #ifdef DEBUG
-         printf("YOU MADE IT!\n");
+      printf("YOU MADE IT!\n");
       #endif // DEBUG
    }
 
@@ -1262,6 +1216,7 @@ void clean_up()
    al_unlock_bitmap(loading);
    al_unlock_bitmap(border);
 
+   al_destroy_audio_stream(music_stream);
    adl_close(midi_player);
 
    if(event_queue) {
@@ -1290,7 +1245,6 @@ void clean_up()
  ************************************************/
 int main(int argc, char **argv)
 {
-   //game.demo_mode = PLAY;
    unsigned char key_buffer[640000] = { 0 };
    long filesize = 0;
 
@@ -1365,10 +1319,6 @@ int main(int argc, char **argv)
       fread(key_buffer, filesize, 1, demo_file);
    }
    
-
-   
-   
-
    if (init_game() != 0)
    {
       jlog("Failed to init game!\n");
@@ -1396,7 +1346,7 @@ int main(int argc, char **argv)
       ALLEGRO_EVENT ev;
 
       al_wait_for_event(event_queue, &ev);
-      
+
       if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
       {
          check_key_down(&ev);
@@ -1412,21 +1362,6 @@ int main(int argc, char **argv)
          game.state = QUIT;
       }
       
-      if (ev.type == ALLEGRO_EVENT_AUDIO_STREAM_FRAGMENT)
-      {
-
-         samples_count = adl_play(midi_player, BUFFER_SAMPLES, buffer);
-         if (samples_count > 0)
-         {
-            al_set_audio_stream_fragment(music_stream, buffer);
-         }
-         else if (samples_count <= 0)
-         {
-            al_set_audio_stream_playing(music_stream, false);
-         }
-
-      }
-
       if (ev.type == ALLEGRO_EVENT_TIMER)
       {
          centiseconds += (100/FPS);
@@ -1440,7 +1375,6 @@ int main(int argc, char **argv)
             seconds = 0;
             minutes++;
          }
-         printf("%02d:%02d:%02d\n", minutes, seconds, centiseconds);
 
          if (game.demo_mode == RECORD)
          {
@@ -1473,11 +1407,24 @@ int main(int argc, char **argv)
             fps = 1/(delta);
             old_time = new_time; 
             #endif 
-            //if (al_get_audio_stream_playing(music_stream)) printf("Playing\n");
-            //if (!al_get_audio_stream_playing(music_stream)) printf("NOT Playing\n");
-            //printf("Sample count: %d\n", samples_count);
          }
          redraw = true;
+      }
+
+      if (ev.type == ALLEGRO_EVENT_AUDIO_STREAM_FRAGMENT)
+      {
+         
+         samples_count = adl_play(midi_player, BUFFER_SAMPLES, opl_buffer);
+         
+         if (samples_count > 0)
+         {
+            al_set_audio_stream_fragment(music_stream, opl_buffer);
+         }
+         else if (samples_count <= 0)
+         {
+            al_drain_audio_stream(music_stream);
+            al_set_audio_stream_playing(music_stream, false);
+         }
       }
 
       if (redraw && al_is_event_queue_empty(event_queue))
