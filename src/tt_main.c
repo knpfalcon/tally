@@ -19,11 +19,17 @@
 #include "tt_items.h"
 #include "tt_bullet.h"
 
-#define PLAY
+char DEMO_FILENAME[32] = "\0";
+int frames = 0;
+int minutes = 0;
+int seconds = 0;
+int centiseconds = 0;
 
-#define BUFFER_SAMPLES 2048
+
+#define BUFFER_SAMPLES 1024
 /* At some point I'll see if I can prune these globals,
    but they're staying for now. */
+int demo_file_pos = 0;
 
 bool dbg = false; 
 
@@ -116,7 +122,7 @@ int samples_count = 0;
  *************************************************/
 int init_game()
 {
-
+   
    //Initialize Allegro
    if(!al_init())
    {
@@ -137,8 +143,9 @@ int init_game()
    }
    jlog("Image add-on initialized.");
    //al_set_new_display_adapter(1);
-   screen.width = 1280;
-   screen.height = 720;
+   screen.width = 320;
+   screen.height = 200;
+   al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
    display = al_create_display(screen.width, screen.height);
    if(!display)
    {
@@ -302,7 +309,6 @@ int init_game()
    al_set_audio_stream_gain(music_stream, 2.0f);
 
    al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
-
 
    return 0;
 }
@@ -484,6 +490,10 @@ void check_cam() //Check to make sure camera is not out of bounds.
    al_draw_bitmap(stat_border, 0, 0, 0);
 
    game.level_needs_unloaded = true;
+
+   centiseconds = 0;
+   seconds = 0;
+   minutes = 0;
    return true; //Returns true on success
  }
 
@@ -627,6 +637,19 @@ void update_screen()
       if (fps >= 30) al_draw_textf(fps_font, al_map_rgb(0,255,0), 0, 0, ALLEGRO_ALIGN_LEFT, "FPS: %d", (int)fps);
    }
    #endif
+   if (game.demo_mode == PLAY)
+   {
+      if (item_frame == 0) al_draw_textf(font, al_map_rgb(255,255,255), 0, 0, ALLEGRO_ALIGN_LEFT, "DEMO");
+      //al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%d", demo_file_pos);
+      
+   }
+   else if (game.demo_mode == RECORD)
+   {
+      if (item_frame == 0) al_draw_textf(font, al_map_rgb(255,255,255), 0, 0, ALLEGRO_ALIGN_LEFT, "RECORDING DEMO");
+      //al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%d", demo_file_pos);
+   }
+   al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%02d:%02d:%02d", minutes, seconds, centiseconds);
+   
    //Draw view_port to game, then draw game scaled to display.
    al_set_target_bitmap(game_bmp);
     
@@ -751,7 +774,7 @@ void check_key_up(ALLEGRO_EVENT *ev)
          break;
 
       case ALLEGRO_KEY_ESCAPE:
-         //game.state = QUIT;
+         game.state = QUIT;
          break;
    }
 }
@@ -833,7 +856,6 @@ void update_player()
    t_map_pos *mp2;
    t_map_pos *mp3;
    bool landed = false;
-   bool jump_snd = false;
 
    player.bb_top = 4;
 
@@ -1266,23 +1288,10 @@ void clean_up()
  ************************************************/
 int main(int argc, char **argv)
 {
+   //game.demo_mode = PLAY;
    unsigned char key_buffer[640000] = { 0 };
-   int demo_file_pos = 0;
    long filesize = 0;
-   
-   #ifdef RECORD
-   demo_file = fopen("demo.dmo", "wb");
-   #endif
-   
-   #ifdef PLAY
-   demo_file = fopen("demo.dmo", "rb");
-   fseek(demo_file, 0, SEEK_END);
-   filesize = ftell(demo_file);
-   rewind(demo_file);
-   fread(key_buffer, filesize, 1, demo_file);
-   #endif
 
-   
    if (argc > 1)
    {
       for (int d = 1; d < argc; d++)
@@ -1290,10 +1299,72 @@ int main(int argc, char **argv)
          if (strcmp(argv[d], "-tdbg") == 0)
          {
             dbg = true;
-         }  
+         }
+         if (strcmp(argv[d], "-recorddemo") == 0)
+         {
+               if (argc -1 > d) d++;
+               else 
+               {
+                  printf("No file name for -recorddemo!\n");
+                  return 1;
+               }
+               if (argv[d][0] != '-')
+               {
+                  strncpy(DEMO_FILENAME, argv[d], strlen(argv[d]));
+                  game.demo_mode = RECORD;
+               }   
+               else
+            {
+               printf("Must be file name after -recorddemo!\n");
+               return 1;
+            }
+         }
+         if (strcmp(argv[d], "-playdemo") == 0)
+         { 
+            if (argc -1 > d) d++;
+            else 
+            {
+               printf("No file name for -playdemo!\n");
+               return 1;
+            }
+            if (argv[d][0] != '-')
+            {
+               strncpy(DEMO_FILENAME, argv[d], strlen(argv[d]));
+               FILE *fp = fopen(DEMO_FILENAME, "r");
+               if (fp) fclose(fp);
+               else
+               {
+                  printf("Demo file doesn't exist!\n");
+                  return 1;
+               }
+               game.demo_mode = PLAY;
+            }
+            else
+            {
+               printf("Must be file name after -playdemo!\n");
+               return 1;
+            }
+            
+         }
       }
    }
-   printf("\n\ndbg = %d\n\n", dbg);
+
+   if (game.demo_mode == RECORD)
+   {
+      demo_file = fopen(DEMO_FILENAME, "wb");
+   }
+
+   if (game.demo_mode == PLAY)
+   {
+      demo_file = fopen(DEMO_FILENAME, "rb");
+      fseek(demo_file, 0, SEEK_END);
+      filesize = ftell(demo_file);
+      rewind(demo_file);
+      fread(key_buffer, filesize, 1, demo_file);
+   }
+   
+
+   
    
 
    if (init_game() != 0)
@@ -1314,8 +1385,6 @@ int main(int argc, char **argv)
 
    al_start_timer(FPS_TIMER);
    jlog("FPS timer started.");
-
-   //Demo Recording
 
    int ticks = 0;
    while(game.state != QUIT)
@@ -1358,29 +1427,42 @@ int main(int argc, char **argv)
 
       if (ev.type == ALLEGRO_EVENT_TIMER)
       {
-         #ifdef PLAY
-         key[KEY_RIGHT] = key_buffer[demo_file_pos];
-         key[KEY_LEFT] = key_buffer[demo_file_pos + 1];
-         key[KEY_Z] = key_buffer[demo_file_pos + 2];
-         key[KEY_X] = key_buffer[demo_file_pos + 3];
-         demo_file_pos += 4;
-         #endif
-
-
-         #ifdef RECORD
-         if (demo_file_pos < 640000)
+         centiseconds += (100/FPS);
+         if (centiseconds >= 100) 
          {
-            key_buffer[demo_file_pos] = key[KEY_RIGHT];
-            key_buffer[demo_file_pos + 1] = key[KEY_LEFT];
-            key_buffer[demo_file_pos + 2] = key[KEY_Z];
-            key_buffer[demo_file_pos + 3] = key[KEY_X];
-            demo_file_pos +=4 ;
+            centiseconds = 0;
+            seconds++;
          }
-         #endif
+         if (seconds == 60)
+         {
+            seconds = 0;
+            minutes++;
+         }
+         printf("%02d:%02d:%02d\n", minutes, seconds, centiseconds);
+
+         if (game.demo_mode == RECORD)
+         {
+            if (demo_file_pos < 640000)
+            {
+               key_buffer[demo_file_pos] = key[KEY_RIGHT];
+               key_buffer[demo_file_pos + 1] = key[KEY_LEFT];
+               key_buffer[demo_file_pos + 2] = key[KEY_Z];
+               key_buffer[demo_file_pos + 3] = key[KEY_X];
+               demo_file_pos +=4 ;
+            }
+         }
 
          ++ticks;
          if (ticks == 1)
          {
+            if (game.demo_mode == PLAY)
+            {
+               key[KEY_RIGHT] = key_buffer[demo_file_pos];
+               key[KEY_LEFT] = key_buffer[demo_file_pos + 1];
+               key[KEY_Z] = key_buffer[demo_file_pos + 2];
+               key[KEY_X] = key_buffer[demo_file_pos + 3];
+               demo_file_pos += 4;
+            }
 
             check_timer_logic();
             #ifdef DEBUG
@@ -1398,6 +1480,7 @@ int main(int argc, char **argv)
 
       if (redraw && al_is_event_queue_empty(event_queue))
       {
+         al_wait_for_vsync();
          redraw = false;
          update_screen();
          ticks = 0;
@@ -1407,10 +1490,15 @@ int main(int argc, char **argv)
    }
    clean_up();
 
-   #ifdef RECORD
-   fwrite(key_buffer, sizeof(key_buffer), 1, demo_file);
-   #endif
+   if (game.demo_mode == RECORD)
+   {
+      fwrite(key_buffer, sizeof(key_buffer), 1, demo_file);
+   }
 
-   fclose(demo_file);
+   if (game.demo_mode != NONE)
+   {
+      fclose(demo_file);
+   }
+   
    return 0;
 }

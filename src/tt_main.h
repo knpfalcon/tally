@@ -28,6 +28,7 @@ typedef struct t_game
    char *level;
    char *music;
    bool level_needs_unloaded;
+   unsigned char demo_mode;
 } t_game;
 
 typedef struct t_cam
@@ -51,7 +52,9 @@ typedef struct t_screen
 
 } t_screen;
 
-enum STATE { QUIT, SPLASH, TITLE, DEMO, MENU, LOAD_LEVEL, PLAY_LEVEL, QUIT_LEVEL };
+enum STATE { QUIT, SPLASH, TITLE, MENU, LOAD_LEVEL, PLAY_LEVEL, QUIT_LEVEL };
+
+enum DEMO_MODE { NONE, PLAY, RECORD };
 
 enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_Z, KEY_LSHIFT, KEY_X, KEY_T, KEY_N, KEY_PAD_PLUS, KEY_PAD_MINUS, KEY_E, KEY_R, KEY_Q};
 
