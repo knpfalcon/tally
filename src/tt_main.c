@@ -637,24 +637,26 @@ void update_screen()
       if (fps >= 30) al_draw_textf(fps_font, al_map_rgb(0,255,0), 0, 0, ALLEGRO_ALIGN_LEFT, "FPS: %d", (int)fps);
    }
    #endif
-   if (game.demo_mode == PLAY)
-   {
-      if (item_frame == 0) al_draw_textf(font, al_map_rgb(255,255,255), 0, 0, ALLEGRO_ALIGN_LEFT, "DEMO");
-      //al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%d", demo_file_pos);
-      
-   }
-   else if (game.demo_mode == RECORD)
-   {
-      if (item_frame == 0) al_draw_textf(font, al_map_rgb(255,255,255), 0, 0, ALLEGRO_ALIGN_LEFT, "RECORDING DEMO");
-      //al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%d", demo_file_pos);
-   }
-   al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%02d:%02d:%02d", minutes, seconds, centiseconds);
    
    //Draw view_port to game, then draw game scaled to display.
    al_set_target_bitmap(game_bmp);
     
    al_draw_bitmap(view_port, VIEWPORT_X, VIEWPORT_Y, 0);
-//   al_draw_bitmap(console_map, 238, 100, 0);
+   if (game.demo_mode == PLAY)
+   {
+      if (item_frame == 0) al_draw_textf(font, al_map_rgb(255,255,255), 269, 136, ALLEGRO_ALIGN_CENTER, "DEMO");
+      if (item_frame == 1) al_draw_textf(font, al_map_rgb(0,0,0), 269, 136, ALLEGRO_ALIGN_CENTER, "DEMO");
+      //al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%d", demo_file_pos);
+      
+   }
+   else if (game.demo_mode == RECORD)
+   {
+      if (item_frame == 0) al_draw_textf(font, al_map_rgb(255,255,255), 269, 136, ALLEGRO_ALIGN_CENTER, "RECORD");
+      if (item_frame == 1) al_draw_textf(font, al_map_rgb(0,0,0), 269, 136, ALLEGRO_ALIGN_CENTER, "RECORD");
+      //al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%d", demo_file_pos);
+   }
+   
+   al_draw_textf(font, al_map_rgb(255,255,255), 269, 102, ALLEGRO_ALIGN_CENTER, "%02d:%02d:%02d", minutes, seconds, centiseconds);
    al_draw_textf(font, al_map_rgb(255,255,255), 301, 18, ALLEGRO_ALIGN_RIGHT, "%09d", player.score);
    al_draw_textf(font, al_map_rgb(255,255,255), 18, 185, ALLEGRO_ALIGN_LEFT, map->name);
    al_draw_bitmap_region(health_bar, 0, player.health * 16, 64, 16, 238, 42, 0);
