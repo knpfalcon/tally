@@ -5,9 +5,8 @@ Tally Trauma
   <img src="http://suitorgames.com/images/tallyt.png" alt="Tally Screenshot" />
 </p>
 
-This is something I've been working on and haven't had time to
-really do much on it. Maybe I'm just bored with the project.
-Anyway, I'm making the source code public.
+This is something I've been working on off-and-on for the last year. It slowly grows, and I
+mainly use it as a project to experiment with. It's far from finished, but maybe someday it will be.
 
 It's an EGA-Styled retro platformer. Programmed in C with Allegro 5.
 
@@ -23,7 +22,7 @@ source files where appropriate.
 **Warning**
 This game is far from finished, and the editor has many errors.
 
-I'm not liable for what this may do to you or anyone else's computer. So
+I'm not liable for what this may do to your or anyone else's computer. So
 don't blame me if things go awry! ;)
 
 Testing and experiments with OPL3 emulation uses the libADLMIDI library.
@@ -31,9 +30,10 @@ It's a mess, but I finally figured out how to feed it into Allegro's audio strea
 I'm using an IMF song I composed in midi format, then fed it through IMF Creator by Adam Biser.
 (Only the music uses libADLMIDI, Sound effects are still ogg files.)
 
-    https://github.com/Wohlstand/libADLMIDI
+[https://github.com/Wohlstand/libADLMIDI](https://github.com/Wohlstand/libADLMIDI)
 
-Please read its license.
+Please follow the link to see how to compile it. The libADLMIDI is licensed in parts,
+LGPL 2.1+, GPL v2+, GPL v3+, and MIT. And is coded by Vitaly Novichkov (Wohlstand).
 
 Linux
 -----------------
@@ -53,6 +53,10 @@ In a terminal do the following
 Install the 32-bit Allegro libraries
     
     sudo apt install liballegro5-dev:i386 liballegro5.2:i386
+
+Clone and Compile libADLMIDI at
+
+	https://github.com/Wohlstand/libADLMIDI
 
 Make sure you have multilib GCC installed
     
