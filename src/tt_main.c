@@ -250,7 +250,7 @@ int init_game()
 
    //ADLMIDI
    midi_player = adl_init(22050);
-   adl_setTempo(midi_player, 0.40);
+   adl_setTempo(midi_player, 1.0);
 
    adl_setLoopEnabled(midi_player, 1);
    
@@ -275,7 +275,7 @@ int init_game()
    //al_flip_display();
 
 
-   if (adl_openFile(midi_player, "data/duke2music/rangea.imf") < 0)
+   if (adl_openFile(midi_player, "data/music/1.imf") < 0)
    {
       fprintf(stderr, "Couldn't open music file: %s\n", adl_errorInfo(midi_player));
       adl_close(midi_player);
