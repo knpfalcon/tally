@@ -270,33 +270,3 @@ t_map_pos *get_map_position(t_map *m, int x, int y)
 
    return &m->position[x + y * MAP_WIDTH];
 }
-
-/************************************************
- * Draws the mini-map on the border             *
- ************************************************/
-void draw_console_map(t_map *m, t_player *p, ALLEGRO_BITMAP *bmp)
-{
-   al_set_target_bitmap(bmp);
-   al_clear_to_color(al_map_rgb(0,0,0));
-
-   //al_draw_circle( 1+ (p->x / TILE_SIZE) / 2, 1 + (p->y / TILE_SIZE) / 2, 5, al_map_rgb(0, 170, 0), 1);
-   //al_draw_pixel( 1+ (p->x / TILE_SIZE) / 2, 1 + (p->y / TILE_SIZE) / 2, al_map_rgb(170, 0, 0));
-
-   for(int y = 0; y < MAP_HEIGHT; y++)
-   {
-      for(int x = 0; x < MAP_WIDTH; x++)
-      {
-         //if (m->position[x + y * MAP_WIDTH].item > 0)
-         if (m->position[x + y * MAP_WIDTH].empty_tile == false && m->position[x + y * MAP_WIDTH].tile < 128)
-         {
-            //draw items
-            al_draw_pixel( (x / 2) + 1, (y / 2) + 1, al_map_rgb(85, 85, 85));
-         }
-      }
-   }
-
-   al_draw_pixel( 1+ (p->x / TILE_SIZE) / 2, 1 + (p->y / TILE_SIZE) / 2, al_map_rgb(85, 255, 255));
-
-   //al_draw_circle( 1+ (p->x / TILE_SIZE) / 2, 1 + (p->y / TILE_SIZE) / 2, 3, al_map_rgb(0, 170, 0), 1);
-
-}
