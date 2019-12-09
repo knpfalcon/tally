@@ -26,9 +26,9 @@ I'm not liable for what this may do to your or anyone else's computer. So
 don't blame me if things go awry! ;)
 
 Testing and experiments with OPL3 emulation uses the libADLMIDI library.
-It's a mess, but I finally figured out how to feed it into Allegro's audio stream.
+My code is a mess, but I finally figured out how to feed it into Allegro's audio stream.
 I'm using an IMF song I composed in midi format, then fed it through IMF Creator by Adam Biser.
-(Only the music uses libADLMIDI, Sound effects are still ogg files.)
+(Only the music uses libADLMIDI, Sound effects are 8-bit wavs.)
 
 [https://github.com/Wohlstand/libADLMIDI](https://github.com/Wohlstand/libADLMIDI)
 
