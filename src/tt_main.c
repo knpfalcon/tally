@@ -57,7 +57,7 @@ t_item_afterfx *item_fx = NULL;
 unsigned char item_frame = 0;
 unsigned char item_afterfx_frame = 0;
 
-bool key[14] = { false };
+bool key[15] = { false };
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -132,7 +132,7 @@ int init_game()
    //al_set_new_display_adapter(1);
    screen.width = 320;
    screen.height = 200;
-   //al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
+   al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
    display = al_create_display(screen.width, screen.height);
    if(!display)
    {
@@ -1132,8 +1132,8 @@ void update_player()
       }
    }
 
-   //Collision test
-   if (!player.hurt && check_collision(player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height, 304, 112, 16, 16))
+   //Collisions
+   /* if (!player.hurt && check_collision(player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height, 304, 112, 16, 16))
    {
       play_sound(snd_hurt, false);
       player.hurt = PLAYER_HURT_TIME;
@@ -1142,7 +1142,7 @@ void update_player()
    if (player.hurt)
    {
       player.hurt--;
-   }
+   } */
 
    //Shooting time
    if (key[KEY_X] && !player.shoot_time)
@@ -1217,7 +1217,18 @@ void clean_up()
    al_unlock_bitmap(border);
 
    al_destroy_audio_stream(music_stream);
+   music_stream = NULL;
+   if (music_stream == NULL)
+   {
+      jlog("music_stream destroyed.");
+   }
+
    adl_close(midi_player);
+   midi_player = NULL;
+   if (midi_player == NULL)
+   {
+      jlog("midi_player destroyed.");
+   }
 
    if(event_queue) {
       al_destroy_event_queue(event_queue);

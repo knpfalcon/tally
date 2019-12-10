@@ -7,6 +7,7 @@
 
 #include "tt_main.h"
 #include "tt_map.h"
+#include "tt_enemy.h"
 
 /************************************************
  * Creates an empty map in memory               *
@@ -249,6 +250,7 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
                                      (y * TILE_SIZE) - c->y,
                                      0);
             }
+
          }
       }
    }

@@ -13,8 +13,11 @@
 
 #include "tt_main.h"
 #include "tt_map.h"
+#include "tt_enemy.h"
 #include "tt_edit.h"
 #include "tt_player.h"
+
+#define EDITOR
 
 const float FPS = 60;
 const float ANIM_SPEED = 8;
@@ -25,11 +28,14 @@ const int DISPLAY_WIDTH = 320 * DISPLAY_MULTIPLIER;
 const int DISPLAY_HEIGHT = 200 * DISPLAY_MULTIPLIER;
 
 int item_selected = 1;
+int thing_selected = 1;
 
 t_cam cam;
 t_mouse sp_mouse;
 t_map *map = NULL;
 t_player player;
+t_enemy enemy[MAX_ENEMIES];
+unsigned int enemy_count = 0;
 unsigned char item_frame = 0;
 
 t_conditional cond = {false, false, false, false};
@@ -38,7 +44,7 @@ t_conditional cond = {false, false, false, false};
 
 
 //enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_Z, KEY_LSHIFT, KEY_N,KEY_PAD_PLUS, KEY_PAD_MINUS};
-bool key[14] = {false};
+bool key[15] = {false};
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -53,6 +59,10 @@ ALLEGRO_BITMAP *tile_sheet = NULL;
 ALLEGRO_BITMAP *item_sheet = NULL;
 ALLEGRO_BITMAP *bg = NULL;
 ALLEGRO_BITMAP *stat_border = NULL;
+
+//Bitmaps for enemeis
+ALLEGRO_BITMAP *b_enemy_spikes = NULL;
+
 //ALLEGRO_BITMAP *player_start = NULL;
 
 //Bitmaps that get drawn to
@@ -205,6 +215,10 @@ int init_game()
    jlog("item_sheet.png loaded.");
    al_lock_bitmap(item_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
 
+   //Load enemy graphics (Skipping error checking)
+   b_enemy_spikes = al_load_bitmap("data/spikes.png");
+
+
    player.bitmap = al_load_bitmap("data/player.png");
    if (player.bitmap == NULL) { jlog("Couldn't load player.png"); return -1; }
    al_lock_bitmap(player.bitmap, al_get_bitmap_format(player.bitmap), ALLEGRO_LOCK_READONLY);
@@ -248,6 +262,8 @@ int init_game()
    al_flip_display();
 
    al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_PRECISION);
+
+   init_enemies(enemy);
 
    jlog("Game initialized.");
    return 0;
@@ -340,6 +356,13 @@ void show_info_stuff()
       al_draw_textf(reg_font,
                     al_map_rgb(255,255,255),
                     226 * DISPLAY_MULTIPLIER,
+                    114 * DISPLAY_MULTIPLIER,
+                    0,
+                    "Thing: %d",
+                    thing_selected);
+      al_draw_textf(reg_font,
+                    al_map_rgb(255,255,255),
+                    226 * DISPLAY_MULTIPLIER,
                     150 * DISPLAY_MULTIPLIER,
                     0,
                     "Item: %d",
@@ -396,6 +419,9 @@ void update_screen()
       if (map != NULL)
       {
          draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
+         
+         
+         draw_enemies(map, enemy, &cam, map->num_enemies);
 
          draw_player_start();
       }
@@ -425,6 +451,17 @@ void update_screen()
                                226,
                                152,
                                0);
+      
+      //Draw Selected enemy
+      switch (thing_selected)
+      {
+      case ENEMY_SPIKES:
+         al_draw_bitmap(b_enemy_spikes, 226, 116, 0);
+         break;
+         
+      default:
+         break;
+      }
    }
 
    //Draw the zoomed out map
@@ -493,6 +530,24 @@ void check_click_in_viewport()
          else if (key[KEY_E])
          {
             map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].item = item_selected;
+         }
+         else if (key[KEY_F])
+         {
+            if (map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].thing == 0 && map->num_enemies < MAX_ENEMIES)
+            {
+               map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].thing = thing_selected;
+               map->num_enemies++;
+               enemy[map->num_enemies -1].active = true;
+               enemy[map->num_enemies -1].x = sp_mouse.over_tile_x * TILE_SIZE;
+               enemy[map->num_enemies -1].y = sp_mouse.over_tile_y * TILE_SIZE;
+               printf("PLACED AT X: %d  Y:%d\n", enemy[enemy_count -1].x, enemy[enemy_count -1].y);
+               enemy[map->num_enemies -1].type = thing_selected;
+            }
+        
+            for (int i = 0; i < map->num_enemies ; i ++)
+            {
+               if (enemy[i].type == ENEMY_SPIKES) enemy[i].frame[0] = b_enemy_spikes;
+            }
          }
          else if (key[KEY_R])
          {
@@ -672,6 +727,9 @@ void check_key_down(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_Q:
          key[KEY_Q] = true;
          break;
+      case ALLEGRO_KEY_F:
+         key[KEY_F] = true;
+         break;
    }
 }
 
@@ -739,14 +797,8 @@ void check_key_up(ALLEGRO_EVENT *ev)
          cond.name_map = true;
          break;
       case ALLEGRO_KEY_F:
-         for (int y = 0; y < MAP_HEIGHT; y++)
-         {
-            for (int x = 0; x < MAP_WIDTH; x++)
-            {
-               map->position[x + y * MAP_WIDTH].empty_tile = false;
-               map->position[x + y * MAP_WIDTH].tile = sp_mouse.tile_selection;
-            }
-         }
+         key[KEY_F] = false;
+         break;
       case ALLEGRO_KEY_P:
          cam.x = player.x - VIEWPORT_WIDTH / 2 + 16;
          cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
