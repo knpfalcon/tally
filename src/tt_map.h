@@ -33,7 +33,7 @@ typedef struct t_map
 {
    char name[32];
    unsigned char bg;
-   unsigned int num_enemies;
+   unsigned int num_things;
    int player_start_x;
    int player_start_y;
    t_map_pos *position;

@@ -57,7 +57,7 @@ t_item_afterfx *item_fx = NULL;
 unsigned char item_frame = 0;
 unsigned char item_afterfx_frame = 0;
 
-bool key[15] = { false };
+bool key[16] = { false };
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;

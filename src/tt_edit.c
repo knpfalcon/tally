@@ -13,7 +13,7 @@
 
 #include "tt_main.h"
 #include "tt_map.h"
-#include "tt_enemy.h"
+#include "tt_thing.h"
 #include "tt_edit.h"
 #include "tt_player.h"
 
@@ -34,7 +34,7 @@ t_cam cam;
 t_mouse sp_mouse;
 t_map *map = NULL;
 t_player player;
-t_enemy enemy[MAX_ENEMIES];
+t_thing thing[MAX_THINGS];
 unsigned int enemy_count = 0;
 unsigned char item_frame = 0;
 
@@ -44,7 +44,7 @@ t_conditional cond = {false, false, false, false};
 
 
 //enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_Z, KEY_LSHIFT, KEY_N,KEY_PAD_PLUS, KEY_PAD_MINUS};
-bool key[15] = {false};
+bool key[16] = {false};
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -263,7 +263,7 @@ int init_game()
 
    al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_PRECISION);
 
-   init_enemies(enemy);
+   clear_things(thing);
 
    jlog("Game initialized.");
    return 0;
@@ -358,8 +358,8 @@ void show_info_stuff()
                     226 * DISPLAY_MULTIPLIER,
                     114 * DISPLAY_MULTIPLIER,
                     0,
-                    "Thing: %d",
-                    thing_selected);
+                    "Thing: %d    No. Things %d / %d",
+                    thing_selected, map->num_things, MAX_THINGS);
       al_draw_textf(reg_font,
                     al_map_rgb(255,255,255),
                     226 * DISPLAY_MULTIPLIER,
@@ -421,7 +421,7 @@ void update_screen()
          draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
          
          
-         draw_enemies(map, enemy, &cam, map->num_enemies);
+         draw_things(map, thing, &cam, map->num_things);
 
          draw_player_start();
       }
@@ -488,6 +488,36 @@ void update_screen()
    al_flip_display();
 }
 
+/***************************************************
+ * Clears all the things and checks for them again *
+ **************************************************/
+void check_map_for_things()
+{  
+   map->num_things = 0;
+   clear_things(thing);
+   for (int y = 0; y < MAP_HEIGHT; y++)
+   {
+      for (int x = 0; x < MAP_WIDTH; x++)
+      {
+         if (map->position[x + y * MAP_WIDTH].thing > 0 && map->num_things < MAX_THINGS)
+         {
+            map->num_things++;
+            thing[map->num_things -1].active  = true;
+            thing[map->num_things -1].x = x * 16;
+            thing[map->num_things -1].y = y * 16;
+         }
+
+         if (map->position[x + y * MAP_WIDTH].thing == ENEMY_SPIKES)
+         {
+            thing[map->num_things -1].frame[0] = b_enemy_spikes;
+            thing[map->num_things -1].bb_height = 16;
+            thing[map->num_things -1].bb_width = 16;
+
+         }
+      }
+   }
+}
+
 /************************************************
  * Checks clicks inside the view port           *
  ************************************************/
@@ -531,24 +561,19 @@ void check_click_in_viewport()
          {
             map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].item = item_selected;
          }
-         else if (key[KEY_F])
+         
+         else if (key[KEY_F]) //Add thing
          {
-            if (map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].thing == 0 && map->num_enemies < MAX_ENEMIES)
-            {
-               map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].thing = thing_selected;
-               map->num_enemies++;
-               enemy[map->num_enemies -1].active = true;
-               enemy[map->num_enemies -1].x = sp_mouse.over_tile_x * TILE_SIZE;
-               enemy[map->num_enemies -1].y = sp_mouse.over_tile_y * TILE_SIZE;
-               printf("PLACED AT X: %d  Y:%d\n", enemy[enemy_count -1].x, enemy[enemy_count -1].y);
-               enemy[map->num_enemies -1].type = thing_selected;
-            }
-        
-            for (int i = 0; i < map->num_enemies ; i ++)
-            {
-               if (enemy[i].type == ENEMY_SPIKES) enemy[i].frame[0] = b_enemy_spikes;
-            }
+            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].thing = thing_selected;
+            check_map_for_things();
          }
+
+         else if (key[KEY_G]) //Remove thing
+         {
+            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].thing = 0;
+            check_map_for_things();
+         }
+            
          else if (key[KEY_R])
          {
             map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].item = 0;
@@ -730,6 +755,9 @@ void check_key_down(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_F:
          key[KEY_F] = true;
          break;
+      case ALLEGRO_KEY_G:
+         key[KEY_G] = true;
+         break;
    }
 }
 
@@ -798,6 +826,9 @@ void check_key_up(ALLEGRO_EVENT *ev)
          break;
       case ALLEGRO_KEY_F:
          key[KEY_F] = false;
+         break;
+      case ALLEGRO_KEY_G:
+         key[KEY_G] = false;
          break;
       case ALLEGRO_KEY_P:
          cam.x = player.x - VIEWPORT_WIDTH / 2 + 16;
@@ -916,6 +947,8 @@ void check_timer_logic(ALLEGRO_EVENT *ev)
       }
 
       check_cam_bounds();
+
+     
    }
 }
 
@@ -1089,6 +1122,14 @@ int main(int argc, char **argv)
          update_screen();
       }
    }
+
+   for (int y = 0; y < MAP_HEIGHT; y++)
+     {
+        for (int x = 0; x < MAP_WIDTH; x++)
+        {
+           printf("%d\n", x + y * MAP_WIDTH);
+        }
+     }
 
    clean_up();
    return 0;

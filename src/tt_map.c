@@ -7,7 +7,7 @@
 
 #include "tt_main.h"
 #include "tt_map.h"
-#include "tt_enemy.h"
+#include "tt_thing.h"
 
 /************************************************
  * Creates an empty map in memory               *
@@ -29,7 +29,7 @@ t_map *create_empty_map()
    }
    strcpy(m->name, "EMPTY MAP");
    m->bg = 0;
-   m->num_enemies = 0;
+   m->num_things = 0;
    m->player_start_x = 0;
    m->player_start_y = 0;
 

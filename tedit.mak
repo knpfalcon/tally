@@ -37,7 +37,7 @@ DEPS = $(patsubst %,$(SRCDIR)/%,$(_DEPS))
 _OBJ = \
 tt_edit.o \
 tt_map.o \
-tt_enemy.o \
+tt_thing.o \
 jt_util.o
 ########
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))

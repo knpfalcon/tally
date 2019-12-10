@@ -6,7 +6,7 @@
 #include "tt_map.h"
 #include "tt_main.h"
 
-#define MAX_ENEMIES 64
+#define MAX_THINGS 256
 #define MAX_ENEMY_FRAMES 8
 #define ENEMY_SPIKES 1
 
@@ -34,8 +34,8 @@ typedef struct
    bool on_ground;
    unsigned char type;
    bool active;
-} t_enemy;
+} t_thing;
 
-void draw_enemies(t_map *m, t_enemy *e, t_cam *c, int count);
-void init_enemies(t_enemy *e);
+void draw_things(t_map *m, t_thing *t, t_cam *c, int count);
+void clear_things(t_thing *t);
 #endif
