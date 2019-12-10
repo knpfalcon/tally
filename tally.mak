@@ -40,7 +40,8 @@ tt_items.o \
 tt_player.o \
 jt_util.o \
 tt_bullet.o \
-tt_collision.o
+tt_collision.o \
+tt_thing.o
 
 
 ########

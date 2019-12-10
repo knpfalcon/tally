@@ -12,11 +12,13 @@
 #include <allegro5/allegro_primitives.h>
 
 #include "tt_main.h"
+#include "tt_thing.h"
 #include "tt_map.h"
 #include "tt_player.h"
 #include "tt_collision.h"
 #include "tt_items.h"
 #include "tt_bullet.h"
+
 
 char DEMO_FILENAME[32] = "\0";
 int frames = 0;
@@ -53,6 +55,8 @@ t_cam cam;
 t_map *map = NULL;
 t_player player = { .cur_frame = 0, .state = STOPPED, .vel_x = 4 };
 t_item_afterfx *item_fx = NULL;
+
+t_thing thing[MAX_THINGS];
 
 unsigned char item_frame = 0;
 unsigned char item_afterfx_frame = 0;
@@ -442,6 +446,9 @@ void check_cam() //Check to make sure camera is not out of bounds.
 
    al_set_audio_stream_playing(music_stream, true);
 
+   //Load things
+   load_things(thing, map);
+
    //draw the status border
    al_set_target_bitmap(game_bmp);
    al_draw_bitmap(stat_border, 0, 0, 0);
@@ -567,6 +574,7 @@ void update_screen()
 {
    draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
    if (player.draw) draw_player(view_port, &cam, &player, player.direction);
+   draw_things(map, thing, &cam, map->num_things);
 
    if (player.direction == RIGHT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
    if (player.direction == LEFT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
@@ -1132,17 +1140,26 @@ void update_player()
       }
    }
 
-   //Collisions
-   /* if (!player.hurt && check_collision(player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height, 304, 112, 16, 16))
+   //Collisions against things
+   
+   for (int i = 0; i < map->num_things; i++)
    {
-      play_sound(snd_hurt, false);
-      player.hurt = PLAYER_HURT_TIME;
-      if(player.health) player.health--;
+      if (!player.hurt && check_collision(player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height, thing[i].x + thing[i].bb_left, thing[i].y + thing[i].bb_top, thing[i].bb_width, thing[i].bb_height))
+      {
+         if (thing[i].type < 10)
+         {
+            play_sound(snd_hurt, false);
+            player.hurt = PLAYER_HURT_TIME;
+            if(player.health) player.health--;
+         }
+         
+      }
    }
+
    if (player.hurt)
    {
       player.hurt--;
-   } */
+   }
 
    //Shooting time
    if (key[KEY_X] && !player.shoot_time)
@@ -1440,7 +1457,7 @@ int main(int argc, char **argv)
 
       if (redraw && al_is_event_queue_empty(event_queue))
       {
-         al_wait_for_vsync();
+         //al_wait_for_vsync();
          redraw = false;
          update_screen();
          ticks = 0;

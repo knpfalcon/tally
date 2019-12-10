@@ -402,10 +402,7 @@ void draw_player_start()
    {
       al_draw_bitmap(player.frame[player.cur_frame], player.x - cam.x, player.y - cam.y, 0);
    }
-
-
 }
-
 
 /************************************************
  * The drawing function, called at redraw       *
@@ -557,27 +554,39 @@ void check_click_in_viewport()
             player.y = map->player_start_y;
             cond.map_saved = false;
          }
-         else if (key[KEY_E])
+         else if (key[KEY_E]) //Add item
          {
             map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].item = item_selected;
+            cond.map_saved = false;
          }
-         
+         else if (key[KEY_R]) //Remove item
+         {
+            if (map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].item > 0)
+            {
+               map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].item = 0;
+               cond.map_saved = false;
+            }
+         }
+   
          else if (key[KEY_F]) //Add thing
          {
             map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].thing = thing_selected;
+            cond.map_saved = false;
             check_map_for_things();
          }
 
          else if (key[KEY_G]) //Remove thing
          {
-            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].thing = 0;
-            check_map_for_things();
+            if (map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].thing > 0)
+            {
+               map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].thing = 0;
+               cond.map_saved = false;
+               check_map_for_things();
+            }
+            
          }
             
-         else if (key[KEY_R])
-         {
-            map->position[sp_mouse.over_tile_x + sp_mouse.over_tile_y * MAP_WIDTH].item = 0;
-         }
+        
          else if (key[KEY_Q])
          {
             //Tile dropper
@@ -683,6 +692,7 @@ bool open_file_dialog()
       player.y = map->player_start_y;
       cam.x = player.x - VIEWPORT_WIDTH / 2 + 16;
       cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
+      check_map_for_things();
       cond.map_saved = true;
    }   
    
@@ -1122,14 +1132,6 @@ int main(int argc, char **argv)
          update_screen();
       }
    }
-
-   for (int y = 0; y < MAP_HEIGHT; y++)
-     {
-        for (int x = 0; x < MAP_WIDTH; x++)
-        {
-           printf("%d\n", x + y * MAP_WIDTH);
-        }
-     }
 
    clean_up();
    return 0;

@@ -31,7 +31,6 @@ void clear_things(t_thing *t)
         {
             t[i].frame[f] = NULL;
         }
-
         t[i].x = 0;
         t[i].y = 0;
         t[i].cur_frame = 0;
@@ -43,4 +42,34 @@ void clear_things(t_thing *t)
         t[i].active = false;
     }
 
+}
+
+void load_things(t_thing *t, t_map *m)
+{
+clear_things(t);
+
+    for (int y = 0; y < MAP_HEIGHT; y++)
+    {
+        for (int x = 0; x < MAP_WIDTH; x++)
+        {
+            if (m->position[x + y * MAP_WIDTH].thing > 0 && m->num_things < MAX_THINGS)
+            {
+                m->num_things++;
+                t[m->num_things -1].active  = true;
+                t[m->num_things -1].x = x * 16;
+                t[m->num_things -1].y = y * 16;
+            }
+
+            if (m->position[x + y * MAP_WIDTH].thing == ENEMY_SPIKES)
+            {
+                t[m->num_things -1].frame[0] = al_load_bitmap("data/spikes.png");
+                t[m->num_things -1].type = ENEMY_SPIKES;
+                t[m->num_things -1].bb_height = 16;
+                t[m->num_things -1].bb_width = 16;
+                t[m->num_things -1].bb_top = 0;
+                t[m->num_things -1].bb_left = 0;
+            }
+
+        }
+    }
 }

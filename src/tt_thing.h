@@ -38,4 +38,6 @@ typedef struct
 
 void draw_things(t_map *m, t_thing *t, t_cam *c, int count);
 void clear_things(t_thing *t);
+void load_things(t_thing *t, t_map *m);
+
 #endif
