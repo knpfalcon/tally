@@ -46,7 +46,7 @@ void clear_things(t_thing *t)
 
 void load_things(t_thing *t, t_map *m)
 {
-clear_things(t);
+    clear_things(t);
 
     for (int y = 0; y < MAP_HEIGHT; y++)
     {

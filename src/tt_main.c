@@ -134,9 +134,9 @@ int init_game()
    }
    jlog("Image add-on initialized.");
    //al_set_new_display_adapter(1);
-   screen.width = 320;
-   screen.height = 200;
-   al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
+   screen.width = 960;
+   screen.height = 600;
+   //al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
    display = al_create_display(screen.width, screen.height);
    if(!display)
    {
@@ -573,8 +573,9 @@ void play_sound(ALLEGRO_SAMPLE *s, bool interupt)
 void update_screen()
 {
    draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
-   if (player.draw) draw_player(view_port, &cam, &player, player.direction);
+
    draw_things(map, thing, &cam, map->num_things);
+   if (player.draw) draw_player(view_port, &cam, &player, player.direction);
 
    if (player.direction == RIGHT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
    if (player.direction == LEFT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
@@ -1146,13 +1147,12 @@ void update_player()
    {
       if (!player.hurt && check_collision(player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height, thing[i].x + thing[i].bb_left, thing[i].y + thing[i].bb_top, thing[i].bb_width, thing[i].bb_height))
       {
-         if (thing[i].type < 10)
+         if (thing[i].type < 10 && player.health) //If thing can hurt player (The first 10 types can)
          {
             play_sound(snd_hurt, false);
             player.hurt = PLAYER_HURT_TIME;
             if(player.health) player.health--;
          }
-         
       }
    }
 
