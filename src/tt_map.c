@@ -83,7 +83,7 @@ bool save_map(t_map *m, ALLEGRO_DISPLAY *display)
 {
    ALLEGRO_PATH *path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
    al_append_path_component(path, "data/maps");
-   al_set_path_filename(path, (const char *)"map.spl");
+   //al_set_path_filename(path, (const char *)"*.spl");
    const char *filename = al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP);
 
    ALLEGRO_FILECHOOSER *file_dialog = al_create_native_file_dialog(filename,
@@ -236,6 +236,31 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
                                      (x * TILE_SIZE) - c->x,
                                      (y * TILE_SIZE) - c->y,
                                      0);
+               
+               //Draw animated tiles
+               if (m->position[x + y * MAP_WIDTH].tile % 2 == 0 &&  m->position[x + y * MAP_WIDTH].tile >= 240)
+               {
+                  al_draw_bitmap_region(tile_sheet,
+                                     convert_index_to_pixel_xy(m->position[x + y * MAP_WIDTH].tile, 16, TILE_SIZE, RETURN_X) + (*item_frame * TILE_SIZE),
+                                     convert_index_to_pixel_xy(m->position[x + y * MAP_WIDTH].tile, 16, TILE_SIZE, RETURN_Y),
+                                     TILE_SIZE,
+                                     TILE_SIZE,
+                                     (x * TILE_SIZE) - c->x,
+                                     (y * TILE_SIZE) - c->y,
+                                     0);
+               }
+               else if (m->position[x + y * MAP_WIDTH].tile % 2 != 0 &&  m->position[x + y * MAP_WIDTH].tile >= 240)
+               {
+                  al_draw_bitmap_region(tile_sheet,
+                                     convert_index_to_pixel_xy(m->position[x + y * MAP_WIDTH].tile, 16, TILE_SIZE, RETURN_X),
+                                     convert_index_to_pixel_xy(m->position[x + y * MAP_WIDTH].tile, 16, TILE_SIZE, RETURN_Y),
+                                     TILE_SIZE,
+                                     TILE_SIZE,
+                                     (x * TILE_SIZE) - c->x,
+                                     (y * TILE_SIZE) - c->y,
+                                     0);
+               }
+               
             }
 
             //ITEMS

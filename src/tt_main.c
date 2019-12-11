@@ -20,7 +20,7 @@
 #include "tt_bullet.h"
 
 
-char DEMO_FILENAME[32] = "\0";
+char DEMO_FILENAME[32] = " ";
 int frames = 0;
 int minutes = 0;
 int seconds = 0;
@@ -1142,7 +1142,6 @@ void update_player()
    }
 
    //Collisions against things
-   
    for (int i = 0; i < map->num_things; i++)
    {
       if (!player.hurt && check_collision(player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height, thing[i].x + thing[i].bb_left, thing[i].y + thing[i].bb_top, thing[i].bb_width, thing[i].bb_height))
@@ -1271,6 +1270,7 @@ void clean_up()
  *                   MAIN                       *
  *                                              *
  ************************************************/
+
 int main(int argc, char **argv)
 {
    unsigned char key_buffer[640000] = { 0 };
@@ -1294,7 +1294,7 @@ int main(int argc, char **argv)
                }
                if (argv[d][0] != '-')
                {
-                  strncpy(DEMO_FILENAME, argv[d], strlen(argv[d]));
+                  strlcpy(DEMO_FILENAME, argv[d], strlen(argv[d]) +1);
                   game.demo_mode = RECORD;
                }   
                else
@@ -1313,7 +1313,8 @@ int main(int argc, char **argv)
             }
             if (argv[d][0] != '-')
             {
-               strncpy(DEMO_FILENAME, argv[d], strlen(argv[d]));
+               strlcpy(DEMO_FILENAME, argv[d], strlen(argv[d]) + 1);
+               //strncpy(DEMO_FILENAME, argv[d], strlen(argv[d]));
                FILE *fp = fopen(DEMO_FILENAME, "r");
                if (fp) fclose(fp);
                else
