@@ -154,7 +154,7 @@ int init_game()
    screen.x = (al_get_display_width(display) / 2) - (screen.width/2);
    screen.y = (al_get_display_height(display) / 2) - (screen.height/2);
    jlog("Display Created.");
-
+   
    // Load/Draw the fill-in border
    border = al_load_bitmap("data/bg_border.png");
    if (border == NULL)
@@ -285,8 +285,8 @@ int init_game()
 
    game.level = LEVEL_1;
    /* game.music = MUSIC_1; */
-   
-   al_set_audio_stream_gain(music_stream, 3.0f);
+   al_set_mixer_gain(al_get_default_mixer(), 0.5); //Turn down the volume during development
+   al_set_audio_stream_gain(music_stream, 1.5f);
    al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
    al_set_audio_stream_playing(music_stream, false);
    printf("DEPTH: %d\n", al_get_mixer_depth(al_get_default_mixer()));
@@ -1270,7 +1270,6 @@ void clean_up()
 void stream_opl()
 {
    static int times_executed;
-   times_executed++;
 
    opl_buffer = al_get_audio_stream_fragment(music_stream);
    
@@ -1293,6 +1292,8 @@ void stream_opl()
    {
       al_drain_audio_stream(music_stream);
    }
+
+   times_executed++;
 }
 
 /************************************************
