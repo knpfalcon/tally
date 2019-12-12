@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <adlmidi.h>
+#include <pthread.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_audio.h>
@@ -26,7 +27,8 @@ int minutes = 0;
 int seconds = 0;
 int centiseconds = 0;
 
-#define BUFFER_SAMPLES 4096
+#define BUFFER_SAMPLES 1024
+#define STREAM_FREQ 44100
 /* At some point I'll see if I can prune these globals,
    but they're staying for now. */
 int demo_file_pos = 0;
@@ -84,7 +86,7 @@ ALLEGRO_BITMAP *bullet_blue = NULL;
 ALLEGRO_BITMAP *muzzle_flash = NULL;
 ALLEGRO_BITMAP *bullet_particle = NULL;
 
-//Bitmaps that get drawn to
+//Bitmaps that get drawn tom
 ALLEGRO_BITMAP *view_port = NULL;
 ALLEGRO_BITMAP *game_bmp = NULL;
 
@@ -104,7 +106,7 @@ ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 ALLEGRO_AUDIO_STREAM *music_stream = NULL;
 struct ADL_MIDIPlayer *midi_player = NULL;
 
-short opl_buffer[BUFFER_SAMPLES];
+short *opl_buffer;
 int samples_count = 0;
 
 
@@ -136,7 +138,7 @@ int init_game()
    //al_set_new_display_adapter(1);
    screen.width = 960;
    screen.height = 600;
-   //al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
+   //al_set_new_display_flags(ALLEGRO_OPENGL);
    display = al_create_display(screen.width, screen.height);
    if(!display)
    {
@@ -254,18 +256,19 @@ int init_game()
    fps_font = al_load_font("data/hack.ttf", 12, 0);
 
    //ADLMIDI
-   midi_player = adl_init(44100);
-   adl_setTempo(midi_player, 1.0);
+   midi_player = adl_init(STREAM_FREQ);
+   //adl_setRunAtPcmRate(midi_player, 1);
+   //adl_setTempo(midi_player, 1.0);
    adl_setLoopEnabled(midi_player, 1);
    adl_switchEmulator(midi_player, ADLMIDI_EMU_DOSBOX);
-   if (adl_openFile(midi_player, "data/music/1.imf") < 0)
+   if (adl_openFile(midi_player, "data/music/enjoy.mid") < 0)
    {
       fprintf(stderr, "Couldn't open music file: %s\n", adl_errorInfo(midi_player));
       adl_close(midi_player);
       return 1;
    }
 
-   music_stream = al_create_audio_stream(1, BUFFER_SAMPLES / 2, 44100, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
+   music_stream = al_create_audio_stream(2, BUFFER_SAMPLES, STREAM_FREQ, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
    
    al_register_event_source(event_queue, al_get_display_event_source(display));
    al_register_event_source(event_queue, al_get_timer_event_source(FPS_TIMER));
@@ -1264,6 +1267,22 @@ void clean_up()
    jlog("***QUITTING***\n\n");
 }
 
+void stream_opl()
+{
+   opl_buffer = al_get_audio_stream_fragment(music_stream);
+   samples_count = adl_play(midi_player, BUFFER_SAMPLES *2, opl_buffer);
+   printf("\n SAMPLE COUNT: %d", samples_count);
+         
+         if (samples_count > 0)
+         {
+            al_set_audio_stream_fragment(music_stream, opl_buffer);
+         }
+         if (samples_count <= 0)
+         {
+            al_drain_audio_stream(music_stream);
+         }
+}
+
 /************************************************
  *                                              *
  *                 HERE IS                      *
@@ -1442,18 +1461,7 @@ int main(int argc, char **argv)
 
       if (ev.type == ALLEGRO_EVENT_AUDIO_STREAM_FRAGMENT)
       {
-         
-         samples_count = adl_play(midi_player, BUFFER_SAMPLES, opl_buffer);
-         
-         if (samples_count > 0)
-         {
-            al_set_audio_stream_fragment(music_stream, opl_buffer);
-         }
-         else if (samples_count <= 0)
-         {
-            al_drain_audio_stream(music_stream);
-            al_set_audio_stream_playing(music_stream, false);
-         }
+         stream_opl();
       }
 
       if (redraw && al_is_event_queue_empty(event_queue))

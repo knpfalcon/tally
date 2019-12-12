@@ -13,7 +13,7 @@
 /**********************************************
  * Print to console and a FILE with new-lines *
  **********************************************/
-void jlog(char *format, ...)
+void jlog(const char *format, ...)
 {
    #ifdef DEBUG
    va_list v_ptr;
