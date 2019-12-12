@@ -27,7 +27,7 @@ int minutes = 0;
 int seconds = 0;
 int centiseconds = 0;
 
-#define BUFFER_SAMPLES 1024
+#define BUFFER_SAMPLES 2048
 #define STREAM_FREQ 44100
 /* At some point I'll see if I can prune these globals,
    but they're staying for now. */
@@ -106,7 +106,7 @@ ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 ALLEGRO_AUDIO_STREAM *music_stream = NULL;
 struct ADL_MIDIPlayer *midi_player = NULL;
 
-short *opl_buffer;
+short *opl_buffer = NULL;
 int samples_count = 0;
 
 
@@ -261,7 +261,7 @@ int init_game()
    //adl_setTempo(midi_player, 1.0);
    adl_setLoopEnabled(midi_player, 1);
    adl_switchEmulator(midi_player, ADLMIDI_EMU_DOSBOX);
-   if (adl_openFile(midi_player, "data/music/enjoy.mid") < 0)
+   if (adl_openFile(midi_player, "data/music/1.imf") < 0)
    {
       fprintf(stderr, "Couldn't open music file: %s\n", adl_errorInfo(midi_player));
       adl_close(midi_player);
@@ -1269,18 +1269,30 @@ void clean_up()
 
 void stream_opl()
 {
+   static int times_executed;
+   times_executed++;
+
    opl_buffer = al_get_audio_stream_fragment(music_stream);
-   samples_count = adl_play(midi_player, BUFFER_SAMPLES *2, opl_buffer);
-   printf("\n SAMPLE COUNT: %d", samples_count);
-         
-         if (samples_count > 0)
-         {
-            al_set_audio_stream_fragment(music_stream, opl_buffer);
-         }
-         if (samples_count <= 0)
-         {
-            al_drain_audio_stream(music_stream);
-         }
+   
+   if (!opl_buffer)
+   {
+      printf("%d, opl_buffer returned null!\n", times_executed);
+      return;
+   }
+   else
+   {
+      samples_count = adl_play(midi_player, BUFFER_SAMPLES *2, opl_buffer);
+   }
+   
+   
+   if (samples_count > 0)
+   {
+      al_set_audio_stream_fragment(music_stream, opl_buffer);
+   }
+   if (samples_count <= 0)
+   {
+      al_drain_audio_stream(music_stream);
+   }
 }
 
 /************************************************
