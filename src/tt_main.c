@@ -139,6 +139,7 @@ int init_game()
    screen.width = 960;
    screen.height = 600;
    //al_set_new_display_flags(ALLEGRO_OPENGL);
+   al_set_new_display_option(ALLEGRO_VSYNC, 1, ALLEGRO_SUGGEST);
    display = al_create_display(screen.width, screen.height);
    if(!display)
    {
@@ -1449,18 +1450,18 @@ int main(int argc, char **argv)
             }
          }
 
+         if (game.demo_mode == PLAY)
+         {
+            key[KEY_RIGHT] = key_buffer[demo_file_pos];
+            key[KEY_LEFT] = key_buffer[demo_file_pos + 1];
+            key[KEY_Z] = key_buffer[demo_file_pos + 2];
+            key[KEY_X] = key_buffer[demo_file_pos + 3];
+            demo_file_pos += 4;
+         }
+
          ++ticks;
          if (ticks == 1)
          {
-            if (game.demo_mode == PLAY)
-            {
-               key[KEY_RIGHT] = key_buffer[demo_file_pos];
-               key[KEY_LEFT] = key_buffer[demo_file_pos + 1];
-               key[KEY_Z] = key_buffer[demo_file_pos + 2];
-               key[KEY_X] = key_buffer[demo_file_pos + 3];
-               demo_file_pos += 4;
-            }
-
             check_timer_logic();
             #ifdef DEBUG
             double new_time = al_get_time();
