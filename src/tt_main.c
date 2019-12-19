@@ -579,7 +579,9 @@ void update_screen()
    draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
 
    draw_things(map, thing, &cam, map->num_things);
-   if (player.draw) draw_player(view_port, &cam, &player, player.direction);
+
+   if (player.x + 32 > 0 && player.y + 32 > 0 && player.x < MAP_WIDTH * TILE_SIZE && player.y < MAP_HEIGHT * TILE_SIZE)   
+      if (player.draw) draw_player(view_port, &cam, &player, player.direction);
 
    if (player.direction == RIGHT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
    if (player.direction == LEFT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
@@ -892,7 +894,7 @@ void update_player()
       to its previous position before the collision occurred.
       But because we're not drawing here, it doesn't show the
       jerkiness of the process.*/
-   if (player.y + 32 > 0 && player.y +32 < MAP_HEIGHT * TILE_SIZE)
+   if (player.y + 31 > 0 && player.y + 31 < MAP_HEIGHT * TILE_SIZE)
    {
       if (is_ground(map, player.x + x1, player.y + 2 )) player.x = old_x; //top
       if (is_ground(map, player.x + x2, player.y + 2 )) player.x = old_x;
@@ -908,7 +910,7 @@ void update_player()
       if there's not a solid tile, it adds 4 to
       the Y velocity. Otherwise the player is standing
       on a solid tile. */
-   if ( (!is_ground(map, player.x + x1, player.y + 31) && !is_ground(map, player.x +x2, player.y + 31)) || player.y + 32 > MAP_HEIGHT * TILE_SIZE)
+   if ( (!is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x2, player.y + 32)) || player.y + 31 > MAP_HEIGHT * TILE_SIZE)
    {
       player.vel_y += 4;
       player.on_ground = false;
@@ -980,7 +982,7 @@ void update_player()
       simulating gravity. */
    if (key[KEY_Z] && player.on_ground && !player.jump_pressed && !is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
    {
-      if (player.y + 32 > 0)
+      if (player.y + 31 > 0)
          {
          if (!is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
          {
@@ -1012,14 +1014,14 @@ void update_player()
       starts pulling them out until it's free of the tile.
       And since it's a loop, and we're not drawing it
       here, we don't actually see what is happening. */
-   if (player.y + 32 < MAP_HEIGHT * TILE_SIZE && player.y + 32 > 0)
+   if (player.y + 31 < MAP_HEIGHT * TILE_SIZE && player.y + 31 > 0)
    {
-      while (is_ground(map, player.x + x1, player.y + 31) && player.y +32 < MAP_HEIGHT * TILE_SIZE)
+      while (is_ground(map, player.x + x1, player.y + 31) && player.y + 31 < MAP_HEIGHT * TILE_SIZE)
       {
          player.y--;
          player.on_ground = true;
       }
-      while (is_ground(map, player.x + x2, player.y + 31) && player.y + 32 < MAP_HEIGHT * TILE_SIZE)
+      while (is_ground(map, player.x + x2, player.y + 31) && player.y + 31 < MAP_HEIGHT * TILE_SIZE)
       {
          player.y--;
          player.on_ground = true;
@@ -1027,7 +1029,7 @@ void update_player()
 
       /* Check Ceiling
          Same as above except at the players top. */
-      while (is_ground(map, player.x + x1, player.y) && player.y + 32 > 0)
+      while (is_ground(map, player.x + x1, player.y) && player.y + 31 > 0)
       {
          player.y++;
          player.vel_y = 0;
@@ -1038,7 +1040,7 @@ void update_player()
          player.state = FALLING;
 
       }
-      while (is_ground(map, player.x + x2, player.y) && player.y + 32 > 0)
+      while (is_ground(map, player.x + x2, player.y) && player.y + 31 > 0)
       {
          player.y++;
          player.vel_y = 0;
