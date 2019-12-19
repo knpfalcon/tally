@@ -49,7 +49,7 @@ OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 #Compile Objects from Source files
 $(ODIR)/%.o: $(SRC) $(DEPS)
-	$(CC) $(INC) -c -o $@ $< $(CFLAGS) $(ALLEGRO_FLAGS)
+	$(CC) $(INC) -c -o $@ $< $(CFLAGS)
 
 #Link Objects and output to executable
 $(BINDIR)/$(OUTFILE): $(OBJ)
