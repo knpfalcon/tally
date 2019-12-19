@@ -28,10 +28,12 @@ SRC = $(patsubst %,$(SRCDIR)/%,$(_SRC))
 
 #Headers.
 _DEPS = \
-%.h
-
+tt_edit.h \
+tt_map.h \
+tt_thing.h \
+jt_util.h
 ########
-DEPS = $(patsubst %,$(SRCDIR)/%,$(_DEPS))
+#DEPS = $(patsubst %,$(SRCDIR)/%,$(_DEPS))
 
 #Object files
 _OBJ = \

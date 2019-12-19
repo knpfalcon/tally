@@ -28,7 +28,14 @@ SRC = $(patsubst %,$(SRCDIR)/%,$(_SRC))
 
 #Headers.
 _DEPS = \
-%.h
+tt_main.h \
+tt_map.h \
+tt_items.h \
+tt_player.h \
+jt_util.h \
+tt_bullet.h \
+tt_collision.h \
+tt_thing.h
 ########
 DEPS = $(patsubst %,$(SRCDIR)/%,$(_DEPS))
 
