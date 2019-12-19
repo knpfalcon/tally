@@ -892,21 +892,23 @@ void update_player()
       to its previous position before the collision occurred.
       But because we're not drawing here, it doesn't show the
       jerkiness of the process.*/
-   if (is_ground(map, player.x + x1, player.y + 2 )) player.x = old_x; //top
-   if (is_ground(map, player.x + x2, player.y + 2 )) player.x = old_x;
+   if (player.y + 32 > 0 && player.y +32 < MAP_HEIGHT * TILE_SIZE)
+   {
+      if (is_ground(map, player.x + x1, player.y + 2 )) player.x = old_x; //top
+      if (is_ground(map, player.x + x2, player.y + 2 )) player.x = old_x;
 
-   if (is_ground(map, player.x + x1, player.y + 16)) player.x = old_x; //center
-   if (is_ground(map, player.x + x2, player.y + 16)) player.x = old_x;
+      if (is_ground(map, player.x + x1, player.y + 16)) player.x = old_x; //center
+      if (is_ground(map, player.x + x2, player.y + 16)) player.x = old_x;
 
-   if (is_ground(map, player.x + x1, player.y + 31)) player.x = old_x; //bottom
-   if (is_ground(map, player.x + x2, player.y + 31)) player.x = old_x;
-
+      if (is_ground(map, player.x + x1, player.y + 31)) player.x = old_x; //bottom
+      if (is_ground(map, player.x + x2, player.y + 31)) player.x = old_x;
+   }
    /* Vertical movement
       Checks the two points below the player's feet
       if there's not a solid tile, it adds 4 to
       the Y velocity. Otherwise the player is standing
       on a solid tile. */
-   if (!is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x2, player.y + 32))
+   if ( (!is_ground(map, player.x + x1, player.y + 31) && !is_ground(map, player.x +x2, player.y + 31)) || player.y + 32 > MAP_HEIGHT * TILE_SIZE)
    {
       player.vel_y += 4;
       player.on_ground = false;
@@ -978,13 +980,18 @@ void update_player()
       simulating gravity. */
    if (key[KEY_Z] && player.on_ground && !player.jump_pressed && !is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
    {
-      if (!is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
-      {
-         play_sound(snd_jump, false);
+      if (player.y + 32 > 0)
+         {
+         if (!is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
+         {
+            play_sound(snd_jump, false);
+         }
+      
+         player.vel_y = -46;
+         player.jump_pressed = true;
+         player.on_ground = false;
       }
-      player.vel_y = -46;
-      player.jump_pressed = true;
-      player.on_ground = false;
+      
    }
    if (!key[KEY_Z])
    {
@@ -1005,42 +1012,44 @@ void update_player()
       starts pulling them out until it's free of the tile.
       And since it's a loop, and we're not drawing it
       here, we don't actually see what is happening. */
-   while (is_ground(map, player.x + x1, player.y + 31))
+   if (player.y + 32 < MAP_HEIGHT * TILE_SIZE && player.y + 32 > 0)
    {
-      player.y--;
-      player.on_ground = true;
-   }
-   while (is_ground(map, player.x + x2, player.y + 31))
-   {
-      player.y--;
-      player.on_ground = true;
-   }
-
-   /* Check Ceiling
-      Same as above except at the players top. */
-   while (is_ground(map, player.x + x1, player.y))
-   {
-      player.y++;
-      player.vel_y = 0;
-      if(player.state == JUMPING)
+      while (is_ground(map, player.x + x1, player.y + 31) && player.y +32 < MAP_HEIGHT * TILE_SIZE)
       {
-         play_sound(snd_hithead, false);
+         player.y--;
+         player.on_ground = true;
       }
-      player.state = FALLING;
-
-   }
-   while (is_ground(map, player.x + x2, player.y))
-   {
-      player.y++;
-      player.vel_y = 0;
-      if(player.state == JUMPING)
+      while (is_ground(map, player.x + x2, player.y + 31) && player.y + 32 < MAP_HEIGHT * TILE_SIZE)
       {
-         play_sound(snd_hithead, false);
+         player.y--;
+         player.on_ground = true;
       }
-      player.state = FALLING;
 
+      /* Check Ceiling
+         Same as above except at the players top. */
+      while (is_ground(map, player.x + x1, player.y) && player.y + 32 > 0)
+      {
+         player.y++;
+         player.vel_y = 0;
+         if(player.state == JUMPING)
+         {
+            play_sound(snd_hithead, false);
+         }
+         player.state = FALLING;
+
+      }
+      while (is_ground(map, player.x + x2, player.y) && player.y + 32 > 0)
+      {
+         player.y++;
+         player.vel_y = 0;
+         if(player.state == JUMPING)
+         {
+            play_sound(snd_hithead, false);
+         }
+         player.state = FALLING;
+
+      }
    }
-
    /* Check for items
       Here we check if the player is over an item
       This get a little redundant. */
