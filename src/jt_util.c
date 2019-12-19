@@ -66,21 +66,17 @@ int convert_index_to_pixel_xy(unsigned char index_source, int num_columns, int s
  * '_cups_strlcat()' - Safely concatenate two strings.
  */
 
-size_t                  /* O - Length of string */
-strlcat(char       *dst,        /* O - Destination string */
-              const char *src,      /* I - Source string */
-          size_t     size)      /* I - Size of destination string buffer */
+size_t strlcat(char *dst, const char *src, size_t size)
 {
-  size_t    srclen;         /* Length of source string */
-  size_t    dstlen;         /* Length of destination string */
-
+  size_t srclen;         /* Length of source string */
+  size_t dstlen;         /* Length of destination string */
 
  /*
   * Figure out how much room is left...
   */
 
   dstlen = strlen(dst);
-  size   -= dstlen + 1;
+  size -= dstlen + 1;
 
   if (!size)
     return (dstlen);        /* No room, return immediately... */
@@ -110,13 +106,9 @@ strlcat(char       *dst,        /* O - Destination string */
  * '_cups_strlcpy()' - Safely copy two strings.
  */
 
-size_t                  /* O - Length of string */
-strlcpy(char       *dst,        /* O - Destination string */
-              const char *src,      /* I - Source string */
-          size_t      size)     /* I - Size of destination string buffer */
+size_t strlcpy(char *dst, const char *src, size_t size)
 {
-  size_t    srclen;         /* Length of source string */
-
+  size_t srclen;         /* Length of source string */
 
  /*
   * Figure out how much room is needed...
