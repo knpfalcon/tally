@@ -37,7 +37,6 @@ typedef struct t_player
    #endif // DEBUG
 } t_player;
 
-
 enum player_state {STOPPED = 0, WALKING = 1, JUMPING = 2, FALLING = 3};
 enum direction {RIGHT = 0, LEFT = 1};
 

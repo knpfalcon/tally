@@ -12,7 +12,6 @@ typedef struct t_bullet
    int end_x;
    int end_y;
    bool draw;
-
 } t_bullet;
 
 

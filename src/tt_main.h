@@ -49,7 +49,6 @@ typedef struct t_screen
    int y;
    int width;
    int height;
-
 } t_screen;
 
 enum STATE { QUIT, SPLASH, TITLE, MENU, LOAD_LEVEL, PLAY_LEVEL, QUIT_LEVEL };

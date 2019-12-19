@@ -242,8 +242,6 @@ int init_game()
    }
    jlog("Audio initialized.");
 
-   
-
    #ifdef DEBUG
    al_set_window_title(display, "Tally Trauma -- DEBUG");
    #endif // DEBUG
@@ -640,7 +638,6 @@ void update_screen()
    
    al_flip_display();
 }
-
 
 /************************************************
  * Checks "Key Down" events                     *
@@ -1231,6 +1228,38 @@ void check_timer_logic()
 }
 
 /************************************************
+ * Stream function for opl Emulation            *
+ ************************************************/
+void stream_opl()
+{
+   static int times_executed;
+
+   opl_buffer = al_get_audio_stream_fragment(music_stream);
+   
+   if (!opl_buffer)
+   {
+      printf("%d, opl_buffer returned null!\n", times_executed);
+      return;
+   }
+   else
+   {
+      samples_count = adl_play(midi_player, BUFFER_SAMPLES *2, opl_buffer);
+   }
+   
+   
+   if (samples_count > 0)
+   {
+      al_set_audio_stream_fragment(music_stream, opl_buffer);
+   }
+   if (samples_count <= 0)
+   {
+      al_drain_audio_stream(music_stream);
+   }
+
+   times_executed++;
+}
+
+/************************************************
  * Clean-ups for end of program                 *
  ************************************************/
 void clean_up()
@@ -1277,35 +1306,6 @@ void clean_up()
    jlog("Display Destroyed.");
 
    jlog("***QUITTING***\n\n");
-}
-
-void stream_opl()
-{
-   static int times_executed;
-
-   opl_buffer = al_get_audio_stream_fragment(music_stream);
-   
-   if (!opl_buffer)
-   {
-      printf("%d, opl_buffer returned null!\n", times_executed);
-      return;
-   }
-   else
-   {
-      samples_count = adl_play(midi_player, BUFFER_SAMPLES *2, opl_buffer);
-   }
-   
-   
-   if (samples_count > 0)
-   {
-      al_set_audio_stream_fragment(music_stream, opl_buffer);
-   }
-   if (samples_count <= 0)
-   {
-      al_drain_audio_stream(music_stream);
-   }
-
-   times_executed++;
 }
 
 /************************************************

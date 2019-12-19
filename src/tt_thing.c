@@ -26,7 +26,6 @@ void clear_things(t_thing *t)
     for (int i = 0; i < MAX_THINGS; i++)
     {
         t[i].bitmap = NULL;
-        
         for (int f = 0; f < MAX_ENEMY_FRAMES; f++)
         {
             t[i].frame[f] = NULL;
@@ -41,7 +40,6 @@ void clear_things(t_thing *t)
         t[i].bb_width = 0;
         t[i].active = false;
     }
-
 }
 
 void load_things(t_thing *t, t_map *m)
@@ -69,7 +67,6 @@ void load_things(t_thing *t, t_map *m)
                 t[m->num_things -1].bb_top = 0;
                 t[m->num_things -1].bb_left = 0;
             }
-
         }
     }
 }

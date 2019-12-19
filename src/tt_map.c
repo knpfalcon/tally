@@ -181,35 +181,6 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
    al_draw_bitmap(background, 0, 0, 0);
    al_draw_bitmap_region(background, 0, 0, 80, VIEWPORT_HEIGHT, 208, 0, 0 );
    al_hold_bitmap_drawing(false);
-   /*
-   int bg_speed = 1;
-
-   if (m->bg == 0) bg_speed = 16;
-
-   int cam_pos_in_view = (int)c->x / bg_speed;
-   printf("%d\n", cam_pos_in_view);
-   int first_remaing_width = (VIEWPORT_WIDTH - cam_pos_in_view);
-   int second_remaing_width = (VIEWPORT_WIDTH - first_remaing_width);
-
-   al_hold_bitmap_drawing(true);
-   al_draw_bitmap_region(background,
-                         cam_pos_in_view,
-                         0,
-                         first_remaing_width,
-                         VIEWPORT_HEIGHT,
-                         0,
-                         0,
-                         0);
-   al_draw_bitmap_region(background,
-                         0,
-                         0,
-                         second_remaing_width,
-                         VIEWPORT_HEIGHT,
-                         first_remaing_width,
-                         0,
-                         0);
-   al_hold_bitmap_drawing(false);
-   */
 
    /**** TILES ****/
    //Which tiles are in view?
@@ -293,7 +264,6 @@ t_map_pos *get_map_position(t_map *m, int x, int y)
    if (m == NULL) return NULL;
 	if (x < 0 || x >= MAP_WIDTH) return NULL;
 	if (y < 0 || y >= MAP_HEIGHT) return NULL;
-
 
    return &m->position[x + y * MAP_WIDTH];
 }

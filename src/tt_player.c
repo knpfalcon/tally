@@ -17,7 +17,6 @@ void draw_player(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p, unsigned char direc
       else
          al_draw_bitmap(p->frame[p->cur_frame], p->x - c->x, p->y - c->y, ALLEGRO_FLIP_HORIZONTAL);
    }
-
 }
 
 /*************************************************
@@ -57,7 +56,6 @@ void animate_player(t_player *p, int *speed)
          p->cur_frame = 1;
       }
    }
-
 
     //Set the muzzle flash position according to frame of player
    if (p->direction == RIGHT)
