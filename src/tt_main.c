@@ -85,6 +85,7 @@ ALLEGRO_BITMAP *health_bar = NULL;
 ALLEGRO_BITMAP *bullet_blue = NULL;
 ALLEGRO_BITMAP *muzzle_flash = NULL;
 ALLEGRO_BITMAP *bullet_particle = NULL;
+ALLEGRO_BITMAP *laser = NULL;
 
 //Bitmaps that get drawn tom
 ALLEGRO_BITMAP *view_port = NULL;
@@ -285,7 +286,7 @@ int init_game()
    game.level = LEVEL_1;
    /* game.music = MUSIC_1; */
    al_set_mixer_gain(al_get_default_mixer(), 0.5); //Turn down the volume during development
-   al_set_audio_stream_gain(music_stream, 1.5f);
+   al_set_audio_stream_gain(music_stream, 2.0f);
    al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
    al_set_audio_stream_playing(music_stream, false);
    printf("DEPTH: %d\n", al_get_mixer_depth(al_get_default_mixer()));
@@ -434,6 +435,11 @@ void check_cam() //Check to make sure camera is not out of bounds.
    if (bullet_particle == NULL) { jlog("Couldn't load particle.png"); return false; }
    al_lock_bitmap(bullet_particle, al_get_bitmap_format(bullet_particle), ALLEGRO_LOCK_READONLY);
 
+   laser = al_load_bitmap("data/laser.png");
+   if (laser == NULL) { jlog("Couldn't load laser.png"); return false; }
+   al_lock_bitmap(laser, al_get_bitmap_format(laser), ALLEGRO_LOCK_READONLY);
+
+
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 
    //Load sounds
@@ -516,6 +522,11 @@ bool unload_level()
    bullet_particle = NULL;
    if (bullet_particle == NULL) jlog("bullet_particle unloaded.");
 
+   al_unlock_bitmap(laser);
+   al_destroy_bitmap(laser);
+   laser = NULL;
+   if (laser == NULL) jlog("laser unloaded.");
+
    for (int j = 0; j < 8; ++j)
    {
       al_unlock_bitmap(player.frame[j]);
@@ -570,6 +581,28 @@ void play_sound(ALLEGRO_SAMPLE *s, bool interupt)
 }
 
 /************************************************
+ * Draw laser                                   *
+ ************************************************/
+void draw_laser()
+{
+   if (player.direction == RIGHT)
+   {
+      for (int x = player_bullet.start_x; x < player_bullet.end_x; x++)
+      {
+         al_draw_bitmap(laser, x - cam.x , player.muzzle_y - cam.y + 6, 0);
+      }
+   }
+
+   if (player.direction == LEFT)
+   {
+      for (int x = player_bullet.start_x; x > player_bullet.end_x ; x--)
+      {
+          al_draw_bitmap(laser, x - cam.x , player.muzzle_y - cam.y + 6, 0);
+      }
+   }
+}
+
+/************************************************
  * The drawing function, called at redraw       *
  ************************************************/
 void update_screen()
@@ -581,11 +614,22 @@ void update_screen()
    if (player.x + 32 > 0 && player.y + 32 > 0 && player.x < MAP_WIDTH * TILE_SIZE && player.y < MAP_HEIGHT * TILE_SIZE)   
       if (player.draw) draw_player(view_port, &cam, &player, player.direction);
 
-   if (player.direction == RIGHT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
-   if (player.direction == LEFT && player.muzzle_time) al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
+   if (player.direction == RIGHT && player.muzzle_time) 
+   {
+      draw_laser();
+      al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
+   }
+   if (player.direction == LEFT && player.muzzle_time) 
+   {
+       draw_laser();
+      al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
+   }
    if (player_bullet.draw)
-      al_draw_bitmap_region(bullet_particle, (player.muzzle_time) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
+   {
+      al_draw_bitmap_region(bullet_particle, (player.muzzle_time * 2) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
       //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
+   }
+      
 
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
    
@@ -727,6 +771,28 @@ void check_key_up(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_X:
          key[KEY_X] = false;
          break;
+      case ALLEGRO_KEY_ENTER: //Tempory code to switch to fullscreen at runtime
+         screen.width = 960;
+         screen.height = 600;
+         al_set_display_flag(display, ALLEGRO_FULLSCREEN_WINDOW, true);
+         screen.factor_x = al_get_display_width(display) / screen.unscaled_w;
+         screen.factor_y = al_get_display_height(display) / screen.unscaled_h;
+         screen.factor = (screen.factor_y < screen.factor_x) ? screen.factor_y : screen.factor_x;
+         screen.width = screen.unscaled_w * screen.factor;
+         screen.height = screen.unscaled_h * screen.factor;
+         screen.x = (al_get_display_width(display) / 2) - (screen.width/2);
+         screen.y = (al_get_display_height(display) / 2) - (screen.height/2);
+         for (int y = 0; y < (al_get_display_height(display) / (32 * screen.factor)) + 1; y++)
+         {
+            for (int x = 0; x < (al_get_display_width(display) / (32 * screen.factor)) + 1; x++)
+            {
+               al_draw_scaled_bitmap(border, 0, 0, 32, 32, x * (32 * screen.factor), y * (32 * screen.factor), 32 * screen.factor, 32 * screen.factor, 0);
+            }
+         }
+         jlog("Display Created.");
+
+         break;
+
 
       case ALLEGRO_KEY_P:
          player.x = map->player_start_x;
@@ -752,6 +818,7 @@ void check_key_up(ALLEGRO_EVENT *ev)
  ************************************************/
 bool check_bullet_collision()
 {
+   //Do once
    if (player.direction == RIGHT)
    {
       player_bullet.start_x = player.x + 25;
@@ -806,6 +873,7 @@ bool check_bullet_collision()
    return false;
 }
 
+
 /************************************************
  * Update the player and movements              *
  ************************************************/
@@ -816,7 +884,6 @@ void update_player()
    and pasted, though! (Although, if you understand
    what it does, I guess it doesn't hurt every now
    and then.) */
-
    int old_x = player.x;
    int x1, x2, x3;
    int tx, ty, ty2, ty3;
@@ -1175,15 +1242,17 @@ void update_player()
    //Shooting time
    if (key[KEY_X] && !player.shoot_time)
    {
-      check_bullet_collision();
+      //check_bullet_collision();
       play_sound(snd_shoot, false);
       player.shoot_time = 5;
-      player.muzzle_time = 4;
+      player.muzzle_time = 3;
    }
    if (player.muzzle_time) player.muzzle_time--;
    else player_bullet.draw = false;
 
+   if (player.shoot_time == 5) check_bullet_collision();
    if (player.shoot_time) player.shoot_time--;
+   
 }
 
 /************************************************
