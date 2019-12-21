@@ -818,7 +818,7 @@ void check_key_up(ALLEGRO_EVENT *ev)
  ************************************************/
 bool check_bullet_collision()
 {
-   //Do once
+
    if (player.direction == RIGHT)
    {
       player_bullet.start_x = player.x + 25;
@@ -985,7 +985,7 @@ void update_player()
    {
       if (player.vel_y > 0) landed = true; //So we can make a landing sound.
       player.on_ground = true;
-      player.jump_pressed = false;
+      //player.jump_pressed = false;
       player.vel_y = 0;
 
    }
@@ -1061,9 +1061,10 @@ void update_player()
    }
    if (!key[KEY_Z])
    {
-      //player.jump_pressed = false;
+      player.jump_pressed = false;
       if (player.vel_y < 0) player.vel_y /= 2;
    }
+
 
    /* Apply vertical force
       This is where the player's Y position is changed
@@ -1242,7 +1243,6 @@ void update_player()
    //Shooting time
    if (key[KEY_X] && !player.shoot_time)
    {
-      //check_bullet_collision();
       play_sound(snd_shoot, false);
       player.shoot_time = 5;
       player.muzzle_time = 3;
