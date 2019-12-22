@@ -960,6 +960,7 @@ void update_player()
       jerkiness of the process.*/
    if (player.y + 31 < MAP_HEIGHT * TILE_SIZE)
    {
+      printf("%d\n", player.y + 16);
       if (player.y + 16 > 0)
       {
          if (is_ground(map, player.x + x1, player.y + 2 )) player.x = old_x; //top
@@ -1092,7 +1093,6 @@ void update_player()
       here, we don't actually see what is happening. */
    if (player.y + 31 < MAP_HEIGHT * TILE_SIZE)
    {
-      printf("%d\n", player.y + 32);
       while (is_ground(map, player.x + x1, player.y + 31) && player.y + 31 > 0)
       {
          player.y--;
