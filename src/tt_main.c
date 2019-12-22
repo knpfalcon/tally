@@ -139,7 +139,7 @@ int init_game()
    //al_set_new_display_adapter(1);
    screen.width = 960;
    screen.height = 600;
-   //al_set_new_display_flags(ALLEGRO_OPENGL);
+   //al_set_new_display_flags(ALLEGRO_NOFRAME);
    al_set_new_display_option(ALLEGRO_VSYNC, 1, ALLEGRO_SUGGEST);
    display = al_create_display(screen.width, screen.height);
    if(!display)
@@ -261,7 +261,7 @@ int init_game()
    //adl_setTempo(midi_player, 1.0);
    adl_setLoopEnabled(midi_player, 1);
    adl_switchEmulator(midi_player, ADLMIDI_EMU_DOSBOX);
-   if (adl_openFile(midi_player, "data/music/1.imf") < 0)
+   if (adl_openFile(midi_player, "data/music/tally2.imf") < 0)
    {
       fprintf(stderr, "Couldn't open music file: %s\n", adl_errorInfo(midi_player));
       adl_close(midi_player);
@@ -958,23 +958,26 @@ void update_player()
       to its previous position before the collision occurred.
       But because we're not drawing here, it doesn't show the
       jerkiness of the process.*/
-   if (player.y + 31 > 0 && player.y + 31 < MAP_HEIGHT * TILE_SIZE)
+   if (player.y + 31 < MAP_HEIGHT * TILE_SIZE)
    {
-      if (is_ground(map, player.x + x1, player.y + 2 )) player.x = old_x; //top
-      if (is_ground(map, player.x + x2, player.y + 2 )) player.x = old_x;
+      if (player.y + 16 > 0)
+      {
+         if (is_ground(map, player.x + x1, player.y + 2 )) player.x = old_x; //top
+         if (is_ground(map, player.x + x2, player.y + 2 )) player.x = old_x;
 
-      if (is_ground(map, player.x + x1, player.y + 16)) player.x = old_x; //center
-      if (is_ground(map, player.x + x2, player.y + 16)) player.x = old_x;
+         if (is_ground(map, player.x + x1, player.y + 16)) player.x = old_x; //center
+         if (is_ground(map, player.x + x2, player.y + 16)) player.x = old_x;
 
-      if (is_ground(map, player.x + x1, player.y + 31)) player.x = old_x; //bottom
-      if (is_ground(map, player.x + x2, player.y + 31)) player.x = old_x;
+         if (is_ground(map, player.x + x1, player.y + 31)) player.x = old_x; //bottom
+         if (is_ground(map, player.x + x2, player.y + 31)) player.x = old_x;
+      }
    }
    /* Vertical movement
       Checks the two points below the player's feet
       if there's not a solid tile, it adds 4 to
       the Y velocity. Otherwise the player is standing
       on a solid tile. */
-   if ( (!is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x2, player.y + 32)) || player.y + 31 > MAP_HEIGHT * TILE_SIZE)
+   if ( (!is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x2, player.y + 32)) || player.y + 31 > MAP_HEIGHT * TILE_SIZE || player.y + 31 < 0 )
    {
       player.vel_y += 4;
       player.on_ground = false;
@@ -1006,7 +1009,7 @@ void update_player()
    when a player falls off edge. Working so far.
    also detects if player barely lands on ledge
    and helps them out a little. */
-   if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && !key[KEY_Z])
+   if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && !key[KEY_Z] && player.y + 31 > 0)
    {
       //Play fall off ledge sound
       player.state = FALLING;
@@ -1018,7 +1021,7 @@ void update_player()
       printf("OOPS!\n");
       #endif // DEBUG
    }
-   else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && key[KEY_Z])
+   else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && key[KEY_Z] && player.y + 31 > 0)
    {
       //Play fall off ledge sound
       if (player.direction == RIGHT) player.x += 4;
@@ -1028,7 +1031,7 @@ void update_player()
       printf("FLY TALLY!\n");
       #endif // DEBUG
    }
-   else if(player.on_ground == true && is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) )
+   else if(player.on_ground == true && is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && player.y + 31 > 0)
    {
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
@@ -1044,27 +1047,35 @@ void update_player()
       a vertical upwards boost while the Y velocity is
       still being pulled in the opposite direction,
       simulating gravity. */
-   if (key[KEY_Z] && player.on_ground && !player.jump_pressed && !is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
-   {
-      if (player.y + 31 > 0)
+      if (key[KEY_Z] && player.on_ground && !player.jump_pressed)
+      {
+         if (player.y > 0 && !is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
          {
-         if (!is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
-         {
-            play_sound(snd_jump, false);
+            if (!is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1) && player.y + 31 > 0)
+            {
+               play_sound(snd_jump, false);
+            }
+            player.vel_y = -46;
+            player.jump_pressed = true;
+            player.on_ground = false;
          }
-      
-         player.vel_y = -46;
-         player.jump_pressed = true;
-         player.on_ground = false;
+         else if (player.y < 0 && is_ground(map, player.x + x1, player.y-1) && is_ground(map, player.x + x2, player.y-1))
+         {
+            if (is_ground(map, player.x + x1, player.y-1) && is_ground(map, player.x + x2, player.y-1) && player.y + 31 > 0)
+            {
+               play_sound(snd_jump, false);
+            }
+            player.vel_y = -46;
+            player.jump_pressed = true;
+            player.on_ground = false;
+         }
       }
-      
-   }
+
    if (!key[KEY_Z])
    {
       player.jump_pressed = false;
       if (player.vel_y < 0) player.vel_y /= 2;
    }
-
 
    /* Apply vertical force
       This is where the player's Y position is changed
@@ -1079,44 +1090,49 @@ void update_player()
       starts pulling them out until it's free of the tile.
       And since it's a loop, and we're not drawing it
       here, we don't actually see what is happening. */
-   if (player.y + 31 < MAP_HEIGHT * TILE_SIZE && player.y + 31 > 0)
+   if (player.y + 31 < MAP_HEIGHT * TILE_SIZE)
    {
-      while (is_ground(map, player.x + x1, player.y + 31) && player.y + 31 < MAP_HEIGHT * TILE_SIZE)
+      printf("%d\n", player.y + 32);
+      while (is_ground(map, player.x + x1, player.y + 31) && player.y + 31 > 0)
       {
          player.y--;
          player.on_ground = true;
       }
-      while (is_ground(map, player.x + x2, player.y + 31) && player.y + 31 < MAP_HEIGHT * TILE_SIZE)
+      while (is_ground(map, player.x + x2, player.y + 31) && player.y + 31 > 0)
       {
          player.y--;
          player.on_ground = true;
-      }
-
-      /* Check Ceiling
-         Same as above except at the players top. */
-      while (is_ground(map, player.x + x1, player.y) && player.y + 31 > 0)
-      {
-         player.y++;
-         player.vel_y = 0;
-         if(player.state == JUMPING)
-         {
-            play_sound(snd_hithead, false);
-         }
-         player.state = FALLING;
-
-      }
-      while (is_ground(map, player.x + x2, player.y) && player.y + 31 > 0)
-      {
-         player.y++;
-         player.vel_y = 0;
-         if(player.state == JUMPING)
-         {
-            play_sound(snd_hithead, false);
-         }
-         player.state = FALLING;
-
       }
    }
+
+   /* Check Ceiling
+      Same as above except at the players top. */
+   if (player.y > 0)
+   {
+      while (is_ground(map, player.x + x1, player.y))
+      {
+         player.y++;
+         player.vel_y = 0;
+         if(player.state == JUMPING)
+         {
+            play_sound(snd_hithead, false);
+         }
+         player.state = FALLING;
+
+      }
+      while (is_ground(map, player.x + x2, player.y))
+      {
+         player.y++;
+         player.vel_y = 0;
+         if(player.state == JUMPING)
+         {
+            play_sound(snd_hithead, false);
+         }
+         player.state = FALLING;
+      }
+   }
+   
+   
    /* Check for items
       Here we check if the player is over an item
       This get a little redundant. */
@@ -1560,7 +1576,7 @@ int main(int argc, char **argv)
 
       if (redraw && al_is_event_queue_empty(event_queue))
       {
-         //al_wait_for_vsync();
+         
          redraw = false;
          update_screen();
          ticks = 0;
