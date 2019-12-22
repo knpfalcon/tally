@@ -84,18 +84,3 @@ void animate_player(t_player *p, int *speed)
 
    }
 }
-
-/*************************************************
- * Debug stuff                                   *
- *************************************************/
-#ifdef DEBUG
- /* Shows some pixels on the player */
-void show_player_hotspot(ALLEGRO_BITMAP *bmp, t_cam *c, t_player *p)
-{
-   al_set_target_bitmap(bmp);
-   al_draw_pixel(p->x + p->x1 - c->x, p->y + 32 - c->y, al_map_rgb(255,150,150));
-   al_draw_pixel(p->x + p->x2 - c->x, p->y + 32 - c->y, al_map_rgb(150,255,150));
-   al_draw_pixel(p->x + p->x3 - c->x, p->y + 32 - c->y, al_map_rgb(150,150,255));
-}
-
-#endif // DEBUG

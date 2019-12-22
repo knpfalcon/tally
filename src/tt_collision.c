@@ -41,9 +41,4 @@ bool check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int
 
    return true;
 }
-#ifdef DEBUG
-   void draw_bb(t_cam *c, int x1, int y1, int w1, int h1)
-   {
-      al_draw_filled_rectangle(x1 - c->x, y1 - c->y, (x1 + w1) - c->x, (y1 + h1) - c->y, al_map_rgba(170,0,0,10));
-   }
-#endif // DEBUG
+

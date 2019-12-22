@@ -35,6 +35,11 @@ void jlog(const char *format, ...)
       fclose(fp);
     }
     #endif // DEBUG
+
+    #ifndef DEBUG
+    printf(format);
+    printf("\n");
+    #endif
 }
 
 /***********************************************

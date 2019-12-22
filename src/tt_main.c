@@ -33,8 +33,6 @@ int centiseconds = 0;
    but they're staying for now. */
 int demo_file_pos = 0;
 
-bool dbg = false; 
-
 FILE *demo_file = NULL;
 bool program_done = false;
 t_game game = { .state = LOAD_LEVEL, .next_state = LOAD_LEVEL };
@@ -44,10 +42,6 @@ int frame_speed = ANIMATION_SPEED;
 int halftime_frame_speed = ANIMATION_SPEED * 2;
 
 bool redraw = true;
-
-#ifdef DEBUG
-double fps;
-#endif
 
 t_bullet player_bullet;
 
@@ -164,7 +158,6 @@ int init_game()
       jlog("Couldn't load bg_border.png!");
       return -1;
    }
-   al_lock_bitmap(border, al_get_bitmap_format(border), ALLEGRO_LOCK_READONLY);
    for (int y = 0; y < (al_get_display_height(display) / (32 * screen.factor)) + 1; y++)
    {
       for (int x = 0; x < (al_get_display_width(display) / (32 * screen.factor)) + 1; x++)
@@ -180,7 +173,6 @@ int init_game()
    }
    else
    {
-      al_lock_bitmap(loading, al_get_bitmap_format(loading), ALLEGRO_LOCK_READONLY);
       al_draw_scaled_bitmap(loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
       al_flip_display();
    }
@@ -377,7 +369,6 @@ void check_cam() //Check to make sure camera is not out of bounds.
       jlog("Couldn't load stat_border.png!");
       return false;
    }
-   al_lock_bitmap(stat_border, al_get_bitmap_format(stat_border), ALLEGRO_LOCK_READONLY);
 
    bg = al_load_bitmap("data/bg_1.png");
    if (bg == NULL)
@@ -385,7 +376,6 @@ void check_cam() //Check to make sure camera is not out of bounds.
       jlog("Couldn't load bg1.png!");
       return false;
    }
-   al_lock_bitmap(bg, al_get_bitmap_format(bg), ALLEGRO_LOCK_READONLY);
 
    tile_sheet = al_load_bitmap("data/tile_sheet.png");
    if (tile_sheet == NULL)
@@ -393,7 +383,6 @@ void check_cam() //Check to make sure camera is not out of bounds.
       jlog("Couldn't load tile_sheet.png!");
       return false;
    }
-   al_lock_bitmap(tile_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
 
    item_sheet = al_load_bitmap("data/item_sheet.png");
    if (tile_sheet == NULL)
@@ -402,11 +391,10 @@ void check_cam() //Check to make sure camera is not out of bounds.
       return false;
    }
    jlog("item_sheet.png loaded.");
-   al_lock_bitmap(item_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
 
    player.bitmap = al_load_bitmap("data/player.png");
    if (player.bitmap == NULL) { jlog("Couldn't load player.png"); return -1; }
-   al_lock_bitmap(player.bitmap, al_get_bitmap_format(player.bitmap), ALLEGRO_LOCK_READONLY);
+
    for (int j = 0; j < 8; j++)
    {
       player.frame[j] = al_create_sub_bitmap(player.bitmap, j * 32, 0, 32, 32);
@@ -415,29 +403,24 @@ void check_cam() //Check to make sure camera is not out of bounds.
          jlog("Couldn't create sub-bitmap from player bitmap!");
          return false;
       }
-      al_lock_bitmap(player.frame[j], al_get_bitmap_format(player.frame[j]), ALLEGRO_LOCK_READONLY);
       jlog("Player frame %d created and locked.", j);
    }
 
    item_fx_sheet = al_load_bitmap("data/item_score.png");
    if (item_fx_sheet == NULL) { jlog("Couldn't load item_score.png"); return false;; }
-   al_lock_bitmap(item_fx_sheet, al_get_bitmap_format(item_fx_sheet), ALLEGRO_LOCK_READONLY);
-
+  
    health_bar = al_load_bitmap("data/health_bar.png");
    if (health_bar == NULL) { jlog("Couldn't load health_bar.png"); return false; }
-   al_lock_bitmap(health_bar, al_get_bitmap_format(health_bar), ALLEGRO_LOCK_READONLY);
 
    muzzle_flash = al_load_bitmap("data/muzzle_flash.png");
    if (muzzle_flash == NULL) { jlog("Couldn't load muzzle_flash.png"); return false; }
-   al_lock_bitmap(muzzle_flash, al_get_bitmap_format(muzzle_flash), ALLEGRO_LOCK_READONLY);
-
+   
    bullet_particle = al_load_bitmap("data/particle.png");
    if (bullet_particle == NULL) { jlog("Couldn't load particle.png"); return false; }
-   al_lock_bitmap(bullet_particle, al_get_bitmap_format(bullet_particle), ALLEGRO_LOCK_READONLY);
 
    laser = al_load_bitmap("data/laser.png");
    if (laser == NULL) { jlog("Couldn't load laser.png"); return false; }
-   al_lock_bitmap(laser, al_get_bitmap_format(laser), ALLEGRO_LOCK_READONLY);
+
 
 
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
@@ -482,60 +465,48 @@ bool unload_level()
    item_fx = NULL;
    if (item_fx == NULL) jlog("item_fx unloaded.");
 
-   al_unlock_bitmap(tile_sheet);
    al_destroy_bitmap(tile_sheet);
    tile_sheet = NULL;
    if (tile_sheet == NULL) jlog("tile_sheet unloaded.");
-
-   al_unlock_bitmap(item_sheet);
    al_destroy_bitmap(item_sheet);
    item_sheet = NULL;
    if (item_sheet == NULL) jlog("item_sheet unloaded.");
 
-   al_unlock_bitmap(bg);
    al_destroy_bitmap(bg);
    bg = NULL;
    if (bg == NULL) jlog("bg unloaded.");
 
-   al_unlock_bitmap(stat_border);
    al_destroy_bitmap(stat_border);
    stat_border = NULL;
    if (stat_border == NULL) jlog("stat_border unloaded.");
 
-   al_unlock_bitmap(item_fx_sheet);
    al_destroy_bitmap(item_fx_sheet);
    item_fx_sheet = NULL;
    if (item_fx_sheet == NULL) jlog("item_fx_sheet unloaded.");
 
-   al_unlock_bitmap(health_bar);
    al_destroy_bitmap(health_bar);
    health_bar = NULL;
    if (health_bar == NULL) jlog("health_bar unloaded.");
 
-   al_unlock_bitmap(muzzle_flash);
    al_destroy_bitmap(muzzle_flash);
    muzzle_flash = NULL;
    if (muzzle_flash == NULL) jlog("muzzle_flash unloaded.");
 
-   al_unlock_bitmap(bullet_particle);
    al_destroy_bitmap(bullet_particle);
    bullet_particle = NULL;
    if (bullet_particle == NULL) jlog("bullet_particle unloaded.");
 
-   al_unlock_bitmap(laser);
    al_destroy_bitmap(laser);
    laser = NULL;
    if (laser == NULL) jlog("laser unloaded.");
 
    for (int j = 0; j < 8; ++j)
    {
-      al_unlock_bitmap(player.frame[j]);
       al_destroy_bitmap(player.frame[j]);
       player.frame[j] = NULL;
       if (player.frame[j] == NULL) jlog("player.frame[%d] unloaded.", j);
    }
 
-   al_unlock_bitmap(player.bitmap);
    al_destroy_bitmap(player.bitmap);
    player.bitmap = NULL;
    if (player.bitmap == NULL) jlog("player.bitmap unloaded.");
@@ -609,6 +580,7 @@ void update_screen()
 {
    draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
 
+   
    draw_things(map, thing, &cam, map->num_things);
 
    if (player.x + 32 > 0 && player.y + 32 > 0 && player.x < MAP_WIDTH * TILE_SIZE && player.y < MAP_HEIGHT * TILE_SIZE)   
@@ -630,24 +602,7 @@ void update_screen()
       //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
    }
       
-
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
-   
-   #ifdef DEBUG
-   if (dbg == true)
-   {
-      draw_bb(&cam, player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height);
-      show_player_hotspot(view_port, &cam, &player);
-   }
-   #endif // DEBUG
-
-   #ifdef DEBUG
-   if (dbg == true)
-   {
-      if (fps < 30) al_draw_textf(fps_font, al_map_rgb(255,0,0), 0, 0, ALLEGRO_ALIGN_LEFT, "FPS: %d", (int)fps);
-      if (fps >= 30) al_draw_textf(fps_font, al_map_rgb(0,255,0), 0, 0, ALLEGRO_ALIGN_LEFT, "FPS: %d", (int)fps);
-   }
-   #endif
    
    //Draw view_port to game, then draw game scaled to display.
    al_set_target_bitmap(game_bmp);
@@ -804,7 +759,6 @@ void check_key_up(ALLEGRO_EVENT *ev)
 
       case ALLEGRO_KEY_T:
          key[KEY_T] = false;
-         dbg ^= 1;
          break;
 
       case ALLEGRO_KEY_ESCAPE:
@@ -931,12 +885,6 @@ void update_player()
       x2 = 11;
       x3 = 15; //For detecting falling from edge.
       player.bb_left = 12;
-      #ifdef DEBUG
-      player.x1 = x1;
-      player.x2 = x2;
-      player.x3 = x3;
-      #endif // DEBUG
-
    }
    else
    {
@@ -944,11 +892,6 @@ void update_player()
       x2 = 22;
       x3 = 18; //For detecting falling from edge.
       player.bb_left = 13;
-      #ifdef DEBUG
-      player.x1 = x1;
-      player.x2 = x2;
-      player.x3 = x3;
-      #endif // DEBUG
    }
 
    /* Horizontal Tile Collision
@@ -999,9 +942,6 @@ void update_player()
       {
          landed = false;
          play_sound(snd_land, false);
-         #ifdef DEBUG
-         printf("TALLY SMACKED THE GROUND!\n");
-         #endif // DEBUG
       }
    }
 
@@ -1017,9 +957,6 @@ void update_player()
       if (player.direction == LEFT) player.x -= 4;
       player.vel_y += 24;
       play_sound(snd_fall, false);
-      #ifdef DEBUG
-      printf("OOPS!\n");
-      #endif // DEBUG
    }
    else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32, &player) && !is_ground(map, player.x +x3, player.y + 32, &player) && key[KEY_Z] && player.y + 31 > 0)
    {
@@ -1027,17 +964,11 @@ void update_player()
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
       //player.vel_y = -24;
-      #ifdef DEBUG
-      printf("FLY TALLY!\n");
-      #endif // DEBUG
    }
    else if(player.on_ground == true && is_ground(map, player.x + x1, player.y + 32, &player) && !is_ground(map, player.x +x3, player.y + 32, &player) && player.y + 31 > 0)
    {
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
-      #ifdef DEBUG
-      printf("YOU MADE IT!\n");
-      #endif // DEBUG
    }
 
    /* Jump button is pressed
@@ -1362,9 +1293,6 @@ void clean_up()
       jlog("Level unloaded.");
    }
 
-   al_unlock_bitmap(loading);
-   al_unlock_bitmap(border);
-
    al_destroy_audio_stream(music_stream);
    music_stream = NULL;
    if (music_stream == NULL)
@@ -1413,10 +1341,6 @@ int main(int argc, char **argv)
    {
       for (int d = 1; d < argc; d++)
        {
-         if (strcmp(argv[d], "-tdbg") == 0)
-         {
-            dbg = true;
-         }
          if (strcmp(argv[d], "-recorddemo") == 0)
          {
                if (argc -1 > d) d++;
@@ -1447,7 +1371,6 @@ int main(int argc, char **argv)
             if (argv[d][0] != '-')
             {
                strlcpy(DEMO_FILENAME, argv[d], strlen(argv[d]) + 1);
-               //strncpy(DEMO_FILENAME, argv[d], strlen(argv[d]));
                FILE *fp = fopen(DEMO_FILENAME, "r");
                if (fp) fclose(fp);
                else
@@ -1462,7 +1385,6 @@ int main(int argc, char **argv)
                printf("Must be file name after -playdemo!\n");
                return 1;
             }
-            
          }
       }
    }
@@ -1504,7 +1426,6 @@ int main(int argc, char **argv)
    while(game.state != QUIT)
    {
 
-      double old_time = al_get_time();
       ALLEGRO_EVENT ev;
 
       al_wait_for_event(event_queue, &ev);
@@ -1563,12 +1484,6 @@ int main(int argc, char **argv)
          if (ticks == 1)
          {
             check_timer_logic();
-            #ifdef DEBUG
-            double new_time = al_get_time();
-            double delta = new_time - old_time;
-            fps = 1/(delta);
-            old_time = new_time; 
-            #endif 
          }
          redraw = true;
       }
