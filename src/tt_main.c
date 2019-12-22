@@ -255,7 +255,7 @@ int init_game()
    adl_switchEmulator(midi_player, ADLMIDI_EMU_DOSBOX);
    if (adl_openFile(midi_player, "data/music/tally2.imf") < 0)
    {
-      fprintf(stderr, "Couldn't open music file: %s\n", adl_errorInfo(midi_player));
+      jlog("Couldn't open music file: %s", adl_errorInfo(midi_player));
       adl_close(midi_player);
       return 1;
    }
@@ -281,7 +281,7 @@ int init_game()
    al_set_audio_stream_gain(music_stream, 2.0f);
    al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
    al_set_audio_stream_playing(music_stream, false);
-   printf("DEPTH: %d\n", al_get_mixer_depth(al_get_default_mixer()));
+   jlog("DEPTH: %d\n", al_get_mixer_depth(al_get_default_mixer()));
    return 0;
 }
 
@@ -783,7 +783,7 @@ bool check_bullet_collision()
          {
             player_bullet.end_x = x;
             player_bullet.end_y = player_bullet.start_y;
-            printf("Bullet hit at %d, %d\n", player_bullet.end_x, player_bullet.end_y);
+            jlog("Bullet hit at %d, %d", player_bullet.end_x, player_bullet.end_y);
             player_bullet.draw = true;
             return true;
          }
@@ -800,7 +800,7 @@ bool check_bullet_collision()
          {
             player_bullet.end_x = x;
             player_bullet.end_y = player_bullet.start_y;
-            printf("Bullet hit at %d, %d\n", player_bullet.end_x, player_bullet.end_y);
+            jlog("Bullet hit at %d, %d", player_bullet.end_x, player_bullet.end_y);
             player_bullet.draw = true;
             return true;
          }
@@ -1258,7 +1258,7 @@ void stream_opl()
    
    if (!opl_buffer)
    {
-      printf("%d, opl_buffer returned null!\n", times_executed);
+      jlog("%d, opl_buffer returned null!", times_executed);
       return;
    }
    else
@@ -1346,7 +1346,7 @@ int main(int argc, char **argv)
                if (argc -1 > d) d++;
                else 
                {
-                  printf("No file name for -recorddemo!\n");
+                  jlog("No file name for -recorddemo!");
                   return 1;
                }
                if (argv[d][0] != '-')
@@ -1356,7 +1356,7 @@ int main(int argc, char **argv)
                }   
                else
             {
-               printf("Must be file name after -recorddemo!\n");
+               jlog("Must be file name after -recorddemo!");
                return 1;
             }
          }
@@ -1365,7 +1365,7 @@ int main(int argc, char **argv)
             if (argc -1 > d) d++;
             else 
             {
-               printf("No file name for -playdemo!\n");
+               jlog("No file name for -playdemo!");
                return 1;
             }
             if (argv[d][0] != '-')
@@ -1375,14 +1375,14 @@ int main(int argc, char **argv)
                if (fp) fclose(fp);
                else
                {
-                  printf("Demo file doesn't exist!\n");
+                  jlog("Demo file doesn't exist!");
                   return 1;
                }
                game.demo_mode = PLAY;
             }
             else
             {
-               printf("Must be file name after -playdemo!\n");
+               jlog("Must be file name after -playdemo!");
                return 1;
             }
          }
