@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdbool.h>
+
 #include "tt_collision.h"
 #include <allegro5/allegro_primitives.h>
 
@@ -9,17 +12,20 @@
    solid. All tiles at indexes 128 through 255
    on the tile sheet are background tiles and
    are not solid. */
-bool is_ground(t_map *m, int x, int y)
+bool is_ground(t_map *m, int x, int y, t_player *p)
 {
-   x /= TILE_SIZE;
-   y /= TILE_SIZE;
-
-   if (m->position[x + y * MAP_WIDTH].empty_tile == true ||
-       m->position[x + y * MAP_WIDTH].tile >= 128)
+   if (y < 0 || y + 1> MAP_HEIGHT * TILE_SIZE) return false;
+   else
    {
-         return false;
-   }
+      x /= TILE_SIZE;
+      y /= TILE_SIZE;
 
+      if (m->position[x + y * MAP_WIDTH].empty_tile == true ||
+         m->position[x + y * MAP_WIDTH].tile >= 128)
+      {
+            return false;
+      }
+   }
    return true;
 }
 

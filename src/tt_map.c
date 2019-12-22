@@ -150,7 +150,7 @@ t_map *load_map(const char *fname)
       al_fclose(fp);
       return NULL; //Return NULL on failure
    }
-   al_fread(fp, m, sizeof *m);
+   al_fread(fp, m, sizeof(*m));
 
    m->position = malloc( (MAP_WIDTH * MAP_HEIGHT) * sizeof(t_map_pos));
    if (m->position == NULL)
@@ -177,10 +177,7 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
    al_set_target_bitmap(d_bmp);
 
    /**** BACKGROUND ****/
-   al_hold_bitmap_drawing(true);
    al_draw_bitmap(background, 0, 0, 0);
-   al_draw_bitmap_region(background, 0, 0, 80, VIEWPORT_HEIGHT, 208, 0, 0 );
-   al_hold_bitmap_drawing(false);
 
    /**** TILES ****/
    //Which tiles are in view?
@@ -233,7 +230,7 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
                }
                
             }
-
+            
             //ITEMS
             if (m->position[x + y * MAP_WIDTH].item > 0)
             {

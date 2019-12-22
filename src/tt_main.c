@@ -825,7 +825,7 @@ bool check_bullet_collision()
       player_bullet.start_y = player.y + 18;
       for (int x = player_bullet.start_x; x < cam.x + VIEWPORT_WIDTH + 16; x++)
       {
-         if (is_ground(map, x, player_bullet.start_y))
+         if (is_ground(map, x, player_bullet.start_y, &player))
          {
             player_bullet.end_x = x;
             player_bullet.end_y = player_bullet.start_y;
@@ -842,7 +842,7 @@ bool check_bullet_collision()
       player_bullet.start_y = player.y + 18;
       for (int x = player_bullet.start_x; x > cam.x - 16; x--)
       {
-         if (is_ground(map, x, player_bullet.start_y))
+         if (is_ground(map, x, player_bullet.start_y, &player))
          {
             player_bullet.end_x = x;
             player_bullet.end_y = player_bullet.start_y;
@@ -960,17 +960,16 @@ void update_player()
       jerkiness of the process.*/
    if (player.y + 31 < MAP_HEIGHT * TILE_SIZE)
    {
-      printf("%d\n", player.y + 16);
       if (player.y + 16 > 0)
       {
-         if (is_ground(map, player.x + x1, player.y + 2 )) player.x = old_x; //top
-         if (is_ground(map, player.x + x2, player.y + 2 )) player.x = old_x;
+         if (is_ground(map, player.x + x1, player.y + 2, &player )) player.x = old_x; //top
+         if (is_ground(map, player.x + x2, player.y + 2, &player )) player.x = old_x;
 
-         if (is_ground(map, player.x + x1, player.y + 16)) player.x = old_x; //center
-         if (is_ground(map, player.x + x2, player.y + 16)) player.x = old_x;
+         if (is_ground(map, player.x + x1, player.y + 16, &player )) player.x = old_x; //center
+         if (is_ground(map, player.x + x2, player.y + 16, &player )) player.x = old_x;
 
-         if (is_ground(map, player.x + x1, player.y + 31)) player.x = old_x; //bottom
-         if (is_ground(map, player.x + x2, player.y + 31)) player.x = old_x;
+         if (is_ground(map, player.x + x1, player.y + 31, &player )) player.x = old_x; //bottom
+         if (is_ground(map, player.x + x2, player.y + 31, &player )) player.x = old_x;
       }
    }
    /* Vertical movement
@@ -978,7 +977,7 @@ void update_player()
       if there's not a solid tile, it adds 4 to
       the Y velocity. Otherwise the player is standing
       on a solid tile. */
-   if ( (!is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x2, player.y + 32)) || player.y + 31 > MAP_HEIGHT * TILE_SIZE || player.y + 31 < 0 )
+   if ( (!is_ground(map, player.x + x1, player.y + 32, &player) && !is_ground(map, player.x +x2, player.y + 32, &player)) )
    {
       player.vel_y += 4;
       player.on_ground = false;
@@ -996,7 +995,7 @@ void update_player()
 
    if (landed == true)
    {
-      if (is_ground(map, player.x + x1, player.y + 32))
+      if (is_ground(map, player.x + x1, player.y + 32, &player))
       {
          landed = false;
          play_sound(snd_land, false);
@@ -1010,7 +1009,7 @@ void update_player()
    when a player falls off edge. Working so far.
    also detects if player barely lands on ledge
    and helps them out a little. */
-   if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && !key[KEY_Z] && player.y + 31 > 0)
+   if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32, &player) && !is_ground(map, player.x +x3, player.y + 32, &player) && !key[KEY_Z] && player.y + 31 > 0)
    {
       //Play fall off ledge sound
       player.state = FALLING;
@@ -1022,7 +1021,7 @@ void update_player()
       printf("OOPS!\n");
       #endif // DEBUG
    }
-   else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && key[KEY_Z] && player.y + 31 > 0)
+   else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32, &player) && !is_ground(map, player.x +x3, player.y + 32, &player) && key[KEY_Z] && player.y + 31 > 0)
    {
       //Play fall off ledge sound
       if (player.direction == RIGHT) player.x += 4;
@@ -1032,7 +1031,7 @@ void update_player()
       printf("FLY TALLY!\n");
       #endif // DEBUG
    }
-   else if(player.on_ground == true && is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && player.y + 31 > 0)
+   else if(player.on_ground == true && is_ground(map, player.x + x1, player.y + 32, &player) && !is_ground(map, player.x +x3, player.y + 32, &player) && player.y + 31 > 0)
    {
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
@@ -1050,9 +1049,9 @@ void update_player()
       simulating gravity. */
       if (key[KEY_Z] && player.on_ground && !player.jump_pressed)
       {
-         if (player.y > 0 && !is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
+         if (player.y + 1 > 0 && !is_ground(map, player.x + x1, player.y-1, &player) && !is_ground(map, player.x + x2, player.y-1, &player))
          {
-            if (!is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1) && player.y + 31 > 0)
+            if (!is_ground(map, player.x + x1, player.y-1, &player) && !is_ground(map, player.x + x2, player.y-1, &player) && player.y + 31 > 0)
             {
                play_sound(snd_jump, false);
             }
@@ -1060,9 +1059,9 @@ void update_player()
             player.jump_pressed = true;
             player.on_ground = false;
          }
-         else if (player.y < 0 && is_ground(map, player.x + x1, player.y-1) && is_ground(map, player.x + x2, player.y-1))
+         else if (player.y + 1 < 0 && is_ground(map, player.x + x1, player.y-1, &player) && is_ground(map, player.x + x2, player.y-1, &player))
          {
-            if (is_ground(map, player.x + x1, player.y-1) && is_ground(map, player.x + x2, player.y-1) && player.y + 31 > 0)
+            if (is_ground(map, player.x + x1, player.y-1, &player) && is_ground(map, player.x + x2, player.y-1, &player) && player.y + 31 > 0)
             {
                play_sound(snd_jump, false);
             }
@@ -1093,12 +1092,12 @@ void update_player()
       here, we don't actually see what is happening. */
    if (player.y + 31 < MAP_HEIGHT * TILE_SIZE)
    {
-      while (is_ground(map, player.x + x1, player.y + 31) && player.y + 31 > 0)
+      while (is_ground(map, player.x + x1, player.y + 31, &player) && player.y + 31 > 0)
       {
          player.y--;
          player.on_ground = true;
       }
-      while (is_ground(map, player.x + x2, player.y + 31) && player.y + 31 > 0)
+      while (is_ground(map, player.x + x2, player.y + 31, &player) && player.y + 31 > 0)
       {
          player.y--;
          player.on_ground = true;
@@ -1109,7 +1108,7 @@ void update_player()
       Same as above except at the players top. */
    if (player.y > 0)
    {
-      while (is_ground(map, player.x + x1, player.y))
+      while (is_ground(map, player.x + x1, player.y, &player))
       {
          player.y++;
          player.vel_y = 0;
@@ -1120,7 +1119,7 @@ void update_player()
          player.state = FALLING;
 
       }
-      while (is_ground(map, player.x + x2, player.y))
+      while (is_ground(map, player.x + x2, player.y, &player))
       {
          player.y++;
          player.vel_y = 0;
@@ -1309,6 +1308,11 @@ void check_timer_logic()
       if (cam.look_ahead < 24) cam.look_ahead += 1;
    }
 
+   if (player.y >= (MAP_HEIGHT * TILE_SIZE) + 32)
+   {
+      player.health = 0;
+   }
+   
    check_cam();
 }
 
