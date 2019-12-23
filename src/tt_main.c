@@ -253,7 +253,7 @@ int init_game()
    //adl_setTempo(midi_player, 1.0);
    adl_setLoopEnabled(midi_player, 1);
    adl_switchEmulator(midi_player, ADLMIDI_EMU_DOSBOX);
-   if (adl_openFile(midi_player, "data/music/tally2.imf") < 0)
+   if (adl_openFile(midi_player, "data/music/tally3.imf") < 0)
    {
       jlog("Couldn't open music file: %s", adl_errorInfo(midi_player));
       adl_close(midi_player);
@@ -566,7 +566,7 @@ void draw_laser()
 
    if (player.direction == LEFT)
    {
-      for (int x = player_bullet.start_x; x > player_bullet.end_x ; x--)
+      for (int x = player_bullet.start_x; x > player_bullet.end_x; x--)
       {
           al_draw_bitmap(laser, x - cam.x , player.muzzle_y - cam.y + 6, 0);
       }
