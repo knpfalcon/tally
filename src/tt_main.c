@@ -95,6 +95,7 @@ ALLEGRO_SAMPLE *snd_jump = NULL;
 ALLEGRO_SAMPLE *snd_land = NULL;
 ALLEGRO_SAMPLE *snd_hithead = NULL;
 ALLEGRO_SAMPLE *snd_shoot = NULL;
+ALLEGRO_SAMPLE *snd_friend = NULL;
 
 ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 
@@ -279,7 +280,7 @@ int init_game()
    game.level = LEVEL_1;
    /* game.music = MUSIC_1; */
    al_set_mixer_gain(al_get_default_mixer(), 1.0f); //Turn down the volume during development
-   al_set_audio_stream_gain(music_stream, 2.0f);
+   al_set_audio_stream_gain(music_stream, 1.0f);
    al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
    al_set_audio_stream_playing(music_stream, false);
    jlog("DEPTH: %d\n", al_get_mixer_depth(al_get_default_mixer()));
@@ -435,6 +436,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
    snd_health = al_load_sample("data/sound/health.wav");
    snd_hurt = al_load_sample("data/sound/hurt.wav");
    snd_shoot = al_load_sample("data/sound/shoot.wav");
+   snd_friend = al_load_sample("data/sound/friend.wav");
 
    al_set_audio_stream_playing(music_stream, true);
 
@@ -580,6 +582,7 @@ void draw_laser()
 void update_screen()
 {
    draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
+   draw_things(map, thing, &cam, map->num_things);
 
    if (player.x + 32 > 0 && player.y + 32 > 0 && player.x < MAP_WIDTH * TILE_SIZE && player.y < MAP_HEIGHT * TILE_SIZE)   
       if (player.draw) draw_player(view_port, &cam, &player, player.direction);
@@ -602,8 +605,6 @@ void update_screen()
       //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
    }
    
-   draw_things(map, thing, &cam, map->num_things);
-
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
    
    //Draw view_port to game, then draw game scaled to display.
@@ -891,7 +892,7 @@ void update_player()
       x1 = 14;
       x2 = 22;
       x3 = 18; //For detecting falling from edge.
-      player.bb_left = 13;
+      player.bb_left = 12;
    }
 
    /* Horizontal Tile Collision
@@ -1170,17 +1171,21 @@ void update_player()
    //Collisions against things
    for (int i = 0; i < map->num_things; i++)
    {
-      if (!player.hurt && check_collision(player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height, thing[i].x + thing[i].bb_left, thing[i].y + thing[i].bb_top, thing[i].bb_width, thing[i].bb_height))
+      if (check_collision(player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height, thing[i].x + thing[i].bb_left, thing[i].y + thing[i].bb_top, thing[i].bb_width, thing[i].bb_height))
       {
-         if (thing[i].type < 10 && player.health) //If thing can hurt player (The first 10 types can)
+         if (!player.hurt && thing[i].type < 10 && player.health) //If thing can hurt player (The first 10 types can)
          {
             play_sound(snd_hurt, false);
             player.hurt = PLAYER_HURT_TIME;
             if(player.health) player.health--;
          }
+         if (thing[i].type == THING_ORLO)
+         {
+            if (thing[i].touched == false) play_sound(snd_friend, false);
+            thing[i].touched = true;
+         }
       }
    }
-
    if (player.hurt)
    {
       player.hurt--;
@@ -1198,7 +1203,6 @@ void update_player()
 
    if (player.shoot_time == 5) check_bullet_collision();
    if (player.shoot_time) player.shoot_time--;
-   
 }
 
 /************************************************
@@ -1277,6 +1281,23 @@ void stream_opl()
    }
 
    times_executed++;
+}
+
+/****************************************************
+ * Reset some things if they're out of camera range *
+ ****************************************************/
+void reset_out_of_view_things()
+{
+   for (int i = 0; i < map->num_things; i++)
+   {
+      if (thing[i].x > cam.x + VIEWPORT_WIDTH || thing[i].y > cam.y + MAP_HEIGHT || thing[i].x + thing[i].width < cam.x || thing[i].y + thing[i].height < cam.y)
+      {
+         if (thing[i].type == THING_ORLO)
+         {
+            thing[i].touched = false; //Reset greeting ability
+         }
+      }
+   }
 }
 
 /************************************************
@@ -1485,6 +1506,8 @@ int main(int argc, char **argv)
          {
             check_timer_logic();
          }
+         
+         reset_out_of_view_things();
          redraw = true;
       }
 

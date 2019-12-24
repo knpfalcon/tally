@@ -10,9 +10,9 @@ void draw_things(t_map *m, t_thing *t, t_cam *c, int count)
     {
         if (t[i].active == true)
         {
-            if ( t[i].x > c->x - t[i].bb_width && 
+            if ( t[i].x > c->x - t[i].width && 
              t[i].x < c->x + VIEWPORT_WIDTH &&
-             t[i].y > c->y - t[i].bb_height &&
+             t[i].y > c->y - t[i].height &&
              t[i].y < c->y + VIEWPORT_HEIGHT)
             {
                 al_draw_bitmap(t[i].frame[t[i].cur_frame], t[i].x - c->x, t[i].y - c->y, 0);
@@ -57,6 +57,7 @@ void load_things(t_thing *t, t_map *m)
                 t[m->num_things -1].active  = true;
                 t[m->num_things -1].x = x * 16;
                 t[m->num_things -1].y = y * 16;
+                t[m->num_things -1].touched = false;
             }
 
             if (m->position[x + y * MAP_WIDTH].thing == ENEMY_SPIKES)
@@ -67,6 +68,8 @@ void load_things(t_thing *t, t_map *m)
                 t[m->num_things -1].bb_width = 16;
                 t[m->num_things -1].bb_top = 0;
                 t[m->num_things -1].bb_left = 0;
+                t[m->num_things -1].width = 16;
+                t[m->num_things -1].height = 16;
             }
 
             if (m->position[x + y * MAP_WIDTH].thing == THING_ORLO)
@@ -79,9 +82,11 @@ void load_things(t_thing *t, t_map *m)
                 
                 t[m->num_things -1].type = THING_ORLO;
                 t[m->num_things -1].bb_height = 32;
-                t[m->num_things -1].bb_width = 32;
+                t[m->num_things -1].bb_width = 12;
                 t[m->num_things -1].bb_top = 0;
-                t[m->num_things -1].bb_left = 0;
+                t[m->num_things -1].bb_left = 9;
+                t[m->num_things -1].width = 32;
+                t[m->num_things -1].height = 32;
             }
             
         }

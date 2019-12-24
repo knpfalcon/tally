@@ -31,10 +31,13 @@ typedef struct
    int muzzle_y;
    int muzzle_time;
    int shoot_time;
+   int width;
+   int height;
    bool draw;
    bool on_ground;
    unsigned char type;
    bool active;
+   bool touched;
 } t_thing;
 
 void draw_things(t_map *m, t_thing *t, t_cam *c, int count);
