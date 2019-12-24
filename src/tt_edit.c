@@ -60,9 +60,10 @@ ALLEGRO_BITMAP *item_sheet = NULL;
 ALLEGRO_BITMAP *bg = NULL;
 ALLEGRO_BITMAP *stat_border = NULL;
 
-//Bitmaps for enemeis
+//Bitmaps for enemies
 ALLEGRO_BITMAP *b_enemy_spikes = NULL;
-
+ALLEGRO_BITMAP *b_orlo = NULL;
+ALLEGRO_BITMAP *b_orlo_frame_0 = NULL;
 //ALLEGRO_BITMAP *player_start = NULL;
 
 //Bitmaps that get drawn to
@@ -187,7 +188,6 @@ int init_game()
       jlog("Couldn't load status_border.png!");
       return -1;
    }
-   al_lock_bitmap(stat_border, al_get_bitmap_format(stat_border), ALLEGRO_LOCK_READONLY);
 
    bg = al_load_bitmap("data/bg_1.png");
    if (bg == NULL)
@@ -195,7 +195,6 @@ int init_game()
       jlog("Couldn't load bg1.png!");
       return -1;
    }
-   al_lock_bitmap(bg, al_get_bitmap_format(bg), ALLEGRO_LOCK_READONLY);
 
    tile_sheet = al_load_bitmap("data/tile_sheet.png");
    if (tile_sheet == NULL)
@@ -204,7 +203,6 @@ int init_game()
       return -1;
    }
    jlog("tile_sheet.png loaded.");
-   al_lock_bitmap(tile_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
 
    item_sheet = al_load_bitmap("data/item_sheet.png");
    if (tile_sheet == NULL)
@@ -213,15 +211,15 @@ int init_game()
       return -1;
    }
    jlog("item_sheet.png loaded.");
-   al_lock_bitmap(item_sheet, al_get_bitmap_format(tile_sheet), ALLEGRO_LOCK_READONLY);
 
    //Load enemy graphics (Skipping error checking)
    b_enemy_spikes = al_load_bitmap("data/spikes.png");
+   b_orlo = al_load_bitmap("data/orlo.png");
+   b_orlo_frame_0 = al_create_sub_bitmap(b_orlo, 0, 0, 32, 32);
 
 
    player.bitmap = al_load_bitmap("data/player.png");
    if (player.bitmap == NULL) { jlog("Couldn't load player.png"); return -1; }
-   al_lock_bitmap(player.bitmap, al_get_bitmap_format(player.bitmap), ALLEGRO_LOCK_READONLY);
    for (int j = 0; j < 8; j++)
    {
       player.frame[j] = al_create_sub_bitmap(player.bitmap, j * 32, 0, 32, 32);
@@ -230,8 +228,7 @@ int init_game()
          jlog("Couldn't create sub-bitmap from player bitmap!");
          return -1;
       }
-      al_lock_bitmap(player.frame[j], al_get_bitmap_format(player.frame[j]), ALLEGRO_LOCK_READONLY);
-      jlog("Player frame %d created and locked.", j);
+      jlog("Player frame %d created.", j);
    }
 
    player.cur_frame = 1;
@@ -455,6 +452,9 @@ void update_screen()
       case ENEMY_SPIKES:
          al_draw_bitmap(b_enemy_spikes, 226, 116, 0);
          break;
+      case THING_ORLO:
+         al_draw_bitmap_region(b_orlo, 0, 0, 32, 32, 226, 116, 0);
+         break;
          
       default:
          break;
@@ -509,7 +509,13 @@ void check_map_for_things()
             thing[map->num_things -1].frame[0] = b_enemy_spikes;
             thing[map->num_things -1].bb_height = 16;
             thing[map->num_things -1].bb_width = 16;
-
+         }
+         if (map->position[x + y * MAP_WIDTH].thing == THING_ORLO)
+         {
+            thing[map->num_things -1].frame[0] = b_orlo_frame_0;
+            
+            thing[map->num_things -1].bb_height = 32;
+            thing[map->num_things -1].bb_width = 32;
          }
       }
    }
@@ -858,6 +864,12 @@ void check_key_up(ALLEGRO_EVENT *ev)
       case ALLEGRO_KEY_R:
          key[KEY_R] = false;
          break;
+      case ALLEGRO_KEY_V:   //Increase selected thing
+         thing_selected++;
+         break;
+      case ALLEGRO_KEY_C:   //Decrease selected thing
+         thing_selected--;
+         break;
       case ALLEGRO_KEY_Q:
          key[KEY_Q] = false;
          al_set_system_mouse_cursor(display, ALLEGRO_SYSTEM_MOUSE_CURSOR_PRECISION);
@@ -1002,15 +1014,6 @@ void check_map_naming(ALLEGRO_EVENT *ev)
 void clean_up()
 {
    destroy_map(map);
-   al_unlock_bitmap(tile_sheet);
-   al_unlock_bitmap(item_sheet);
-   al_unlock_bitmap(bg);
-   al_unlock_bitmap(stat_border);
-   al_unlock_bitmap(player.bitmap);
-   for (int j = 0; j < 7; j++)
-   {
-      al_unlock_bitmap(player.frame[j]);
-   }
 
    if(event_queue) {
       al_destroy_event_queue(event_queue);

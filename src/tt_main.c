@@ -581,17 +581,16 @@ void update_screen()
 {
    draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
 
-   
-   draw_things(map, thing, &cam, map->num_things);
-
    if (player.x + 32 > 0 && player.y + 32 > 0 && player.x < MAP_WIDTH * TILE_SIZE && player.y < MAP_HEIGHT * TILE_SIZE)   
       if (player.draw) draw_player(view_port, &cam, &player, player.direction);
+
 
    if (player.direction == RIGHT && player.muzzle_time) 
    {
       draw_laser();
       al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
    }
+
    if (player.direction == LEFT && player.muzzle_time) 
    {
        draw_laser();
@@ -602,7 +601,9 @@ void update_screen()
       al_draw_bitmap_region(bullet_particle, (player.muzzle_time * 2) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
       //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
    }
-      
+   
+   draw_things(map, thing, &cam, map->num_things);
+
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
    
    //Draw view_port to game, then draw game scaled to display.
@@ -902,7 +903,7 @@ void update_player()
       jerkiness of the process.*/
    if (player.y + 31 < MAP_HEIGHT * TILE_SIZE)
    {
-      if (player.y + 16 > 0)
+      if (player.y + 32 > 0)
       {
          if (is_ground(map, player.x + x1, player.y + 2, &player )) player.x = old_x; //top
          if (is_ground(map, player.x + x2, player.y + 2, &player )) player.x = old_x;

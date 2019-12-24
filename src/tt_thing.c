@@ -42,6 +42,7 @@ void clear_things(t_thing *t)
     }
 }
 
+//Loads things into the game (NOT THE EDITOR)
 void load_things(t_thing *t, t_map *m)
 {
     clear_things(t);
@@ -67,6 +68,22 @@ void load_things(t_thing *t, t_map *m)
                 t[m->num_things -1].bb_top = 0;
                 t[m->num_things -1].bb_left = 0;
             }
+
+            if (m->position[x + y * MAP_WIDTH].thing == THING_ORLO)
+            {
+                t[m->num_things -1].bitmap = al_load_bitmap("data/orlo.png");
+                for (int i =0; i < 5; i++)
+                {
+                    t[m->num_things -1].frame[i] = al_create_sub_bitmap(t[m->num_things -1].bitmap, i * 32, 0, 32, 32);
+                }
+                
+                t[m->num_things -1].type = THING_ORLO;
+                t[m->num_things -1].bb_height = 32;
+                t[m->num_things -1].bb_width = 32;
+                t[m->num_things -1].bb_top = 0;
+                t[m->num_things -1].bb_left = 0;
+            }
+            
         }
     }
 }
