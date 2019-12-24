@@ -33,9 +33,9 @@ typedef struct t_game
 
 typedef struct t_cam
 {
-   float x;
-   float y;
-   float look_ahead;
+   int x;
+   int y;
+   int look_ahead;
 } t_cam;
 
 typedef struct t_screen

@@ -1171,7 +1171,7 @@ void update_player()
    //Collisions against things
    for (int i = 0; i < map->num_things; i++)
    {
-      if (check_collision(player.x + player.bb_left, player.y + player.bb_top, player.bb_width, player.bb_height, thing[i].x + thing[i].bb_left, thing[i].y + thing[i].bb_top, thing[i].bb_width, thing[i].bb_height))
+      if (collision_check(&player, &thing[i]))
       {
          if (!player.hurt && thing[i].type < 10 && player.health) //If thing can hurt player (The first 10 types can)
          {
@@ -1290,13 +1290,14 @@ void reset_out_of_view_things()
 {
    for (int i = 0; i < map->num_things; i++)
    {
-      if (thing[i].x > cam.x + VIEWPORT_WIDTH || thing[i].y > cam.y + MAP_HEIGHT || thing[i].x + thing[i].width < cam.x || thing[i].y + thing[i].height < cam.y)
+      if (thing[i].type == THING_ORLO)
       {
-         if (thing[i].type == THING_ORLO)
-         {
-            thing[i].touched = false; //Reset greeting ability
+         if (thing[i].x > cam.x + VIEWPORT_WIDTH || thing[i].y > cam.y + VIEWPORT_HEIGHT || thing[i].x + thing[i].width < cam.x || thing[i].y + thing[i].height < cam.y)
+         {   
+           thing[i].touched = false; //Reset greeting ability
          }
       }
+      
    }
 }
 
