@@ -253,7 +253,8 @@ int init_game()
    //adl_setTempo(midi_player, 1.0);
    adl_setLoopEnabled(midi_player, 1);
    adl_switchEmulator(midi_player, ADLMIDI_EMU_DOSBOX);
-   if (adl_openFile(midi_player, "data/music/tally3.imf") < 0)
+   adl_openBankFile(midi_player, "data/gm.wopl");
+   if (adl_openFile(midi_player, "data/music/opl2.mid") < 0)
    {
       jlog("Couldn't open music file: %s", adl_errorInfo(midi_player));
       adl_close(midi_player);
@@ -277,7 +278,7 @@ int init_game()
 
    game.level = LEVEL_1;
    /* game.music = MUSIC_1; */
-   al_set_mixer_gain(al_get_default_mixer(), 0.5); //Turn down the volume during development
+   al_set_mixer_gain(al_get_default_mixer(), 1.0f); //Turn down the volume during development
    al_set_audio_stream_gain(music_stream, 2.0f);
    al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
    al_set_audio_stream_playing(music_stream, false);
@@ -833,11 +834,9 @@ bool check_bullet_collision()
  ************************************************/
 void update_player()
 {
-   /* Special thanks to Johan Pietz, here. I borrowed
-   from his code in Alex 4 a little. It's not copy
-   and pasted, though! (Although, if you understand
-   what it does, I guess it doesn't hurt every now
-   and then.) */
+   /* NOTE: Special thanks to Johan Pietz, here. This part is
+   very similar to the player code in Alex the Allegator 4. */
+
    int old_x = player.x;
    int x1, x2, x3;
    int tx, ty, ty2, ty3;
