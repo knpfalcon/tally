@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <adlmidi.h>
-#include <pthread.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_audio.h>
@@ -58,6 +57,16 @@ unsigned char item_frame = 0;
 unsigned char item_afterfx_frame = 0;
 
 bool key[16] = { false };
+
+#define ORLO_BUFFER_SIZE 32 
+
+typedef struct
+{
+   int x;
+   int y;
+} t_orlo;
+
+t_orlo orlo_position_buffer[ORLO_BUFFER_SIZE] = { 0 };
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -1168,6 +1177,7 @@ void update_player()
       }
    }
 
+
    //Collisions against things
    for (int i = 0; i < map->num_things; i++)
    {
@@ -1297,7 +1307,27 @@ void reset_out_of_view_things()
            thing[i].touched = false; //Reset greeting ability
          }
       }
-      
+   }
+}
+
+void update_orlo()
+{
+   static int orlo_buffer_pos = 8; 
+   static int orlo_pos_delay = 0;
+   orlo_position_buffer[orlo_buffer_pos].x = player.x;
+   orlo_position_buffer[orlo_buffer_pos].y = player.y;
+   if (orlo_buffer_pos < ORLO_BUFFER_SIZE) orlo_buffer_pos ++;
+   if (orlo_pos_delay < ORLO_BUFFER_SIZE) orlo_pos_delay++;
+   if (orlo_buffer_pos >= ORLO_BUFFER_SIZE) orlo_buffer_pos = 0;
+   if (orlo_pos_delay >= ORLO_BUFFER_SIZE) orlo_pos_delay = 0;
+   //I may make Orlo his own entity instead of placing him as a thing. But for now this is how it is.
+   for (int i = 0; i < map->num_things; i++)
+   {
+      if (thing[i].type == THING_ORLO)
+      {
+         thing[i].x = orlo_position_buffer[orlo_pos_delay].x;
+         thing[i].y = orlo_position_buffer[orlo_pos_delay].y;
+      }
    }
 }
 
@@ -1318,10 +1348,6 @@ void clean_up()
    al_destroy_audio_stream(music_stream);
    music_stream = NULL;
    if (music_stream == NULL)
-   {
-      jlog("music_stream destroyed.");
-   }
-
    adl_close(midi_player);
    midi_player = NULL;
    if (midi_player == NULL)
@@ -1505,6 +1531,7 @@ int main(int argc, char **argv)
          ++ticks;
          if (ticks == 1)
          {
+            update_orlo();
             check_timer_logic();
          }
          

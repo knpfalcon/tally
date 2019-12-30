@@ -32,7 +32,7 @@ bool is_ground(t_map *m, int x, int y, t_player *p)
 /*************************************************
  * Basic Bounding Box collision detection        *
  *************************************************/
-bool check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
+bool check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2) //Scope for this function is limited to this module
 {
 
 
@@ -44,6 +44,7 @@ bool check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int
 
 bool collision_check(void *a, void *b)
 {
+   //Cast a and b as t_things. This works if you put a t_player type, becasue the first part of the structs are the same.
    if (check_collision( ((t_thing*)a)->x + ((t_thing*)a)->bb_left, ((t_thing*)a)->y + ((t_thing*)a)->bb_top, ((t_thing*)a)->bb_width, ((t_thing*)a)->bb_height, ((t_thing*)b)->x + ((t_thing*)b)->bb_left, ((t_thing*)b)->y + ((t_thing*)b)->bb_top, ((t_thing*)b)->bb_width, ((t_thing*)b)->bb_height))
    return true;
    

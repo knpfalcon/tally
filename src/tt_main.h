@@ -1,6 +1,7 @@
 #ifndef TT_MAIN_H
 #define TT_MAIN_H
 
+#include <stdbool.h>
 #include "jt_util.h"
 
 #define VIEWPORT_WIDTH 208

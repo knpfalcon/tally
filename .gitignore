@@ -4,6 +4,7 @@
 *.log
 *.json
 *.o
+*.swp
 tally
 tedit
 
