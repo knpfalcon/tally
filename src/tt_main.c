@@ -1315,47 +1315,47 @@ void reset_out_of_view_things()
 
 void update_orlo()
 {
-   static int orlo_buffer_pos = 8; 
-   static int orlo_pos_delay = 0;
-   orlo_position_buffer[orlo_buffer_pos].x = player.x;
-   orlo_position_buffer[orlo_buffer_pos].y = player.y;
-   orlo_position_buffer[orlo_buffer_pos].direction = player.direction;
-   orlo_position_buffer[orlo_buffer_pos].cur_frame = player.cur_frame;
+   static int player_put_buffer_pos = 8; 
+   static int orlo_read_buffer_pos = 0;
+   orlo_position_buffer[player_put_buffer_pos].x = player.x;
+   orlo_position_buffer[player_put_buffer_pos].y = player.y;
+   orlo_position_buffer[player_put_buffer_pos].direction = player.direction;
+   orlo_position_buffer[player_put_buffer_pos].cur_frame = player.cur_frame;
    if (player.state == STOPPED && player.direction == RIGHT)
    {
-      if ( is_ground(map, player.x + 20, player.y + 32) &&
-          !is_ground(map, player.x + 20, player.y + 2)  &&
-          !is_ground(map, player.x + 20, player.y + 16) &&
-          !is_ground(map, player.x + 20, player.y + 31)   )
+      if (  is_ground(map, player.x + 20, player.y + 32)    &&
+            !is_ground(map, player.x + 20, player.y + 2)    &&
+            !is_ground(map, player.x + 20, player.y + 16)   &&
+            !is_ground(map, player.x + 20, player.y + 31)      )
       {
-         orlo_position_buffer[orlo_buffer_pos].x += 6; 
+         orlo_position_buffer[player_put_buffer_pos].x += 6; 
       }
    }
 
    if (player.state == STOPPED && player.direction == LEFT)
    {
-      if ( is_ground(map, player.x + 10, player.y + 32) &&
-          !is_ground(map, player.x + 10, player.y + 2)  &&
-          !is_ground(map, player.x + 10, player.y + 16) &&
-          !is_ground(map, player.x + 10, player.y + 31)   )
+      if (  is_ground(map, player.x + 10, player.y + 32)    &&
+            !is_ground(map, player.x + 10, player.y + 2)    &&
+            !is_ground(map, player.x + 10, player.y + 16)   &&
+            !is_ground(map, player.x + 10, player.y + 31)      )
       {
-         orlo_position_buffer[orlo_buffer_pos].x -= 6; 
+         orlo_position_buffer[player_put_buffer_pos].x -= 6; 
       }
        
    } 
-   if (orlo_buffer_pos < ORLO_BUFFER_SIZE) orlo_buffer_pos ++;
-   if (orlo_pos_delay < ORLO_BUFFER_SIZE) orlo_pos_delay++;
-   if (orlo_buffer_pos >= ORLO_BUFFER_SIZE) orlo_buffer_pos = 0;
-   if (orlo_pos_delay >= ORLO_BUFFER_SIZE) orlo_pos_delay = 0;
+   if (player_put_buffer_pos < ORLO_BUFFER_SIZE) player_put_buffer_pos ++;
+   if (orlo_read_buffer_pos < ORLO_BUFFER_SIZE) orlo_read_buffer_pos++;
+   if (player_put_buffer_pos >= ORLO_BUFFER_SIZE) player_put_buffer_pos = 0;
+   if (orlo_read_buffer_pos >= ORLO_BUFFER_SIZE) orlo_read_buffer_pos = 0;
    //I may make Orlo his own entity instead of placing him as a thing. But for now this is how it is.
    for (int i = 0; i < map->num_things; i++)
    {
       if (thing[i].type == THING_ORLO)
       {
-         thing[i].x = orlo_position_buffer[orlo_pos_delay].x;
-         thing[i].y = orlo_position_buffer[orlo_pos_delay].y;
-         thing[i].direction = orlo_position_buffer[orlo_pos_delay].direction;
-         thing[i].cur_frame = orlo_position_buffer[orlo_pos_delay].cur_frame;
+         thing[i].x = orlo_position_buffer[orlo_read_buffer_pos].x;
+         thing[i].y = orlo_position_buffer[orlo_read_buffer_pos].y;
+         thing[i].direction = orlo_position_buffer[orlo_read_buffer_pos].direction;
+         thing[i].cur_frame = orlo_position_buffer[orlo_read_buffer_pos].cur_frame;
       }
    }
 }
