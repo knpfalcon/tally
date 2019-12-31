@@ -15,7 +15,10 @@ void draw_things(t_map *m, t_thing *t, t_cam *c, int count)
              t[i].y > c->y - t[i].height &&
              t[i].y < c->y + VIEWPORT_HEIGHT)
             {
-                al_draw_bitmap(t[i].frame[t[i].cur_frame], t[i].x - c->x, t[i].y - c->y, 0);
+               if (t[i].direction == RIGHT)
+                   al_draw_bitmap(t[i].frame[t[i].cur_frame], t[i].x - c->x, t[i].y - c->y, 0);
+               if (t[i].direction == LEFT)
+                   al_draw_bitmap(t[i].frame[t[i].cur_frame], t[i].x - c->x, t[i].y - c->y, ALLEGRO_FLIP_HORIZONTAL);
             }
         }
     }
@@ -75,7 +78,7 @@ void load_things(t_thing *t, t_map *m)
             if (m->position[x + y * MAP_WIDTH].thing == THING_ORLO)
             {
                 t[m->num_things -1].bitmap = al_load_bitmap("data/orlo.png");
-                for (int i =0; i < 5; i++)
+                for (int i =0; i < 8; i++)
                 {
                     t[m->num_things -1].frame[i] = al_create_sub_bitmap(t[m->num_things -1].bitmap, i * 32, 0, 32, 32);
                 }

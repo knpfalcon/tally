@@ -64,6 +64,9 @@ typedef struct
 {
    int x;
    int y;
+   unsigned char state;
+   unsigned char direction;
+   unsigned char cur_frame;
 } t_orlo;
 
 t_orlo orlo_position_buffer[ORLO_BUFFER_SIZE] = { 0 };
@@ -349,7 +352,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
    //Display loading image
    al_draw_scaled_bitmap(loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
    al_flip_display();
-
+   //al_rest(3);  //Enable this when screen recording for time to hit the record button!
    //Load map
    map = load_map(map_file); //Create an empty map
    if (map == NULL)
@@ -791,7 +794,7 @@ bool check_bullet_collision()
       player_bullet.start_y = player.y + 18;
       for (int x = player_bullet.start_x; x < cam.x + VIEWPORT_WIDTH + 16; x++)
       {
-         if (is_ground(map, x, player_bullet.start_y, &player))
+         if (is_ground(map, x, player_bullet.start_y))
          {
             player_bullet.end_x = x;
             player_bullet.end_y = player_bullet.start_y;
@@ -808,7 +811,7 @@ bool check_bullet_collision()
       player_bullet.start_y = player.y + 18;
       for (int x = player_bullet.start_x; x > cam.x - 16; x--)
       {
-         if (is_ground(map, x, player_bullet.start_y, &player))
+         if (is_ground(map, x, player_bullet.start_y))
          {
             player_bullet.end_x = x;
             player_bullet.end_y = player_bullet.start_y;
@@ -915,14 +918,14 @@ void update_player()
    {
       if (player.y + 32 > 0)
       {
-         if (is_ground(map, player.x + x1, player.y + 2, &player )) player.x = old_x; //top
-         if (is_ground(map, player.x + x2, player.y + 2, &player )) player.x = old_x;
+         if (is_ground(map, player.x + x1, player.y + 2 )) player.x = old_x; //top
+         if (is_ground(map, player.x + x2, player.y + 2 )) player.x = old_x;
 
-         if (is_ground(map, player.x + x1, player.y + 16, &player )) player.x = old_x; //center
-         if (is_ground(map, player.x + x2, player.y + 16, &player )) player.x = old_x;
+         if (is_ground(map, player.x + x1, player.y + 16 )) player.x = old_x; //center
+         if (is_ground(map, player.x + x2, player.y + 16 )) player.x = old_x;
 
-         if (is_ground(map, player.x + x1, player.y + 31, &player )) player.x = old_x; //bottom
-         if (is_ground(map, player.x + x2, player.y + 31, &player )) player.x = old_x;
+         if (is_ground(map, player.x + x1, player.y + 31 )) player.x = old_x; //bottom
+         if (is_ground(map, player.x + x2, player.y + 31 )) player.x = old_x;
       }
    }
    /* Vertical movement
@@ -930,7 +933,7 @@ void update_player()
       if there's not a solid tile, it adds 4 to
       the Y velocity. Otherwise the player is standing
       on a solid tile. */
-   if ( (!is_ground(map, player.x + x1, player.y + 32, &player) && !is_ground(map, player.x +x2, player.y + 32, &player)) )
+   if ( (!is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x2, player.y + 32)) )
    {
       player.vel_y += 4;
       player.on_ground = false;
@@ -948,7 +951,7 @@ void update_player()
 
    if (landed == true)
    {
-      if (is_ground(map, player.x + x1, player.y + 32, &player))
+      if (is_ground(map, player.x + x1, player.y + 32))
       {
          landed = false;
          play_sound(snd_land, false);
@@ -959,7 +962,7 @@ void update_player()
    when a player falls off edge. Working so far.
    also detects if player barely lands on ledge
    and helps them out a little. */
-   if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32, &player) && !is_ground(map, player.x +x3, player.y + 32, &player) && !key[KEY_Z] && player.y + 31 > 0)
+   if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && !key[KEY_Z] && player.y + 31 > 0)
    {
       //Play fall off ledge sound
       player.state = FALLING;
@@ -968,14 +971,14 @@ void update_player()
       player.vel_y += 24;
       play_sound(snd_fall, false);
    }
-   else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32, &player) && !is_ground(map, player.x +x3, player.y + 32, &player) && key[KEY_Z] && player.y + 31 > 0)
+   else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && key[KEY_Z] && player.y + 31 > 0)
    {
       //Play fall off ledge sound
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
       //player.vel_y = -24;
    }
-   else if(player.on_ground == true && is_ground(map, player.x + x1, player.y + 32, &player) && !is_ground(map, player.x +x3, player.y + 32, &player) && player.y + 31 > 0)
+   else if(player.on_ground == true && is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && player.y + 31 > 0)
    {
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
@@ -990,9 +993,9 @@ void update_player()
       simulating gravity. */
       if (key[KEY_Z] && player.on_ground && !player.jump_pressed)
       {
-         if (player.y + 1 > 0 && !is_ground(map, player.x + x1, player.y-1, &player) && !is_ground(map, player.x + x2, player.y-1, &player))
+         if (player.y + 1 > 0 && !is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
          {
-            if (!is_ground(map, player.x + x1, player.y-1, &player) && !is_ground(map, player.x + x2, player.y-1, &player) && player.y + 31 > 0)
+            if (!is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1) && player.y + 31 > 0)
             {
                play_sound(snd_jump, false);
             }
@@ -1000,9 +1003,9 @@ void update_player()
             player.jump_pressed = true;
             player.on_ground = false;
          }
-         else if (player.y + 1 < 0 && is_ground(map, player.x + x1, player.y-1, &player) && is_ground(map, player.x + x2, player.y-1, &player))
+         else if (player.y + 1 < 0 && is_ground(map, player.x + x1, player.y-1) && is_ground(map, player.x + x2, player.y-1))
          {
-            if (is_ground(map, player.x + x1, player.y-1, &player) && is_ground(map, player.x + x2, player.y-1, &player) && player.y + 31 > 0)
+            if (is_ground(map, player.x + x1, player.y-1) && is_ground(map, player.x + x2, player.y-1) && player.y + 31 > 0)
             {
                play_sound(snd_jump, false);
             }
@@ -1033,12 +1036,12 @@ void update_player()
       here, we don't actually see what is happening. */
    if (player.y + 31 < MAP_HEIGHT * TILE_SIZE)
    {
-      while (is_ground(map, player.x + x1, player.y + 31, &player) && player.y + 31 > 0)
+      while (is_ground(map, player.x + x1, player.y + 31) && player.y + 31 > 0)
       {
          player.y--;
          player.on_ground = true;
       }
-      while (is_ground(map, player.x + x2, player.y + 31, &player) && player.y + 31 > 0)
+      while (is_ground(map, player.x + x2, player.y + 31) && player.y + 31 > 0)
       {
          player.y--;
          player.on_ground = true;
@@ -1049,7 +1052,7 @@ void update_player()
       Same as above except at the players top. */
    if (player.y > 0)
    {
-      while (is_ground(map, player.x + x1, player.y, &player))
+      while (is_ground(map, player.x + x1, player.y))
       {
          player.y++;
          player.vel_y = 0;
@@ -1060,7 +1063,7 @@ void update_player()
          player.state = FALLING;
 
       }
-      while (is_ground(map, player.x + x2, player.y, &player))
+      while (is_ground(map, player.x + x2, player.y))
       {
          player.y++;
          player.vel_y = 0;
@@ -1316,6 +1319,30 @@ void update_orlo()
    static int orlo_pos_delay = 0;
    orlo_position_buffer[orlo_buffer_pos].x = player.x;
    orlo_position_buffer[orlo_buffer_pos].y = player.y;
+   orlo_position_buffer[orlo_buffer_pos].direction = player.direction;
+   orlo_position_buffer[orlo_buffer_pos].cur_frame = player.cur_frame;
+   if (player.state == STOPPED && player.direction == RIGHT)
+   {
+      if ( is_ground(map, player.x + 20, player.y + 32) &&
+          !is_ground(map, player.x + 20, player.y + 2)  &&
+          !is_ground(map, player.x + 20, player.y + 16) &&
+          !is_ground(map, player.x + 20, player.y + 31)   )
+      {
+         orlo_position_buffer[orlo_buffer_pos].x += 6; 
+      }
+   }
+
+   if (player.state == STOPPED && player.direction == LEFT)
+   {
+      if ( is_ground(map, player.x + 10, player.y + 32) &&
+          !is_ground(map, player.x + 10, player.y + 2)  &&
+          !is_ground(map, player.x + 10, player.y + 16) &&
+          !is_ground(map, player.x + 10, player.y + 31)   )
+      {
+         orlo_position_buffer[orlo_buffer_pos].x -= 6; 
+      }
+       
+   } 
    if (orlo_buffer_pos < ORLO_BUFFER_SIZE) orlo_buffer_pos ++;
    if (orlo_pos_delay < ORLO_BUFFER_SIZE) orlo_pos_delay++;
    if (orlo_buffer_pos >= ORLO_BUFFER_SIZE) orlo_buffer_pos = 0;
@@ -1327,6 +1354,8 @@ void update_orlo()
       {
          thing[i].x = orlo_position_buffer[orlo_pos_delay].x;
          thing[i].y = orlo_position_buffer[orlo_pos_delay].y;
+         thing[i].direction = orlo_position_buffer[orlo_pos_delay].direction;
+         thing[i].cur_frame = orlo_position_buffer[orlo_pos_delay].cur_frame;
       }
    }
 }

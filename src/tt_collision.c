@@ -12,7 +12,7 @@
    solid. All tiles at indexes 128 through 255
    on the tile sheet are background tiles and
    are not solid. */
-bool is_ground(t_map *m, int x, int y, t_player *p)
+bool is_ground(t_map *m, int x, int y)
 {
    if (y < 0 || y + 1> MAP_HEIGHT * TILE_SIZE) return false;
    else
