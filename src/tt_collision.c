@@ -2,7 +2,6 @@
 #include <stdbool.h>
 
 #include "tt_collision.h"
-#include <allegro5/allegro_primitives.h>
 
 /*************************************************
  * Checks for a solid tile at X/Y                *

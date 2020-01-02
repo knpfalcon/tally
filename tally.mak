@@ -7,8 +7,8 @@ LIBDIR = -L/usr/lib/i386-linux-gnu -L/usr/local/lib/
 
 ALLEGRO_LIBS = allegro-5 allegro_acodec-5 allegro_image-5 \
 allegro_audio-5 allegro_color-5 allegro_dialog-5 allegro_font-5 \
-allegro_main-5 allegro_memfile-5 allegro_physfs-5 allegro_primitives-5 \
-allegro_ttf-5 allegro_video-5
+allegro_main-5 allegro_memfile-5 allegro_physfs-5 \
+allegro_ttf-5
 
 ALLEGRO_FLAGS = $(shell pkg-config --cflags --libs $(ALLEGRO_LIBS)) -lm -lphysfs -l:libADLMIDI.a -lstdc++
 

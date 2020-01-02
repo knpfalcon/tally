@@ -9,7 +9,6 @@
 #include <allegro5/allegro_acodec.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
-#include <allegro5/allegro_primitives.h>
 
 #include "tt_main.h"
 #include "tt_thing.h"
@@ -228,12 +227,12 @@ int init_game()
    jlog("Fonts add-on installed.");
 
    //Primitives
-   if (!al_init_primitives_addon())
+  /*  if (!al_init_primitives_addon())
    {
       jlog("Failed to install primitives addon!");
       return -1;
    }
-   jlog("Primitives add-on initialized.");
+   jlog("Primitives add-on initialized."); */
 
    //Audio
    if (!al_install_audio())
