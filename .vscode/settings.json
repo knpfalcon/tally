@@ -1,0 +1,25 @@
+{
+    "files.associations": {
+        "allegro_font.h": "c",
+        "string.h": "c",
+        "allegro_native_dialog.h": "c",
+        "gtk.h": "c",
+        "gdk.h": "c",
+        "allegro_audio.h": "c",
+        "allegro_acodec.h": "c",
+        "adlmidi.h": "c",
+        "tt_player.h": "c",
+        "tt_enemy.h": "c",
+        "tt_map.h": "c",
+        "tt_bullet.h": "c",
+        "jt_util.h": "c",
+        "map": "c",
+        "stdio.h": "c",
+        "tt_main.h": "c",
+        "tt_thing.h": "c",
+        "tt_collision.h": "c",
+        "tt_items.h": "c",
+        "allegro_primitives.h": "c",
+        "adlmidi.hpp": "c"
+    }
+}

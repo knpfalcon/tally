@@ -2,7 +2,6 @@
 *.depend
 *.layout
 *.log
-*.json
 *.o
 *.swp
 tally
