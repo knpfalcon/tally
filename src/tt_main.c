@@ -1441,8 +1441,8 @@ void update_screen()
    {
       al_draw_bitmap_region(item_fx_sheet, 96, item_frame * 16, 16, 16, orlo.x + 8 - cam.x , orlo.y - orlo_gave_health_life_span - cam.y, 0);
    }
-   if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GET_HEALTH)  al_draw_textf(msg_font, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "%s", ORLO_TXT_GET_HEALTH);
-   if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GIVE_HEALTH) al_draw_textf(msg_font, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "%s", ORLO_TXT_GIVE_HEALTH);
+   if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GET_HEALTH)  al_draw_textf(msg_font, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "0R10: %s", ORLO_TXT_GET_HEALTH);
+   if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GIVE_HEALTH) al_draw_textf(msg_font, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "0R10: %s", ORLO_TXT_GIVE_HEALTH);
    
    //Draw view_port to game, then draw game scaled to display.
    al_set_target_bitmap(game_bmp);
