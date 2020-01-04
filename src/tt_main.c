@@ -50,6 +50,8 @@ t_map *map = NULL;
 t_player player = { .cur_frame = 0, .state = STOPPED, .vel_x = 4 };
 t_item_afterfx *item_fx = NULL;
 
+int screen_flash = -1;
+
 t_thing thing[MAX_THINGS];
 
 unsigned char item_frame = 0;
@@ -1162,6 +1164,7 @@ void update_player()
             play_sound(snd_hurt, false);
             player.hurt = PLAYER_HURT_TIME;
             if(player.health) player.health--;
+            screen_flash = 2;
          }
          if (thing[i].type == THING_ORLO)
          {
@@ -1187,6 +1190,8 @@ void update_player()
 
    if (player.shoot_time == 5) check_bullet_collision();
    if (player.shoot_time) player.shoot_time--;
+
+   if (screen_flash > -1) screen_flash--;
 }
 
 /*
@@ -1220,11 +1225,11 @@ void check_timer_logic()
    //Camera Look-ahead
    if (key[KEY_LEFT] && !key[KEY_RIGHT])
    {
-      if (cam.look_ahead > -24) cam.look_ahead -=1;
+      if (cam.look_ahead > -24) cam.look_ahead -=2;
    }
    if (key[KEY_RIGHT] && !key[KEY_LEFT])
    {
-      if (cam.look_ahead < 24) cam.look_ahead += 1;
+      if (cam.look_ahead < 24) cam.look_ahead += 2;
    }
 
    if (player.y >= (MAP_HEIGHT * TILE_SIZE) + 32)
@@ -1444,9 +1449,10 @@ void update_screen()
    if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GET_HEALTH)  al_draw_textf(msg_font, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "0R10: %s", ORLO_TXT_GET_HEALTH);
    if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GIVE_HEALTH) al_draw_textf(msg_font, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "0R10: %s", ORLO_TXT_GIVE_HEALTH);
    
+   if (screen_flash > 0) al_clear_to_color(al_map_rgb(170,0,0));
    //Draw view_port to game, then draw game scaled to display.
    al_set_target_bitmap(game_bmp);
-    
+   
    al_draw_bitmap(view_port, VIEWPORT_X, VIEWPORT_Y, 0);
    if (game.demo_mode == PLAY)
    {
