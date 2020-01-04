@@ -73,6 +73,13 @@ t_orlo_position_buffer orlo_position_buffer[ORLO_BUFFER_SIZE] = { 0 };
 t_thing orlo = { 0 };
 bool orlo_gave_health = false;
 int orlo_gave_health_life_span = 0;
+int orlo_message_lifetime = -1;
+int orlo_message_to_show = 0;
+#define MSG_NONE        0
+#define MSG_GET_HEALTH  1
+#define MSG_GIVE_HEALTH 2
+const char ORLO_TXT_GET_HEALTH[34] = "I acquired health for you, Tally!";
+const char ORLO_TXT_GIVE_HEALTH[21] = "Health administered.";
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -81,6 +88,7 @@ ALLEGRO_MOUSE_STATE mouse;
 
 ALLEGRO_FONT *font = NULL;
 ALLEGRO_FONT *fps_font = NULL;
+ALLEGRO_FONT *msg_font = NULL;
 
 //Bitmaps that get loaded from disk
 ALLEGRO_BITMAP *loading = NULL;
@@ -262,6 +270,7 @@ int init_game()
 
    //Load font
    font = al_load_bitmap_font("data/fonts/font.png");
+   msg_font = al_load_bitmap_font("data/fonts/pixfont.png");
    fps_font = al_load_font("data/hack.ttf", 12, 0);
 
    //ADLMIDI
@@ -1280,7 +1289,7 @@ void reset_out_of_view_things()
  */
 void update_orlo()
 {
-   const int fall_behind = 10;      //How many indecies behind is the read buffer? (Orlo has a delayed reaction when following Tally.)
+   const int fall_behind = 14;      //How many indecies behind is the read buffer? (Orlo has a delayed reaction when following Tally.)
    static int put_buffer_pos = 0;   //This is the index where we put the player x, y, direction, and animation frame, so Orlo can mimick it.
    static int read_buffer_pos = 0;  //This is the current index (set by fall_behind), of where Orlo reads from
 
@@ -1317,6 +1326,7 @@ void update_orlo()
    ty2 = (orlo.y + 31);
    ty3 = (orlo.y + 16);
    
+
    mp = get_map_position(map, tx, ty);
    mp2 = get_map_position(map, tx, ty2);
    mp3 = get_map_position(map, tx, ty3);
@@ -1331,6 +1341,8 @@ void update_orlo()
             orlo.state = ORLO_STATE_W_HEALTH;
             activate_item_fx(mp, item_fx);
             play_sound(snd_orlo_get_health, false);
+            orlo_message_lifetime = 32;
+            orlo_message_to_show = MSG_GET_HEALTH;
          }
          else if (mp2->item == ITEM_HEALTH && player.health == 8)
          {
@@ -1338,6 +1350,8 @@ void update_orlo()
             orlo.state = ORLO_STATE_W_HEALTH;
             activate_item_fx(mp2, item_fx);
             play_sound(snd_orlo_get_health, false);
+            orlo_message_lifetime = 32;
+            orlo_message_to_show = MSG_GET_HEALTH;
          }
          else if (mp3->item == ITEM_HEALTH && player.health == 8)
          {
@@ -1345,6 +1359,8 @@ void update_orlo()
             orlo.state = ORLO_STATE_W_HEALTH;
             activate_item_fx(mp3, item_fx);
             play_sound(snd_orlo_get_health, false);
+            orlo_message_lifetime = 32;
+            orlo_message_to_show = MSG_GET_HEALTH;
          } 
       }
 
@@ -1354,6 +1370,8 @@ void update_orlo()
       orlo.state = ORLO_STATE_NORMAL;
       player.health = 8;
       orlo_gave_health = true;
+      orlo_message_lifetime = 32;
+      orlo_message_to_show = MSG_GIVE_HEALTH;
    }
 
    if (orlo_gave_health)
@@ -1366,6 +1384,8 @@ void update_orlo()
          orlo_gave_health_life_span = 0;
       }
    }
+   if (orlo_message_lifetime > - 1) orlo_message_lifetime--;
+   if (orlo_message_lifetime == -1) orlo_message_to_show = MSG_NONE;
  
 }
 
@@ -1421,6 +1441,8 @@ void update_screen()
    {
       al_draw_bitmap_region(item_fx_sheet, 96, item_frame * 16, 16, 16, orlo.x + 8 - cam.x , orlo.y - orlo_gave_health_life_span - cam.y, 0);
    }
+   if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GET_HEALTH)  al_draw_textf(msg_font, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "%s", ORLO_TXT_GET_HEALTH);
+   if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GIVE_HEALTH) al_draw_textf(msg_font, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "%s", ORLO_TXT_GIVE_HEALTH);
    
    //Draw view_port to game, then draw game scaled to display.
    al_set_target_bitmap(game_bmp);
