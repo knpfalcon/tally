@@ -110,7 +110,8 @@ ALLEGRO_SAMPLE *snd_jump = NULL;
 ALLEGRO_SAMPLE *snd_land = NULL;
 ALLEGRO_SAMPLE *snd_hithead = NULL;
 ALLEGRO_SAMPLE *snd_shoot = NULL;
-ALLEGRO_SAMPLE *snd_friend = NULL;
+ALLEGRO_SAMPLE *snd_orlo_give_health = NULL;
+ALLEGRO_SAMPLE *snd_orlo_get_health = NULL;
 
 ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 
@@ -147,8 +148,8 @@ int init_game()
    }
    jlog("Image add-on initialized.");
    //al_set_new_display_adapter(1);
-   screen.width = 960;
-   screen.height = 600;
+   screen.width = 1920;
+   screen.height = 1080;
    //al_set_new_display_flags(ALLEGRO_NOFRAME);
    al_set_new_display_option(ALLEGRO_VSYNC, 1, ALLEGRO_SUGGEST);
    display = al_create_display(screen.width, screen.height);
@@ -268,7 +269,7 @@ int init_game()
    adl_setLoopEnabled(midi_player, 1);
    adl_switchEmulator(midi_player, ADLMIDI_EMU_DOSBOX);
    adl_openBankFile(midi_player, "data/gm.wopl");
-   if (adl_openFile(midi_player, "data/music/opl2.mid") < 0)
+   if (adl_openFile(midi_player, "data/music/dsong.mid") < 0)
    {
       jlog("Couldn't open music file: %s", adl_errorInfo(midi_player));
       adl_close(midi_player);
@@ -293,7 +294,7 @@ int init_game()
    game.level = LEVEL_1;
    /* game.music = MUSIC_1; */
    al_set_mixer_gain(al_get_default_mixer(), 1.0f); //Turn down the volume during development
-   al_set_audio_stream_gain(music_stream, 1.0f);
+   al_set_audio_stream_gain(music_stream, 1.5f);
    al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
    al_set_audio_stream_playing(music_stream, false);
    jlog("DEPTH: %d\n", al_get_mixer_depth(al_get_default_mixer()));
@@ -473,7 +474,8 @@ void check_cam() //Check to make sure camera is not out of bounds.
    snd_health = al_load_sample("data/sound/health.wav");
    snd_hurt = al_load_sample("data/sound/hurt.wav");
    snd_shoot = al_load_sample("data/sound/shoot.wav");
-   snd_friend = al_load_sample("data/sound/friend.wav");
+   snd_orlo_give_health = al_load_sample("data/sound/orlogivehealth.wav");
+   snd_orlo_get_health = al_load_sample("data/sound/orloacquiredhealth.wav");
 
    al_set_audio_stream_playing(music_stream, true);
 
@@ -1154,7 +1156,7 @@ void update_player()
          }
          if (thing[i].type == THING_ORLO)
          {
-            if (thing[i].touched == false) play_sound(snd_friend, false);
+            if (thing[i].touched == false) //play_sound(orlo_give_health, false);
             thing[i].touched = true;
          }
       }
@@ -1328,27 +1330,27 @@ void update_orlo()
             mp->item = 0;
             orlo.state = ORLO_STATE_W_HEALTH;
             activate_item_fx(mp, item_fx);
-            play_sound(snd_health, false);
+            play_sound(snd_orlo_get_health, false);
          }
          else if (mp2->item == ITEM_HEALTH && player.health == 8)
          {
             mp2->item = 0;
             orlo.state = ORLO_STATE_W_HEALTH;
             activate_item_fx(mp2, item_fx);
-            play_sound(snd_health, false);
+            play_sound(snd_orlo_get_health, false);
          }
          else if (mp3->item == ITEM_HEALTH && player.health == 8)
          {
             mp3->item = 0;
             orlo.state = ORLO_STATE_W_HEALTH;
             activate_item_fx(mp3, item_fx);
-            play_sound(snd_health, false);
+            play_sound(snd_orlo_get_health, false);
          } 
       }
 
-   if(player.health < 8 && collision_check(&player, &orlo) && key[KEY_UP])
+   if(player.health < 8 && collision_check(&player, &orlo) && key[KEY_UP] && orlo.state == ORLO_STATE_W_HEALTH)
    {
-      play_sound(snd_health, false);
+      play_sound(snd_orlo_give_health, false);
       orlo.state = ORLO_STATE_NORMAL;
       player.health = 8;
       orlo_gave_health = true;
