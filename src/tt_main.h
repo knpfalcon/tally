@@ -21,6 +21,9 @@
 #define MUSIC_0 "data/music/music0.ogg"
 #define MUSIC_1 "data/music/music1.ogg"
 
+#define ORLO_STATE_NORMAL 0
+#define ORLO_STATE_W_HEALTH 1
+
 typedef struct t_game
 {
    unsigned char state;
@@ -55,9 +58,5 @@ typedef struct t_screen
 enum STATE { QUIT, SPLASH, TITLE, MENU, LOAD_LEVEL, PLAY_LEVEL, QUIT_LEVEL };
 
 enum DEMO_MODE { NONE, PLAY, RECORD };
-
-enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_Z, KEY_LSHIFT, KEY_X, KEY_T, KEY_N, KEY_PAD_PLUS, KEY_PAD_MINUS, KEY_E, KEY_R, KEY_Q, KEY_F, KEY_G};
-
-extern bool key[16];
 
 #endif // SP_MAIN_H

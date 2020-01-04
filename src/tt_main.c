@@ -56,6 +56,7 @@ unsigned char item_frame = 0;
 unsigned char item_afterfx_frame = 0;
 
 bool key[16] = { false };
+enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_Z, KEY_LSHIFT, KEY_X, KEY_T, KEY_N, KEY_PAD_PLUS, KEY_PAD_MINUS, KEY_E, KEY_R, KEY_Q, KEY_F, KEY_G};
 
 #define ORLO_BUFFER_SIZE 32 
 
@@ -69,8 +70,9 @@ typedef struct
 } t_orlo_position_buffer;
 
 t_orlo_position_buffer orlo_position_buffer[ORLO_BUFFER_SIZE] = { 0 };
-
 t_thing orlo = { 0 };
+bool orlo_gave_health = false;
+int orlo_gave_health_life_span = 0;
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -370,6 +372,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
    orlo.bb_left = 9;
    orlo.width = 32;
    orlo.height = 32;
+   orlo.state = ORLO_STATE_NORMAL;
 
    //Set player stuff
    player.x = map->player_start_x;
@@ -1300,6 +1303,68 @@ void update_orlo()
    orlo.y = orlo_position_buffer[read_buffer_pos].y;
    orlo.direction = orlo_position_buffer[read_buffer_pos].direction;
    orlo.cur_frame = orlo_position_buffer[read_buffer_pos].cur_frame;
+
+   //Check if Orlo picks up health
+   //int x1, x2, x3;
+   int tx, ty, ty2, ty3;
+   t_map_pos *mp;
+   t_map_pos *mp2;
+   t_map_pos *mp3;
+   tx = orlo.x + (orlo.direction ? 14 : 18);
+   ty = (orlo.y + 1);
+   ty2 = (orlo.y + 31);
+   ty3 = (orlo.y + 16);
+   
+   mp = get_map_position(map, tx, ty);
+   mp2 = get_map_position(map, tx, ty2);
+   mp3 = get_map_position(map, tx, ty3);
+
+   if (mp != NULL && mp2 != NULL && mp3 != NULL)
+   {
+      if (orlo.state == ORLO_STATE_NORMAL)
+      {
+         if (mp->item == ITEM_HEALTH && player.health == 8)
+         {
+            mp->item = 0;
+            orlo.state = ORLO_STATE_W_HEALTH;
+            activate_item_fx(mp, item_fx);
+            play_sound(snd_health, false);
+         }
+         else if (mp2->item == ITEM_HEALTH && player.health == 8)
+         {
+            mp2->item = 0;
+            orlo.state = ORLO_STATE_W_HEALTH;
+            activate_item_fx(mp2, item_fx);
+            play_sound(snd_health, false);
+         }
+         else if (mp3->item == ITEM_HEALTH && player.health == 8)
+         {
+            mp3->item = 0;
+            orlo.state = ORLO_STATE_W_HEALTH;
+            activate_item_fx(mp3, item_fx);
+            play_sound(snd_health, false);
+         } 
+      }
+
+   if(player.health < 8 && collision_check(&player, &orlo) && key[KEY_UP])
+   {
+      play_sound(snd_health, false);
+      orlo.state = ORLO_STATE_NORMAL;
+      player.health = 8;
+      orlo_gave_health = true;
+   }
+
+   if (orlo_gave_health)
+      {
+         orlo_gave_health_life_span++;
+      }
+      if (orlo_gave_health_life_span == 32)
+      {
+         orlo_gave_health = false;
+         orlo_gave_health_life_span = 0;
+      }
+   }
+ 
 }
 
 void draw_orlo()
@@ -1310,9 +1375,11 @@ void draw_orlo()
       orlo.y < cam.y + VIEWPORT_HEIGHT)
    {
       if (orlo.direction == RIGHT)
-            al_draw_bitmap(orlo.frame[orlo.cur_frame], orlo.x - cam.x, orlo.y - cam.y, 0);
+            //al_draw_bitmap(orlo.frame[orlo.cur_frame], orlo.x - cam.x, orlo.y - cam.y, 0);
+            al_draw_bitmap_region(orlo.bitmap, orlo.width * orlo.cur_frame, orlo.state * orlo.height, orlo.width, orlo.height, orlo.x - cam.x, orlo.y - cam.y, 0);
       if (orlo.direction == LEFT)
-            al_draw_bitmap(orlo.frame[orlo.cur_frame], orlo.x - cam.x, orlo.y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
+            //al_draw_bitmap(orlo.frame[orlo.cur_frame], orlo.x - cam.x, orlo.y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
+            al_draw_bitmap_region(orlo.bitmap, orlo.width * orlo.cur_frame, orlo.state * orlo.height, orlo.width, orlo.height, orlo.x - cam.x, orlo.y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
    }
 }
 
@@ -1323,7 +1390,7 @@ void update_screen()
 {
    draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
    draw_things(map, thing, &cam, map->num_things);
-   draw_orlo();
+   if (!orlo_gave_health) draw_orlo();
 
    if (player.x + 32 > 0 && player.y + 32 > 0 && player.x < MAP_WIDTH * TILE_SIZE && player.y < MAP_HEIGHT * TILE_SIZE)   
       if (player.draw) draw_player(view_port, &cam, &player, player.direction);
@@ -1345,8 +1412,13 @@ void update_screen()
       al_draw_bitmap_region(bullet_particle, (player.muzzle_time * 2) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
       //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
    }
-   
+   if (orlo_gave_health) draw_orlo();
    draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
+   
+   if (orlo_gave_health)
+   {
+      al_draw_bitmap_region(item_fx_sheet, 96, item_frame * 16, 16, 16, orlo.x + 8 - cam.x , orlo.y - orlo_gave_health_life_span - cam.y, 0);
+   }
    
    //Draw view_port to game, then draw game scaled to display.
    al_set_target_bitmap(game_bmp);
