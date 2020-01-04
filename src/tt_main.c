@@ -78,7 +78,7 @@ int orlo_message_to_show = 0;
 #define MSG_NONE        0
 #define MSG_GET_HEALTH  1
 #define MSG_GIVE_HEALTH 2
-const char ORLO_TXT_GET_HEALTH[34] = "I acquired health for you, Tally!";
+const char ORLO_TXT_GET_HEALTH[34] = "I acquired health for you.";
 const char ORLO_TXT_GIVE_HEALTH[21] = "Health administered.";
 
 ALLEGRO_DISPLAY *display = NULL;
