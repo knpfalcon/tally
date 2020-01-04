@@ -27,8 +27,8 @@ int centiseconds = 0;
 
 #define BUFFER_SAMPLES 2048
 #define STREAM_FREQ 44100
-/* At some point I'll see if I can prune these globals,
-   but they're staying for now. */
+
+/* At some point I'll see if I can prune these globals, but they're staying for now. */
 int demo_file_pos = 0;
 
 FILE *demo_file = NULL;
@@ -66,9 +66,11 @@ typedef struct
    unsigned char state;
    unsigned char direction;
    unsigned char cur_frame;
-} t_orlo;
+} t_orlo_position_buffer;
 
-t_orlo orlo_position_buffer[ORLO_BUFFER_SIZE] = { 0 };
+t_orlo_position_buffer orlo_position_buffer[ORLO_BUFFER_SIZE] = { 0 };
+
+t_thing orlo = { 0 };
 
 ALLEGRO_DISPLAY *display = NULL;
 ALLEGRO_EVENT_QUEUE *event_queue = NULL;
@@ -117,9 +119,9 @@ short *opl_buffer = NULL;
 int samples_count = 0;
 
 
-/*************************************************
- * Initiate everything the game needs at startup *
- *************************************************/
+/*
+ * Initiate everything the game needs at startup 
+ */
 int init_game()
 {
    
@@ -261,8 +263,6 @@ int init_game()
 
    //ADLMIDI
    midi_player = adl_init(STREAM_FREQ);
-   //adl_setRunAtPcmRate(midi_player, 1);
-   //adl_setTempo(midi_player, 1.0);
    adl_setLoopEnabled(midi_player, 1);
    adl_switchEmulator(midi_player, ADLMIDI_EMU_DOSBOX);
    adl_openBankFile(midi_player, "data/gm.wopl");
@@ -343,9 +343,9 @@ void check_cam() //Check to make sure camera is not out of bounds.
    }
 }
 
-/*************************************************
- * Loads a level up at LOAD_LEVEL game state     *
- *************************************************/
+/*
+ * Loads a level up at LOAD_LEVEL game state
+ */
  bool load_level(char *map_file, char *music_file)
  {
    //Display loading image
@@ -360,6 +360,16 @@ void check_cam() //Check to make sure camera is not out of bounds.
       return false;
    }
    jlog("Map loaded.");
+
+   //Set Orlo stuff
+   orlo_position_buffer[0].x = player.x;
+   orlo_position_buffer[0].y = player.y;
+   orlo.bb_height = 32;
+   orlo.bb_width = 12;
+   orlo.bb_top = 0;
+   orlo.bb_left = 9;
+   orlo.width = 32;
+   orlo.height = 32;
 
    //Set player stuff
    player.x = map->player_start_x;
@@ -416,7 +426,20 @@ void check_cam() //Check to make sure camera is not out of bounds.
          jlog("Couldn't create sub-bitmap from player bitmap!");
          return false;
       }
-      jlog("Player frame %d created and locked.", j);
+      jlog("Player frame %d created.", j);
+   }
+
+   orlo.bitmap = al_load_bitmap("data/orlo.png");
+   if (orlo.bitmap == NULL) { jlog("Couldn't load orlo.png"); return -1; }
+   for (int i =0; i < 8; i++)
+   {
+      orlo.frame[i] = al_create_sub_bitmap(orlo.bitmap, i * 32, 0, 32, 32);
+      if (orlo.frame[i] == NULL)
+      {
+         jlog("Couldn't create sub-bitmap from orlo bitmap!");
+         return false;
+      }
+      jlog("Orlo frame %d created.", i);
    }
 
    item_fx_sheet = al_load_bitmap("data/item_score.png");
@@ -466,9 +489,9 @@ void check_cam() //Check to make sure camera is not out of bounds.
    return true; //Returns true on success
  }
 
-/*************************************************
- * Unloads a level                               *
- *************************************************/
+/*
+ * Unloads a level
+ */
 bool unload_level()
 {
    destroy_map(map);
@@ -556,18 +579,18 @@ bool unload_level()
 }
 
 
-/*************************************************
- * Plays a sound without all the boilerplate     *
- *************************************************/
+/*
+ * Plays a sound without all the boilerplate
+ */
 void play_sound(ALLEGRO_SAMPLE *s, bool interupt)
 {
    if (interupt) al_stop_samples();
    al_play_sample(s, sfx_volume, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
 }
 
-/************************************************
- * Draw laser                                   *
- ************************************************/
+/*
+ * Draw laser
+ */
 void draw_laser()
 {
    if (player.direction == RIGHT)
@@ -587,74 +610,9 @@ void draw_laser()
    }
 }
 
-/************************************************
- * The drawing function, called at redraw       *
- ************************************************/
-void update_screen()
-{
-   draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
-   draw_things(map, thing, &cam, map->num_things);
-
-   if (player.x + 32 > 0 && player.y + 32 > 0 && player.x < MAP_WIDTH * TILE_SIZE && player.y < MAP_HEIGHT * TILE_SIZE)   
-      if (player.draw) draw_player(view_port, &cam, &player, player.direction);
-
-
-   if (player.direction == RIGHT && player.muzzle_time) 
-   {
-      draw_laser();
-      al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
-   }
-
-   if (player.direction == LEFT && player.muzzle_time) 
-   {
-       draw_laser();
-      al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
-   }
-   if (player_bullet.draw)
-   {
-      al_draw_bitmap_region(bullet_particle, (player.muzzle_time * 2) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
-      //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
-   }
-   
-   draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
-   
-   //Draw view_port to game, then draw game scaled to display.
-   al_set_target_bitmap(game_bmp);
-    
-   al_draw_bitmap(view_port, VIEWPORT_X, VIEWPORT_Y, 0);
-   if (game.demo_mode == PLAY)
-   {
-      if (item_frame == 0) al_draw_textf(font, al_map_rgb(255,255,255), 269, 136, ALLEGRO_ALIGN_CENTER, "DEMO");
-      if (item_frame == 1) al_draw_textf(font, al_map_rgb(0,0,0), 269, 136, ALLEGRO_ALIGN_CENTER, "DEMO");
-      //al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%d", demo_file_pos);
-      
-   }
-   else if (game.demo_mode == RECORD)
-   {
-      if (item_frame == 0) al_draw_textf(font, al_map_rgb(255,255,255), 269, 136, ALLEGRO_ALIGN_CENTER, "RECORD");
-      if (item_frame == 1) al_draw_textf(font, al_map_rgb(0,0,0), 269, 136, ALLEGRO_ALIGN_CENTER, "RECORD");
-      //al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%d", demo_file_pos);
-   }
-   
-   al_draw_textf(font, al_map_rgb(255,255,255), 269, 102, ALLEGRO_ALIGN_CENTER, "%02d:%02d:%02d", minutes, seconds, centiseconds);
-   al_draw_textf(font, al_map_rgb(255,255,255), 301, 18, ALLEGRO_ALIGN_RIGHT, "%09d", player.score);
-   al_draw_textf(font, al_map_rgb(255,255,255), 18, 185, ALLEGRO_ALIGN_LEFT, map->name);
-   al_draw_bitmap_region(health_bar, 0, player.health * 16, 64, 16, 238, 42, 0);
-   al_set_target_backbuffer(display);
-   
-   al_draw_scaled_bitmap(game_bmp,
-                         0,0,
-                         screen.unscaled_w, screen.unscaled_h,
-                         screen.x, screen.y,
-                         screen.width, screen.height,
-                         0);
-   
-   al_flip_display();
-}
-
-/************************************************
- * Checks "Key Down" events                     *
- ************************************************/
+/*
+ * Checks "Key Down" events
+ */
 void check_key_down(ALLEGRO_EVENT *ev)
 {
     
@@ -700,9 +658,9 @@ void check_key_down(ALLEGRO_EVENT *ev)
    
 }
 
-/************************************************
- * Checks "Key Up" events                       *
- ************************************************/
+/*
+ * Checks "Key Up" events
+ */
 void check_key_up(ALLEGRO_EVENT *ev)
 {
    switch(ev->keyboard.keycode)
@@ -781,9 +739,9 @@ void check_key_up(ALLEGRO_EVENT *ev)
    }
 }
 
-/************************************************
- * Check bullet collisions                      *
- ************************************************/
+/*
+ * Check bullet collisions
+ */
 bool check_bullet_collision()
 {
 
@@ -842,9 +800,9 @@ bool check_bullet_collision()
 }
 
 
-/************************************************
- * Update the player and movements              *
- ************************************************/
+/*
+ * Update the player and movements
+ */
 void update_player()
 {
    /* NOTE: Special thanks to Johan Pietz, here. This part is
@@ -912,7 +870,7 @@ void update_player()
       something there it sets the player's position back
       to its previous position before the collision occurred.
       But because we're not drawing here, it doesn't show the
-      jerkiness of the process.*/
+      jerkiness of the process. */
    if (player.y + 31 < MAP_HEIGHT * TILE_SIZE)
    {
       if (player.y + 32 > 0)
@@ -1217,9 +1175,9 @@ void update_player()
    if (player.shoot_time) player.shoot_time--;
 }
 
-/************************************************
- * Checks logic that needs to be timed by FPS   *
- ************************************************/
+/*
+ * Checks logic that needs to be timed by FPS
+ */
 void check_timer_logic()
 {
    
@@ -1263,9 +1221,9 @@ void check_timer_logic()
    check_cam();
 }
 
-/************************************************
- * Stream function for opl Emulation            *
- ************************************************/
+/*
+ * Stream function for opl Emulation
+ */
 void stream_opl()
 {
    static int times_executed;
@@ -1295,9 +1253,9 @@ void stream_opl()
    times_executed++;
 }
 
-/****************************************************
- * Reset some things if they're out of camera range *
- ****************************************************/
+/*
+ * Reset some things if they're out of camera range
+ */
 void reset_out_of_view_things()
 {
    for (int i = 0; i < map->num_things; i++)
@@ -1312,44 +1270,121 @@ void reset_out_of_view_things()
    }
 }
 
+/*
+ * Updates Orlo the Robot
+ */
 void update_orlo()
 {
-   const int fall_behind = 10;
-   static int put_buffer_pos = 0; 
-   static int read_buffer_pos = 0;
+   const int fall_behind = 10;      //How many indecies behind is the read buffer? (Orlo has a delayed reaction when following Tally.)
+   static int put_buffer_pos = 0;   //This is the index where we put the player x, y, direction, and animation frame, so Orlo can mimick it.
+   static int read_buffer_pos = 0;  //This is the current index (set by fall_behind), of where Orlo reads from
 
-   //I may make Orlo his own entity instead of placing him as a thing. But for now this is how it is.
-   for (int i = 0; i < map->num_things; i++)
+   orlo_position_buffer[put_buffer_pos].x = player.x;
+   orlo_position_buffer[put_buffer_pos].y = player.y;
+   orlo_position_buffer[put_buffer_pos].direction = player.direction;
+   orlo_position_buffer[put_buffer_pos].cur_frame = player.cur_frame;
+
+   if (put_buffer_pos < ORLO_BUFFER_SIZE) put_buffer_pos++;
+
+   if (put_buffer_pos >= ORLO_BUFFER_SIZE) 
    {
-      if (thing[i].type == THING_ORLO)
-      {
-         orlo_position_buffer[put_buffer_pos].x = player.x;
-         orlo_position_buffer[put_buffer_pos].y = player.y;
-         orlo_position_buffer[put_buffer_pos].direction = player.direction;
-         orlo_position_buffer[put_buffer_pos].cur_frame = player.cur_frame;
+      put_buffer_pos = 0;
+   }
 
-         if (put_buffer_pos < ORLO_BUFFER_SIZE) put_buffer_pos++;
+   if (put_buffer_pos >= fall_behind) read_buffer_pos =  put_buffer_pos - fall_behind;    //Set the read buffer to be behind as many indecies as fall_behind indicates
+   if (read_buffer_pos > put_buffer_pos) read_buffer_pos++;
+   if (read_buffer_pos >= ORLO_BUFFER_SIZE) read_buffer_pos = 0;
+   
+   //Set Orlo's stuff
+   orlo.x = orlo_position_buffer[read_buffer_pos].x;
+   orlo.y = orlo_position_buffer[read_buffer_pos].y;
+   orlo.direction = orlo_position_buffer[read_buffer_pos].direction;
+   orlo.cur_frame = orlo_position_buffer[read_buffer_pos].cur_frame;
+}
 
-         if (put_buffer_pos >= ORLO_BUFFER_SIZE) 
-         {
-            put_buffer_pos = 0;
-         }
-
-         if (put_buffer_pos >= fall_behind) read_buffer_pos =  put_buffer_pos - fall_behind;
-         if (read_buffer_pos > put_buffer_pos) read_buffer_pos++;
-         if (read_buffer_pos >= ORLO_BUFFER_SIZE) read_buffer_pos = 0;
-         
-         thing[i].x = orlo_position_buffer[read_buffer_pos].x;
-         thing[i].y = orlo_position_buffer[read_buffer_pos].y;
-         thing[i].direction = orlo_position_buffer[read_buffer_pos].direction;
-         thing[i].cur_frame = orlo_position_buffer[read_buffer_pos].cur_frame;
-      }
+void draw_orlo()
+{
+   if ( orlo.x > cam.x - orlo.width && 
+      orlo.x < cam.x + VIEWPORT_WIDTH &&
+      orlo.y > cam.y - orlo.height &&
+      orlo.y < cam.y + VIEWPORT_HEIGHT)
+   {
+      if (orlo.direction == RIGHT)
+            al_draw_bitmap(orlo.frame[orlo.cur_frame], orlo.x - cam.x, orlo.y - cam.y, 0);
+      if (orlo.direction == LEFT)
+            al_draw_bitmap(orlo.frame[orlo.cur_frame], orlo.x - cam.x, orlo.y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
    }
 }
 
-/************************************************
- * Clean-ups for end of program                 *
- ************************************************/
+/*
+ * The drawing function, called at redraw
+ */
+void update_screen()
+{
+   draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
+   draw_things(map, thing, &cam, map->num_things);
+   draw_orlo();
+
+   if (player.x + 32 > 0 && player.y + 32 > 0 && player.x < MAP_WIDTH * TILE_SIZE && player.y < MAP_HEIGHT * TILE_SIZE)   
+      if (player.draw) draw_player(view_port, &cam, &player, player.direction);
+
+
+   if (player.direction == RIGHT && player.muzzle_time) 
+   {
+      draw_laser();
+      al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
+   }
+
+   if (player.direction == LEFT && player.muzzle_time) 
+   {
+       draw_laser();
+      al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
+   }
+   if (player_bullet.draw)
+   {
+      al_draw_bitmap_region(bullet_particle, (player.muzzle_time * 2) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
+      //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
+   }
+   
+   draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
+   
+   //Draw view_port to game, then draw game scaled to display.
+   al_set_target_bitmap(game_bmp);
+    
+   al_draw_bitmap(view_port, VIEWPORT_X, VIEWPORT_Y, 0);
+   if (game.demo_mode == PLAY)
+   {
+      if (item_frame == 0) al_draw_textf(font, al_map_rgb(255,255,255), 269, 136, ALLEGRO_ALIGN_CENTER, "DEMO");
+      if (item_frame == 1) al_draw_textf(font, al_map_rgb(0,0,0), 269, 136, ALLEGRO_ALIGN_CENTER, "DEMO");
+      //al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%d", demo_file_pos);
+      
+   }
+   else if (game.demo_mode == RECORD)
+   {
+      if (item_frame == 0) al_draw_textf(font, al_map_rgb(255,255,255), 269, 136, ALLEGRO_ALIGN_CENTER, "RECORD");
+      if (item_frame == 1) al_draw_textf(font, al_map_rgb(0,0,0), 269, 136, ALLEGRO_ALIGN_CENTER, "RECORD");
+      //al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%d", demo_file_pos);
+   }
+   
+   al_draw_textf(font, al_map_rgb(255,255,255), 269, 102, ALLEGRO_ALIGN_CENTER, "%02d:%02d:%02d", minutes, seconds, centiseconds);
+   al_draw_textf(font, al_map_rgb(255,255,255), 301, 18, ALLEGRO_ALIGN_RIGHT, "%09d", player.score);
+   al_draw_textf(font, al_map_rgb(255,255,255), 18, 185, ALLEGRO_ALIGN_LEFT, map->name);
+   al_draw_bitmap_region(health_bar, 0, player.health * 16, 64, 16, 238, 42, 0);
+   al_set_target_backbuffer(display);
+   
+   al_draw_scaled_bitmap(game_bmp,
+                         0,0,
+                         screen.unscaled_w, screen.unscaled_h,
+                         screen.x, screen.y,
+                         screen.width, screen.height,
+                         0);
+   
+   al_flip_display();
+}
+
+/*
+ * Clean-ups for end of program
+ */
 void clean_up()
 {
    if (game.level_needs_unloaded)
@@ -1395,7 +1430,6 @@ void clean_up()
  *                   MAIN                       *
  *                                              *
  ************************************************/
-
 int main(int argc, char **argv)
 {
    unsigned char key_buffer[640000] = { 0 };

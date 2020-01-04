@@ -75,7 +75,7 @@ void load_things(t_thing *t, t_map *m)
                 t[m->num_things -1].height = 16;
             }
 
-            if (m->position[x + y * MAP_WIDTH].thing == THING_ORLO)
+            /* if (m->position[x + y * MAP_WIDTH].thing == THING_ORLO)
             {
                 t[m->num_things -1].bitmap = al_load_bitmap("data/orlo.png");
                 for (int i =0; i < 8; i++)
@@ -91,7 +91,7 @@ void load_things(t_thing *t, t_map *m)
                 t[m->num_things -1].width = 32;
                 t[m->num_things -1].height = 32;
             }
-            
+             */
         }
     }
 }
