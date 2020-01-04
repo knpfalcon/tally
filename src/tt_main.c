@@ -1314,9 +1314,10 @@ void reset_out_of_view_things()
 
 void update_orlo()
 {
-   static int put_buffer_pos = 8; 
+   const int fall_behind = 10;
+   static int put_buffer_pos = 0; 
    static int read_buffer_pos = 0;
-   
+
    //I may make Orlo his own entity instead of placing him as a thing. But for now this is how it is.
    for (int i = 0; i < map->num_things; i++)
    {
@@ -1327,9 +1328,15 @@ void update_orlo()
          orlo_position_buffer[put_buffer_pos].direction = player.direction;
          orlo_position_buffer[put_buffer_pos].cur_frame = player.cur_frame;
 
-         if (put_buffer_pos < ORLO_BUFFER_SIZE) put_buffer_pos ++;
-         if (read_buffer_pos < ORLO_BUFFER_SIZE) read_buffer_pos++;
-         if (put_buffer_pos >= ORLO_BUFFER_SIZE) put_buffer_pos = 0;
+         if (put_buffer_pos < ORLO_BUFFER_SIZE) put_buffer_pos++;
+
+         if (put_buffer_pos >= ORLO_BUFFER_SIZE) 
+         {
+            put_buffer_pos = 0;
+         }
+
+         if (put_buffer_pos >= fall_behind) read_buffer_pos =  put_buffer_pos - fall_behind;
+         if (read_buffer_pos > put_buffer_pos) read_buffer_pos++;
          if (read_buffer_pos >= ORLO_BUFFER_SIZE) read_buffer_pos = 0;
          
          thing[i].x = orlo_position_buffer[read_buffer_pos].x;
