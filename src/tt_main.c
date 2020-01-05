@@ -158,8 +158,8 @@ int init_game()
    }
    jlog("Image add-on initialized.");
    //al_set_new_display_adapter(1);
-   screen.width = 1920;
-   screen.height = 1080;
+   screen.width = 1280;
+   screen.height = 800;
    //al_set_new_display_flags(ALLEGRO_NOFRAME);
    al_set_new_display_option(ALLEGRO_VSYNC, 1, ALLEGRO_SUGGEST);
    display = al_create_display(screen.width, screen.height);
@@ -185,13 +185,13 @@ int init_game()
       jlog("Couldn't load bg_border.png!");
       return -1;
    }
-   for (int y = 0; y < (al_get_display_height(display) / (32 * screen.factor)) + 1; y++)
+   /* for (int y = 0; y < (al_get_display_height(display) / (32 * screen.factor)) + 1; y++)
    {
       for (int x = 0; x < (al_get_display_width(display) / (32 * screen.factor)) + 1; x++)
       {
          al_draw_scaled_bitmap(border, 0, 0, 32, 32, x * (32 * screen.factor), y * (32 * screen.factor), 32 * screen.factor, 32 * screen.factor, 0);
       }
-   }
+   } */
    //Load/Draw Loading bitmap and flip the display
    loading = al_load_bitmap("data/loading.png");
    if (loading == NULL)
@@ -305,7 +305,7 @@ int init_game()
    game.level = LEVEL_1;
    /* game.music = MUSIC_1; */
    al_set_mixer_gain(al_get_default_mixer(), 1.0f); //Turn down the volume during development
-   al_set_audio_stream_gain(music_stream, 1.5f);
+   al_set_audio_stream_gain(music_stream, 1.8f);
    al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
    al_set_audio_stream_playing(music_stream, false);
    jlog("DEPTH: %d\n", al_get_mixer_depth(al_get_default_mixer()));
@@ -725,13 +725,13 @@ void check_key_up(ALLEGRO_EVENT *ev)
          screen.height = screen.unscaled_h * screen.factor;
          screen.x = (al_get_display_width(display) / 2) - (screen.width/2);
          screen.y = (al_get_display_height(display) / 2) - (screen.height/2);
-         for (int y = 0; y < (al_get_display_height(display) / (32 * screen.factor)) + 1; y++)
+         /* for (int y = 0; y < (al_get_display_height(display) / (32 * screen.factor)) + 1; y++)
          {
             for (int x = 0; x < (al_get_display_width(display) / (32 * screen.factor)) + 1; x++)
             {
                al_draw_scaled_bitmap(border, 0, 0, 32, 32, x * (32 * screen.factor), y * (32 * screen.factor), 32 * screen.factor, 32 * screen.factor, 0);
             }
-         }
+         } */
          jlog("Display Created.");
 
          break;
@@ -742,6 +742,7 @@ void check_key_up(ALLEGRO_EVENT *ev)
          player.y = map->player_start_y;
          cam.x = player.x - VIEWPORT_WIDTH / 2 + 24;
          cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
+         cam.look_ahead = 0;
          check_cam();
          break;
 
