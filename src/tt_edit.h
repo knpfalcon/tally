@@ -5,6 +5,11 @@
 
 #define DISPLAY_MULTIPLIER 3
 
+#define TILE_SHEET_X 226
+#define TILE_SHEET_Y 16
+#define TILE_SHEET_WIDTH 256
+#define TILE_SHEET_HEIGHT 256
+
 typedef struct t_conditional
 {
    bool show_mini_map;

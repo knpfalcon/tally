@@ -305,11 +305,11 @@ void show_info_stuff()
 {
    if (cond.show_mini_map == false)
    {
-      al_draw_bitmap(tile_sheet, 226 * DISPLAY_MULTIPLIER, 16 * DISPLAY_MULTIPLIER, 0);
-      al_draw_rectangle(convert_index_to_pixel_xy(sp_mouse.tile_selection, 16, TILE_SIZE, RETURN_X) + (226 * DISPLAY_MULTIPLIER),
-                        convert_index_to_pixel_xy(sp_mouse.tile_selection, 16, TILE_SIZE, RETURN_Y) + (16 * DISPLAY_MULTIPLIER),
-                        convert_index_to_pixel_xy(sp_mouse.tile_selection, 16, TILE_SIZE, RETURN_X) + (226 * DISPLAY_MULTIPLIER) + TILE_SIZE,
-                        convert_index_to_pixel_xy(sp_mouse.tile_selection, 16, TILE_SIZE, RETURN_Y) + (16 * DISPLAY_MULTIPLIER) + TILE_SIZE,
+      al_draw_bitmap(tile_sheet, TILE_SHEET_X * DISPLAY_MULTIPLIER, TILE_SHEET_Y * DISPLAY_MULTIPLIER, 0);
+      al_draw_rectangle(convert_index_to_pixel_xy(sp_mouse.tile_selection, 16, TILE_SIZE, RETURN_X) + (TILE_SHEET_X * DISPLAY_MULTIPLIER),
+                        convert_index_to_pixel_xy(sp_mouse.tile_selection, 16, TILE_SIZE, RETURN_Y) + (TILE_SHEET_Y * DISPLAY_MULTIPLIER),
+                        convert_index_to_pixel_xy(sp_mouse.tile_selection, 16, TILE_SIZE, RETURN_X) + (TILE_SHEET_X * DISPLAY_MULTIPLIER) + TILE_SIZE,
+                        convert_index_to_pixel_xy(sp_mouse.tile_selection, 16, TILE_SIZE, RETURN_Y) + (TILE_SHEET_Y * DISPLAY_MULTIPLIER) + TILE_SIZE,
                         al_map_rgb(255,255,0),
                         2);
       al_draw_textf(
@@ -607,6 +607,25 @@ void check_click_in_viewport()
          sp_mouse.over_tile_x = 0;
          sp_mouse.over_tile_y = 0;
       }
+
+      //Check mouse in Tile Selector
+      if (sp_mouse.x > TILE_SHEET_X * DISPLAY_MULTIPLIER
+         && sp_mouse.x < ( TILE_SHEET_WIDTH + (TILE_SHEET_X * DISPLAY_MULTIPLIER) )
+         && sp_mouse.y > TILE_SHEET_Y * DISPLAY_MULTIPLIER
+         && sp_mouse.y < ( TILE_SHEET_HEIGHT + (TILE_SHEET_Y * DISPLAY_MULTIPLIER) ) )
+      {
+         if (mouse.buttons & 1)
+         {
+            //sp_mouse.over_tile_x = ((((sp_mouse.x - (16 * DISPLAY_MULTIPLIER)) + (cam.x * DISPLAY_MULTIPLIER)) / TILE_SIZE) / DISPLAY_MULTIPLIER);
+               int x = (sp_mouse.x - (TILE_SHEET_X * DISPLAY_MULTIPLIER) ) / TILE_SIZE;
+               int y = (sp_mouse.y - (TILE_SHEET_Y * DISPLAY_MULTIPLIER) )  / TILE_SIZE;
+               int w = TILE_SHEET_WIDTH / TILE_SIZE;
+
+               sp_mouse.tile_selection = x + y * w;
+                  
+         }
+      }
+
    }
 }
 
