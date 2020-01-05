@@ -165,6 +165,7 @@ int init_game()
    
    //Create Display
    //al_set_new_display_flags(ALLEGRO_OPENGL);
+   al_set_new_display_option(ALLEGRO_VSYNC, 1, ALLEGRO_SUGGEST);
    display = al_create_display(DISPLAY_WIDTH, DISPLAY_HEIGHT);
    if(!display)
    {
