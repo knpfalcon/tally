@@ -3,10 +3,10 @@
 
 #define FONT_FILE "data/hack.ttf"
 
-#define DISPLAY_MULTIPLIER 3
+#define DISPLAY_MULTIPLIER 2
 
-#define TILE_SHEET_X 226
-#define TILE_SHEET_Y 16
+#define TILE_SHEET_X 452
+#define TILE_SHEET_Y 32
 #define TILE_SHEET_WIDTH 256
 #define TILE_SHEET_HEIGHT 256
 

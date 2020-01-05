@@ -176,6 +176,9 @@ void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP 
    al_set_target_bitmap(d_bmp);
 
    /**** BACKGROUND ****/
+   #ifdef EDITOR
+   al_clear_to_color(al_map_rgb(0,0,0));
+   #endif
    al_draw_bitmap(background, 0, 0, 0);
 
    /**** TILES ****/

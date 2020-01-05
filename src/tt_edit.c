@@ -17,15 +17,13 @@
 #include "tt_edit.h"
 #include "tt_player.h"
 
-#define EDITOR
-
 const float FPS = 60;
 const float ANIM_SPEED = 8;
 
 bool redraw = true;
 
-const int DISPLAY_WIDTH = 320 * DISPLAY_MULTIPLIER;
-const int DISPLAY_HEIGHT = 200 * DISPLAY_MULTIPLIER;
+const int DISPLAY_WIDTH = 640 * DISPLAY_MULTIPLIER;
+const int DISPLAY_HEIGHT = 400 * DISPLAY_MULTIPLIER;
 
 int item_selected = 1;
 int thing_selected = 1;
@@ -238,9 +236,9 @@ int init_game()
    mini_map = al_create_bitmap(MAP_WIDTH * TILE_SIZE, MAP_HEIGHT * TILE_SIZE);
 
    //Create the game bitmap that needs to be stretched to display
-   game = al_create_bitmap(320, 200);
+   game = al_create_bitmap(640, 400);
 
-   reg_font = al_load_ttf_font(FONT_FILE, 4 * DISPLAY_MULTIPLIER, 0);
+   reg_font = al_load_ttf_font(FONT_FILE, 8 * DISPLAY_MULTIPLIER, 0);
    if(!reg_font)
    {
       jlog("Failed to load %s", FONT_FILE);
@@ -316,7 +314,7 @@ void show_info_stuff()
                     reg_font,
                     al_map_rgb(255,255,255),
                     16 * DISPLAY_MULTIPLIER,
-                    6 * DISPLAY_MULTIPLIER,
+                    344 * DISPLAY_MULTIPLIER,
                     ALLEGRO_ALIGN_LEFT, "map->position %d, %d",
                     sp_mouse.over_tile_x,
                     sp_mouse.over_tile_y
@@ -346,22 +344,22 @@ void show_info_stuff()
       }
       al_draw_textf(reg_font,
                     al_map_rgb(255,255,255),
-                    226 * DISPLAY_MULTIPLIER,
-                    10 * DISPLAY_MULTIPLIER,
+                    452 * DISPLAY_MULTIPLIER,
+                    162 * DISPLAY_MULTIPLIER,
                     0,
                     "Tile Selected: %d",
                     sp_mouse.tile_selection);
       al_draw_textf(reg_font,
                     al_map_rgb(255,255,255),
-                    226 * DISPLAY_MULTIPLIER,
-                    114 * DISPLAY_MULTIPLIER,
+                    452 * DISPLAY_MULTIPLIER,
+                    178 * DISPLAY_MULTIPLIER,
                     0,
                     "Thing: %d    No. Things %d / %d",
                     thing_selected, map->num_things, MAX_THINGS);
       al_draw_textf(reg_font,
                     al_map_rgb(255,255,255),
-                    226 * DISPLAY_MULTIPLIER,
-                    150 * DISPLAY_MULTIPLIER,
+                    452 * DISPLAY_MULTIPLIER,
+                    228 * DISPLAY_MULTIPLIER,
                     0,
                     "Item: %d",
                     item_selected);
@@ -370,7 +368,7 @@ void show_info_stuff()
          al_draw_text(reg_font,
                       al_map_rgb(0,255,0),
                       16 * DISPLAY_MULTIPLIER,
-                      180 * DISPLAY_MULTIPLIER,
+                      364 * DISPLAY_MULTIPLIER,
                       ALLEGRO_ALIGN_LEFT,
                       "MAP SAVED.");
       }
@@ -379,7 +377,7 @@ void show_info_stuff()
          al_draw_text(reg_font,
                       al_map_rgb(255,0,0),
                       16 * DISPLAY_MULTIPLIER,
-                      180 * DISPLAY_MULTIPLIER,
+                      364 * DISPLAY_MULTIPLIER,
                       ALLEGRO_ALIGN_LEFT,
                       "MAP NOT SAVED.");
       }
@@ -434,8 +432,8 @@ void update_screen()
                                convert_index_to_pixel_xy(sp_mouse.tile_selection, 16, TILE_SIZE, RETURN_Y),
                                TILE_SIZE,
                                TILE_SIZE,
-                               256,
-                               16,
+                               452,
+                               32,
                                0);
       }
       al_draw_bitmap_region(item_sheet,
@@ -443,18 +441,18 @@ void update_screen()
                                0,
                                TILE_SIZE,
                                TILE_SIZE,
-                               226,
-                               152,
+                               450,
+                               236,
                                0);
       
       //Draw Selected enemy
       switch (thing_selected)
       {
       case ENEMY_SPIKES:
-         al_draw_bitmap(b_enemy_spikes, 226, 116, 0);
+         al_draw_bitmap(b_enemy_spikes, 452, 188, 0);
          break;
       case THING_ORLO:
-         al_draw_bitmap_region(b_orlo, 0, 0, 32, 32, 226, 116, 0);
+         al_draw_bitmap_region(b_orlo, 0, 0, 32, 32, 452, 188, 0);
          break;
          
       default:
@@ -475,7 +473,7 @@ void update_screen()
    }
    al_set_target_backbuffer(display);
 
-   if (cond.show_mini_map == false) al_draw_scaled_bitmap(game, 0, 0, 320, 200, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, 0);
+   if (cond.show_mini_map == false) al_draw_scaled_bitmap(game, 0, 0, 640, 400, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, 0);
 
    if (cond.show_mini_map)
    {

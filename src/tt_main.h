@@ -4,8 +4,16 @@
 #include <stdbool.h>
 #include "jt_util.h"
 
+#ifdef EDITOR
+#define VIEWPORT_WIDTH 416
+#define VIEWPORT_HEIGHT 320
+#endif
+
+#ifndef EDITOR
 #define VIEWPORT_WIDTH 208
 #define VIEWPORT_HEIGHT 160
+#endif
+
 #define VIEWPORT_X 16
 #define VIEWPORT_Y 16
 

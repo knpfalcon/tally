@@ -2,7 +2,7 @@
 #
 
 CC = gcc
-CFLAGS = -m32 -O3 -Wall -g -DDEBUG
+CFLAGS = -m32 -O3 -Wall -g -DDEBUG -DEDITOR
 LIBDIR = -L/usr/lib/i386-linux-gnu
 
 ALLEGRO_LIBS = allegro-5 allegro_acodec-5 allegro_image-5 \
@@ -28,8 +28,8 @@ SRC = $(patsubst %,$(SRCDIR)/%,$(_SRC))
 
 #Headers.
 _DEPS = \
-tt_edit.h \
 tt_map.h \
+tt_edit.h \
 tt_thing.h \
 jt_util.h
 ########
