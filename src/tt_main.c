@@ -18,36 +18,32 @@
 #include "tt_items.h"
 #include "tt_bullet.h"
 
-
-char DEMO_FILENAME[32] = " ";
-int frames = 0;
-int minutes = 0;
-int seconds = 0;
-int centiseconds = 0;
-
 #define BUFFER_SAMPLES 2048
 #define STREAM_FREQ 44100
+
+//int frames = 0;
+//int minutes = 0;
+//int seconds = 0;
+//int centiseconds = 0;
 
 /* At some point I'll see if I can prune these globals, but they're staying for now. */
 int demo_file_pos = 0;
 
-FILE *demo_file = NULL;
-bool program_done = false;
 t_game game = { .state = LOAD_LEVEL, .next_state = LOAD_LEVEL };
 
 const float FPS = 30;
 int frame_speed = ANIMATION_SPEED;
 int halftime_frame_speed = ANIMATION_SPEED * 2;
 
-bool redraw = true;
-
 t_bullet player_bullet;
 
 t_screen screen = { .unscaled_w = 320, .unscaled_h = 200 };
 
 t_cam cam;
+
 t_map *map = NULL;
 t_player player = { .cur_frame = 0, .state = STOPPED, .vel_x = 4 };
+
 t_item_afterfx *item_fx = NULL;
 
 int screen_flash = -1;
@@ -57,8 +53,8 @@ t_thing thing[MAX_THINGS];
 unsigned char item_frame = 0;
 unsigned char item_afterfx_frame = 0;
 
-bool key[16] = { false };
-enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_Z, KEY_LSHIFT, KEY_X, KEY_T, KEY_N, KEY_PAD_PLUS, KEY_PAD_MINUS, KEY_E, KEY_R, KEY_Q, KEY_F, KEY_G};
+bool key[6] = { false };
+enum KEYS {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_JUMP, KEY_FIRE};
 
 #define ORLO_BUFFER_SIZE 32 
 
@@ -88,23 +84,22 @@ ALLEGRO_EVENT_QUEUE *event_queue = NULL;
 ALLEGRO_TIMER *FPS_TIMER = NULL;
 ALLEGRO_MOUSE_STATE mouse;
 
-ALLEGRO_FONT *font = NULL;
-ALLEGRO_FONT *fps_font = NULL;
-ALLEGRO_FONT *msg_font = NULL;
+ALLEGRO_FONT *font_status = NULL;
+ALLEGRO_FONT *font_message = NULL;
 
 //Bitmaps that get loaded from disk
-ALLEGRO_BITMAP *loading = NULL;
-ALLEGRO_BITMAP *border = NULL;
-ALLEGRO_BITMAP *tile_sheet = NULL;
-ALLEGRO_BITMAP *item_sheet = NULL;
-ALLEGRO_BITMAP *bg = NULL;
-ALLEGRO_BITMAP *stat_border = NULL;
-ALLEGRO_BITMAP *item_fx_sheet = NULL;
-ALLEGRO_BITMAP *health_bar = NULL;
-ALLEGRO_BITMAP *bullet_blue = NULL;
-ALLEGRO_BITMAP *muzzle_flash = NULL;
-ALLEGRO_BITMAP *bullet_particle = NULL;
-ALLEGRO_BITMAP *laser = NULL;
+ALLEGRO_BITMAP *bmp_loading = NULL;
+ALLEGRO_BITMAP *bmp_border = NULL;
+ALLEGRO_BITMAP *bmp_tile_sheet = NULL;
+ALLEGRO_BITMAP *bmp_item_sheet = NULL;
+ALLEGRO_BITMAP *bmp_bg = NULL;
+ALLEGRO_BITMAP *bmp_stat_border = NULL;
+ALLEGRO_BITMAP *bmp_item_fx_sheet = NULL;
+ALLEGRO_BITMAP *bmp_health_bar = NULL;
+ALLEGRO_BITMAP *bmp_bullet_blue = NULL;
+ALLEGRO_BITMAP *bmp_muzzle_flash = NULL;
+ALLEGRO_BITMAP *bmp_bullet_particle = NULL;
+ALLEGRO_BITMAP *bmp_laser = NULL;
 
 //Bitmaps that get drawn tom
 ALLEGRO_BITMAP *view_port = NULL;
@@ -179,8 +174,8 @@ int init_game()
    jlog("Display Created.");
    
    // Load/Draw the fill-in border
-   border = al_load_bitmap("data/bg_border.png");
-   if (border == NULL)
+   bmp_border = al_load_bitmap("data/bg_border.png");
+   if (bmp_border == NULL)
    {
       jlog("Couldn't load bg_border.png!");
       return -1;
@@ -193,14 +188,14 @@ int init_game()
       }
    } */
    //Load/Draw Loading bitmap and flip the display
-   loading = al_load_bitmap("data/loading.png");
-   if (loading == NULL)
+   bmp_loading = al_load_bitmap("data/loading.png");
+   if (bmp_loading == NULL)
    {
       jlog("Couldn't load loading.png!");
    }
    else
    {
-      al_draw_scaled_bitmap(loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
+      al_draw_scaled_bitmap(bmp_loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
       al_flip_display();
    }
 
@@ -271,9 +266,8 @@ int init_game()
    #endif // RELEASE
 
    //Load font
-   font = al_load_bitmap_font("data/fonts/font.png");
-   msg_font = al_load_bitmap_font("data/fonts/pixfont.png");
-   fps_font = al_load_font("data/hack.ttf", 12, 0);
+   font_status = al_load_bitmap_font("data/fonts/font.png");
+   font_message = al_load_bitmap_font("data/fonts/pixfont.png");
 
    //ADLMIDI
    midi_player = adl_init(STREAM_FREQ);
@@ -363,7 +357,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
  bool load_level(char *map_file, char *music_file)
  {
    //Display loading image
-   al_draw_scaled_bitmap(loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
+   al_draw_scaled_bitmap(bmp_loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
    al_flip_display();
    //al_rest(3);  //Enable this when screen recording for time to hit the record button!
    //Load map
@@ -401,29 +395,29 @@ void check_cam() //Check to make sure camera is not out of bounds.
    item_fx = create_item_after_fx(map);
 
    //Load the graphics for a level
-   stat_border = al_load_bitmap("data/stat_border.png");
-   if (stat_border == NULL)
+   bmp_stat_border = al_load_bitmap("data/stat_border.png");
+   if (bmp_stat_border == NULL)
    {
       jlog("Couldn't load stat_border.png!");
       return false;
    }
 
-   bg = al_load_bitmap("data/bg_1.png");
-   if (bg == NULL)
+   bmp_bg = al_load_bitmap("data/bg_1.png");
+   if (bmp_bg == NULL)
    {
       jlog("Couldn't load bg1.png!");
       return false;
    }
 
-   tile_sheet = al_load_bitmap("data/tile_sheet.png");
-   if (tile_sheet == NULL)
+   bmp_tile_sheet = al_load_bitmap("data/tile_sheet.png");
+   if (bmp_tile_sheet == NULL)
    {
       jlog("Couldn't load tile_sheet.png!");
       return false;
    }
 
-   item_sheet = al_load_bitmap("data/item_sheet.png");
-   if (tile_sheet == NULL)
+   bmp_item_sheet = al_load_bitmap("data/item_sheet.png");
+   if (bmp_tile_sheet == NULL)
    {
       jlog("Couldn't load item_sheet.png!");
       return false;
@@ -457,22 +451,20 @@ void check_cam() //Check to make sure camera is not out of bounds.
       jlog("Orlo frame %d created.", i);
    }
 
-   item_fx_sheet = al_load_bitmap("data/item_score.png");
-   if (item_fx_sheet == NULL) { jlog("Couldn't load item_score.png"); return false;; }
+   bmp_item_fx_sheet = al_load_bitmap("data/item_score.png");
+   if (bmp_item_fx_sheet == NULL) { jlog("Couldn't load item_score.png"); return false;; }
   
-   health_bar = al_load_bitmap("data/health_bar.png");
-   if (health_bar == NULL) { jlog("Couldn't load health_bar.png"); return false; }
+   bmp_health_bar = al_load_bitmap("data/health_bar.png");
+   if (bmp_health_bar == NULL) { jlog("Couldn't load health_bar.png"); return false; }
 
-   muzzle_flash = al_load_bitmap("data/muzzle_flash.png");
-   if (muzzle_flash == NULL) { jlog("Couldn't load muzzle_flash.png"); return false; }
+   bmp_muzzle_flash = al_load_bitmap("data/muzzle_flash.png");
+   if (bmp_muzzle_flash == NULL) { jlog("Couldn't load muzzle_flash.png"); return false; }
    
-   bullet_particle = al_load_bitmap("data/particle.png");
-   if (bullet_particle == NULL) { jlog("Couldn't load particle.png"); return false; }
+   bmp_bullet_particle = al_load_bitmap("data/particle.png");
+   if (bmp_bullet_particle == NULL) { jlog("Couldn't load particle.png"); return false; }
 
-   laser = al_load_bitmap("data/laser.png");
-   if (laser == NULL) { jlog("Couldn't load laser.png"); return false; }
-
-
+   bmp_laser = al_load_bitmap("data/laser.png");
+   if (bmp_laser == NULL) { jlog("Couldn't load laser.png"); return false; }
 
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 
@@ -495,13 +487,13 @@ void check_cam() //Check to make sure camera is not out of bounds.
 
    //draw the status border
    al_set_target_bitmap(game_bmp);
-   al_draw_bitmap(stat_border, 0, 0, 0);
+   al_draw_bitmap(bmp_stat_border, 0, 0, 0);
 
    game.level_needs_unloaded = true;
 
-   centiseconds = 0;
-   seconds = 0;
-   minutes = 0;
+   //centiseconds = 0;
+   //seconds = 0;
+   //minutes = 0;
    return true; //Returns true on success
  }
 
@@ -518,40 +510,40 @@ bool unload_level()
    item_fx = NULL;
    if (item_fx == NULL) jlog("item_fx unloaded.");
 
-   al_destroy_bitmap(tile_sheet);
-   tile_sheet = NULL;
-   if (tile_sheet == NULL) jlog("tile_sheet unloaded.");
-   al_destroy_bitmap(item_sheet);
-   item_sheet = NULL;
-   if (item_sheet == NULL) jlog("item_sheet unloaded.");
+   al_destroy_bitmap(bmp_tile_sheet);
+   bmp_tile_sheet = NULL;
+   if (bmp_tile_sheet == NULL) jlog("tile_sheet unloaded.");
+   al_destroy_bitmap(bmp_item_sheet);
+   bmp_item_sheet = NULL;
+   if (bmp_item_sheet == NULL) jlog("item_sheet unloaded.");
 
-   al_destroy_bitmap(bg);
-   bg = NULL;
-   if (bg == NULL) jlog("bg unloaded.");
+   al_destroy_bitmap(bmp_bg);
+   bmp_bg = NULL;
+   if (bmp_bg == NULL) jlog("bg unloaded.");
 
-   al_destroy_bitmap(stat_border);
-   stat_border = NULL;
-   if (stat_border == NULL) jlog("stat_border unloaded.");
+   al_destroy_bitmap(bmp_stat_border);
+   bmp_stat_border = NULL;
+   if (bmp_stat_border == NULL) jlog("stat_border unloaded.");
 
-   al_destroy_bitmap(item_fx_sheet);
-   item_fx_sheet = NULL;
-   if (item_fx_sheet == NULL) jlog("item_fx_sheet unloaded.");
+   al_destroy_bitmap(bmp_item_fx_sheet);
+   bmp_item_fx_sheet = NULL;
+   if (bmp_item_fx_sheet == NULL) jlog("item_fx_sheet unloaded.");
 
-   al_destroy_bitmap(health_bar);
-   health_bar = NULL;
-   if (health_bar == NULL) jlog("health_bar unloaded.");
+   al_destroy_bitmap(bmp_health_bar);
+   bmp_health_bar = NULL;
+   if (bmp_health_bar == NULL) jlog("health_bar unloaded.");
 
-   al_destroy_bitmap(muzzle_flash);
-   muzzle_flash = NULL;
-   if (muzzle_flash == NULL) jlog("muzzle_flash unloaded.");
+   al_destroy_bitmap(bmp_muzzle_flash);
+   bmp_muzzle_flash = NULL;
+   if (bmp_muzzle_flash == NULL) jlog("muzzle_flash unloaded.");
 
-   al_destroy_bitmap(bullet_particle);
-   bullet_particle = NULL;
-   if (bullet_particle == NULL) jlog("bullet_particle unloaded.");
+   al_destroy_bitmap(bmp_bullet_particle);
+   bmp_bullet_particle = NULL;
+   if (bmp_bullet_particle == NULL) jlog("bullet_particle unloaded.");
 
-   al_destroy_bitmap(laser);
-   laser = NULL;
-   if (laser == NULL) jlog("laser unloaded.");
+   al_destroy_bitmap(bmp_laser);
+   bmp_laser = NULL;
+   if (bmp_laser == NULL) jlog("laser unloaded.");
 
    for (int j = 0; j < 8; ++j)
    {
@@ -613,7 +605,7 @@ void draw_laser()
    {
       for (int x = player_bullet.start_x; x < player_bullet.end_x; x++)
       {
-         al_draw_bitmap(laser, x - cam.x , player.muzzle_y - cam.y + 6, 0);
+         al_draw_bitmap(bmp_laser, x - cam.x , player.muzzle_y - cam.y + 6, 0);
       }
    }
 
@@ -621,7 +613,7 @@ void draw_laser()
    {
       for (int x = player_bullet.start_x; x > player_bullet.end_x; x--)
       {
-          al_draw_bitmap(laser, x - cam.x , player.muzzle_y - cam.y + 6, 0);
+          al_draw_bitmap(bmp_laser, x - cam.x , player.muzzle_y - cam.y + 6, 0);
       }
    }
 }
@@ -631,7 +623,6 @@ void draw_laser()
  */
 void check_key_down(ALLEGRO_EVENT *ev)
 {
-    
    switch(ev->keyboard.keycode)
    {
       case ALLEGRO_KEY_UP:
@@ -659,19 +650,12 @@ void check_key_down(ALLEGRO_EVENT *ev)
          key[KEY_RIGHT] = true;
          break;
       case ALLEGRO_KEY_Z:
-         key[KEY_Z] = true;
-         break;
-      case ALLEGRO_KEY_LSHIFT:
-         key[KEY_LSHIFT] = true;
+         key[KEY_JUMP] = true;
          break;
       case ALLEGRO_KEY_X:
-         key[KEY_X] = true;
-         break;
-      case ALLEGRO_KEY_T:
-         key[KEY_T] = true;
+         key[KEY_FIRE] = true;
          break;
    }
-   
 }
 
 /*
@@ -706,13 +690,10 @@ void check_key_up(ALLEGRO_EVENT *ev)
          key[KEY_RIGHT] = false;
          break;
       case ALLEGRO_KEY_Z:
-         key[KEY_Z] = false;
-         break;
-      case ALLEGRO_KEY_LSHIFT:
-         key[KEY_LSHIFT] = false;
+         key[KEY_JUMP] = false;
          break;
       case ALLEGRO_KEY_X:
-         key[KEY_X] = false;
+         key[KEY_FIRE] = false;
          break;
       case ALLEGRO_KEY_ENTER: //Tempory code to switch to fullscreen at runtime
          screen.width = 960;
@@ -733,10 +714,9 @@ void check_key_up(ALLEGRO_EVENT *ev)
             }
          } */
          jlog("Display Created.");
-
          break;
 
-
+      //Reset player to start point. (Debug key)
       case ALLEGRO_KEY_P:
          player.x = map->player_start_x;
          player.y = map->player_start_y;
@@ -744,10 +724,6 @@ void check_key_up(ALLEGRO_EVENT *ev)
          cam.y = player.y - VIEWPORT_HEIGHT / 2 + 16;
          cam.look_ahead = 0;
          check_cam();
-         break;
-
-      case ALLEGRO_KEY_T:
-         key[KEY_T] = false;
          break;
 
       case ALLEGRO_KEY_ESCAPE:
@@ -761,7 +737,6 @@ void check_key_up(ALLEGRO_EVENT *ev)
  */
 bool check_bullet_collision()
 {
-
    if (player.direction == RIGHT)
    {
       player_bullet.start_x = player.x + 25;
@@ -936,7 +911,7 @@ void update_player()
    when a player falls off edge. Working so far.
    also detects if player barely lands on ledge
    and helps them out a little. */
-   if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && !key[KEY_Z] && player.y + 31 > 0)
+   if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && !key[KEY_JUMP] && player.y + 31 > 0)
    {
       //Play fall off ledge sound
       player.state = FALLING;
@@ -945,7 +920,7 @@ void update_player()
       player.vel_y += 24;
       play_sound(snd_fall, false);
    }
-   else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && key[KEY_Z] && player.y + 31 > 0)
+   else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && key[KEY_JUMP] && player.y + 31 > 0)
    {
       //Play fall off ledge sound
       if (player.direction == RIGHT) player.x += 4;
@@ -965,7 +940,7 @@ void update_player()
       a vertical upwards boost while the Y velocity is
       still being pulled in the opposite direction,
       simulating gravity. */
-      if (key[KEY_Z] && player.on_ground && !player.jump_pressed)
+      if (key[KEY_JUMP] && player.on_ground && !player.jump_pressed)
       {
          if (player.y + 1 > 0 && !is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1))
          {
@@ -989,7 +964,7 @@ void update_player()
          }
       }
 
-   if (!key[KEY_Z])
+   if (!key[KEY_JUMP])
    {
       player.jump_pressed = false;
       if (player.vel_y < 0) player.vel_y /= 2;
@@ -1180,7 +1155,7 @@ void update_player()
    }
 
    //Shooting time
-   if (key[KEY_X] && !player.shoot_time)
+   if (key[KEY_FIRE] && !player.shoot_time)
    {
       play_sound(snd_shoot, false);
       player.shoot_time = 5;
@@ -1260,7 +1235,6 @@ void stream_opl()
       samples_count = adl_play(midi_player, BUFFER_SAMPLES *2, opl_buffer);
    }
    
-   
    if (samples_count > 0)
    {
       al_set_audio_stream_fragment(music_stream, opl_buffer);
@@ -1332,7 +1306,6 @@ void update_orlo()
    ty2 = (orlo.y + 31);
    ty3 = (orlo.y + 16);
    
-
    mp = get_map_position(map, tx, ty);
    mp2 = get_map_position(map, tx, ty2);
    mp3 = get_map_position(map, tx, ty3);
@@ -1370,7 +1343,7 @@ void update_orlo()
          } 
       }
 
-   if(player.health < 8 && collision_check(&player, &orlo) && key[KEY_UP] && orlo.state == ORLO_STATE_W_HEALTH)
+   if (player.health < 8 && collision_check(&player, &orlo) && key[KEY_UP] && orlo.state == ORLO_STATE_W_HEALTH)
    {
       play_sound(snd_orlo_give_health, false);
       orlo.state = ORLO_STATE_NORMAL;
@@ -1416,7 +1389,7 @@ void draw_orlo()
  */
 void update_screen()
 {
-   draw_map(view_port, tile_sheet, item_sheet, bg, &cam, map, &item_frame);
+   draw_map(view_port, bmp_tile_sheet, bmp_item_sheet, bmp_bg, &cam, map, &item_frame);
    draw_things(map, thing, &cam, map->num_things);
    if (!orlo_gave_health) draw_orlo();
 
@@ -1427,28 +1400,28 @@ void update_screen()
    if (player.direction == RIGHT && player.muzzle_time) 
    {
       draw_laser();
-      al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
+      al_draw_bitmap(bmp_muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
    }
 
    if (player.direction == LEFT && player.muzzle_time) 
    {
        draw_laser();
-      al_draw_bitmap(muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
+      al_draw_bitmap(bmp_muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
    }
    if (player_bullet.draw)
    {
-      al_draw_bitmap_region(bullet_particle, (player.muzzle_time * 2) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
+      al_draw_bitmap_region(bmp_bullet_particle, (player.muzzle_time * 2) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
       //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
    }
    if (orlo_gave_health) draw_orlo();
-   draw_item_fx(view_port, item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
+   draw_item_fx(view_port, bmp_item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
    
    if (orlo_gave_health)
    {
-      al_draw_bitmap_region(item_fx_sheet, 96, item_frame * 16, 16, 16, orlo.x + 8 - cam.x , orlo.y - orlo_gave_health_life_span - cam.y, 0);
+      al_draw_bitmap_region(bmp_item_fx_sheet, 96, item_frame * 16, 16, 16, orlo.x + 8 - cam.x , orlo.y - orlo_gave_health_life_span - cam.y, 0);
    }
-   if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GET_HEALTH)  al_draw_textf(msg_font, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "0R10: %s", ORLO_TXT_GET_HEALTH);
-   if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GIVE_HEALTH) al_draw_textf(msg_font, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "0R10: %s", ORLO_TXT_GIVE_HEALTH);
+   if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GET_HEALTH)  al_draw_textf(font_message, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "0R10: %s", ORLO_TXT_GET_HEALTH);
+   if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GIVE_HEALTH) al_draw_textf(font_message, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "0R10: %s", ORLO_TXT_GIVE_HEALTH);
    
    if (screen_flash > 0) al_clear_to_color(al_map_rgb(170,0,0));
    //Draw view_port to game, then draw game scaled to display.
@@ -1457,22 +1430,22 @@ void update_screen()
    al_draw_bitmap(view_port, VIEWPORT_X, VIEWPORT_Y, 0);
    if (game.demo_mode == PLAY)
    {
-      if (item_frame == 0) al_draw_textf(font, al_map_rgb(255,255,255), 269, 136, ALLEGRO_ALIGN_CENTER, "DEMO");
-      if (item_frame == 1) al_draw_textf(font, al_map_rgb(0,0,0), 269, 136, ALLEGRO_ALIGN_CENTER, "DEMO");
+      if (item_frame == 0) al_draw_textf(font_status, al_map_rgb(255,255,255), 269, 136, ALLEGRO_ALIGN_CENTER, "DEMO");
+      if (item_frame == 1) al_draw_textf(font_status, al_map_rgb(0,0,0), 269, 136, ALLEGRO_ALIGN_CENTER, "DEMO");
       //al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%d", demo_file_pos);
       
    }
    else if (game.demo_mode == RECORD)
    {
-      if (item_frame == 0) al_draw_textf(font, al_map_rgb(255,255,255), 269, 136, ALLEGRO_ALIGN_CENTER, "RECORD");
-      if (item_frame == 1) al_draw_textf(font, al_map_rgb(0,0,0), 269, 136, ALLEGRO_ALIGN_CENTER, "RECORD");
+      if (item_frame == 0) al_draw_textf(font_status, al_map_rgb(255,255,255), 269, 136, ALLEGRO_ALIGN_CENTER, "RECORD");
+      if (item_frame == 1) al_draw_textf(font_status, al_map_rgb(0,0,0), 269, 136, ALLEGRO_ALIGN_CENTER, "RECORD");
       //al_draw_textf(font, al_map_rgb(255,255,255), 0, 8, ALLEGRO_ALIGN_LEFT, "%d", demo_file_pos);
    }
    
-   al_draw_textf(font, al_map_rgb(255,255,255), 269, 102, ALLEGRO_ALIGN_CENTER, "%02d:%02d:%02d", minutes, seconds, centiseconds);
-   al_draw_textf(font, al_map_rgb(255,255,255), 301, 18, ALLEGRO_ALIGN_RIGHT, "%09d", player.score);
-   al_draw_textf(font, al_map_rgb(255,255,255), 18, 185, ALLEGRO_ALIGN_LEFT, map->name);
-   al_draw_bitmap_region(health_bar, 0, player.health * 16, 64, 16, 238, 42, 0);
+   //al_draw_textf(font_status, al_map_rgb(255,255,255), 269, 102, ALLEGRO_ALIGN_CENTER, "%02d:%02d:%02d", minutes, seconds, centiseconds);
+   al_draw_textf(font_status, al_map_rgb(255,255,255), 301, 18, ALLEGRO_ALIGN_RIGHT, "%09d", player.score);
+   al_draw_textf(font_status, al_map_rgb(255,255,255), 18, 185, ALLEGRO_ALIGN_LEFT, map->name);
+   al_draw_bitmap_region(bmp_health_bar, 0, player.health * 16, 64, 16, 238, 42, 0);
    al_set_target_backbuffer(display);
    
    al_draw_scaled_bitmap(game_bmp,
@@ -1535,6 +1508,10 @@ void clean_up()
  ************************************************/
 int main(int argc, char **argv)
 {
+   bool redraw = false;
+
+   char DEMO_FILENAME[32] = " ";
+   FILE *demo_file = NULL;
    unsigned char key_buffer[640000] = { 0 };
    long filesize = 0;
 
@@ -1626,7 +1603,6 @@ int main(int argc, char **argv)
    int ticks = 0;
    while(game.state != QUIT)
    {
-
       ALLEGRO_EVENT ev;
 
       al_wait_for_event(event_queue, &ev);
@@ -1648,7 +1624,7 @@ int main(int argc, char **argv)
       
       if (ev.type == ALLEGRO_EVENT_TIMER)
       {
-         centiseconds += (100/FPS);
+         /* centiseconds += (100/FPS);
          if (centiseconds >= 100) 
          {
             centiseconds = 0;
@@ -1658,7 +1634,7 @@ int main(int argc, char **argv)
          {
             seconds = 0;
             minutes++;
-         }
+         } */
 
          if (game.demo_mode == RECORD)
          {
@@ -1666,8 +1642,8 @@ int main(int argc, char **argv)
             {
                key_buffer[demo_file_pos] = key[KEY_RIGHT];
                key_buffer[demo_file_pos + 1] = key[KEY_LEFT];
-               key_buffer[demo_file_pos + 2] = key[KEY_Z];
-               key_buffer[demo_file_pos + 3] = key[KEY_X];
+               key_buffer[demo_file_pos + 2] = key[KEY_JUMP];
+               key_buffer[demo_file_pos + 3] = key[KEY_FIRE];
                demo_file_pos +=4 ;
             }
          }
@@ -1676,8 +1652,8 @@ int main(int argc, char **argv)
          {
             key[KEY_RIGHT] = key_buffer[demo_file_pos];
             key[KEY_LEFT] = key_buffer[demo_file_pos + 1];
-            key[KEY_Z] = key_buffer[demo_file_pos + 2];
-            key[KEY_X] = key_buffer[demo_file_pos + 3];
+            key[KEY_JUMP] = key_buffer[demo_file_pos + 2];
+            key[KEY_FIRE] = key_buffer[demo_file_pos + 3];
             demo_file_pos += 4;
          }
 

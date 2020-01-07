@@ -20,8 +20,6 @@
 const float FPS = 60;
 const float ANIM_SPEED = 8;
 
-bool redraw = true;
-
 const int DISPLAY_WIDTH = 640 * DISPLAY_MULTIPLIER;
 const int DISPLAY_HEIGHT = 400 * DISPLAY_MULTIPLIER;
 
@@ -1065,6 +1063,7 @@ void clean_up()
  ************************************************/
 int main(int argc, char **argv)
 {
+   bool redraw = true;
 
    if (init_game() != 0)
    {
