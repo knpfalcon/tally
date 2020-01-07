@@ -615,7 +615,6 @@ void check_click_in_viewport()
       {
          if (mouse.buttons & 1)
          {
-            //sp_mouse.over_tile_x = ((((sp_mouse.x - (16 * DISPLAY_MULTIPLIER)) + (cam.x * DISPLAY_MULTIPLIER)) / TILE_SIZE) / DISPLAY_MULTIPLIER);
                int x = (sp_mouse.x - (TILE_SHEET_X * DISPLAY_MULTIPLIER) ) / TILE_SIZE;
                int y = (sp_mouse.y - (TILE_SHEET_Y * DISPLAY_MULTIPLIER) )  / TILE_SIZE;
                int w = TILE_SHEET_WIDTH / TILE_SIZE;
