@@ -9,7 +9,7 @@
 #define MAX_THINGS 256
 #define MAX_ENEMY_FRAMES 8
 #define ENEMY_SPIKES 1
-#define THING_ORLO 11
+#define ENEMY_BAD_ROBOT 2
 
 typedef struct
 {

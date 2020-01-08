@@ -100,6 +100,7 @@ ALLEGRO_BITMAP *bmp_bullet_blue = NULL;
 ALLEGRO_BITMAP *bmp_muzzle_flash = NULL;
 ALLEGRO_BITMAP *bmp_bullet_particle = NULL;
 ALLEGRO_BITMAP *bmp_laser = NULL;
+ALLEGRO_BITMAP *bmp_bad_robot_1 = NULL;
 
 //Bitmaps that get drawn tom
 ALLEGRO_BITMAP *view_port = NULL;
@@ -125,7 +126,6 @@ struct ADL_MIDIPlayer *midi_player = NULL;
 
 short *opl_buffer = NULL;
 int samples_count = 0;
-
 
 /*
  * Initiate everything the game needs at startup 
@@ -299,7 +299,7 @@ int init_game()
    game.level = LEVEL_1;
    /* game.music = MUSIC_1; */
    al_set_mixer_gain(al_get_default_mixer(), 1.0f); //Turn down the volume during development
-   al_set_audio_stream_gain(music_stream, 1.8f);
+   al_set_audio_stream_gain(music_stream, 0.0f);
    al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
    al_set_audio_stream_playing(music_stream, false);
    jlog("DEPTH: %d\n", al_get_mixer_depth(al_get_default_mixer()));
@@ -451,8 +451,11 @@ void check_cam() //Check to make sure camera is not out of bounds.
       jlog("Orlo frame %d created.", i);
    }
 
+   bmp_bad_robot_1 = al_load_bitmap("data/badrobot.png");
+   if (bmp_bad_robot_1 == NULL) { jlog("Couldn't load badrobot.png"); return false; }
+
    bmp_item_fx_sheet = al_load_bitmap("data/item_score.png");
-   if (bmp_item_fx_sheet == NULL) { jlog("Couldn't load item_score.png"); return false;; }
+   if (bmp_item_fx_sheet == NULL) { jlog("Couldn't load item_score.png"); return false; }
   
    bmp_health_bar = al_load_bitmap("data/health_bar.png");
    if (bmp_health_bar == NULL) { jlog("Couldn't load health_bar.png"); return false; }
@@ -791,15 +794,11 @@ bool check_bullet_collision()
    return false;
 }
 
-
 /*
  * Update the player and movements
  */
 void update_player()
 {
-   /* NOTE: Special thanks to Johan Pietz, here. This part is
-   very similar to the player code in Alex the Allegator 4. */
-
    int old_x = player.x;
    int x1, x2, x3;
    int tx, ty, ty2, ty3;
@@ -1142,7 +1141,7 @@ void update_player()
             if(player.health) player.health--;
             screen_flash = 2;
          }
-         if (thing[i].type == THING_ORLO)
+         if (thing[i].type == ENEMY_BAD_ROBOT)
          {
             if (thing[i].touched == false) //play_sound(orlo_give_health, false);
             thing[i].touched = true;
@@ -1254,7 +1253,7 @@ void reset_out_of_view_things()
 {
    for (int i = 0; i < map->num_things; i++)
    {
-      if (thing[i].type == THING_ORLO)
+      if (thing[i].type == ENEMY_BAD_ROBOT)
       {
          if (thing[i].x > cam.x + VIEWPORT_WIDTH || thing[i].y > cam.y + VIEWPORT_HEIGHT || thing[i].x + thing[i].width < cam.x || thing[i].y + thing[i].height < cam.y)
          {   
@@ -1456,6 +1455,20 @@ void update_screen()
                          0);
    
    al_flip_display();
+}
+
+void update_enemies()
+{
+   for (int i = 0; i < map->num_things; i++)
+   {
+      if (thing[i].type == ENEMY_BAD_ROBOT)
+      {
+         if (thing[i].direction == RIGHT) thing[i].x += 1;
+         if (thing[i].direction == LEFT) thing[i].x -= 1;
+         if ( !is_ground(map, thing[i].x + 15, thing[i].y + 16) && thing[i].direction == RIGHT) thing[i].direction = LEFT;
+         if ( !is_ground(map, thing[i].x + 1, thing[i].y + 16) && thing[i].direction == LEFT) thing[i].direction = RIGHT;
+      }
+   }
 }
 
 /*
@@ -1661,13 +1674,14 @@ int main(int argc, char **argv)
          if (ticks == 1)
          {
             update_orlo();
+            update_enemies();
             check_timer_logic();
          }
          
          reset_out_of_view_things();
          redraw = true;
       }
-
+      
       if (ev.type == ALLEGRO_EVENT_AUDIO_STREAM_FRAGMENT)
       {
          stream_opl();

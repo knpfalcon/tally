@@ -1,0 +1,16 @@
+THINGS TO DO NEXT
+=================
+Prune Global Variables / Cut down main source file
+    -Move init function to its own source file
+    -Move graphics, sounds, system stuff to their respective places in graphics/sound/system structs
+Add basic enemy with basic movment
+Redesign Border / Find good places for alerts, etc.
+Add elevator
+Add switches
+Add keys / doors
+Add level exit
+Death Capability / Death animation
+Redo/Redesign items
+Rework map struct
+Add ability for different map sizes
+Update level editor readme

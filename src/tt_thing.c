@@ -75,23 +75,23 @@ void load_things(t_thing *t, t_map *m)
                 t[m->num_things -1].height = 16;
             }
 
-            /* if (m->position[x + y * MAP_WIDTH].thing == THING_ORLO)
+            if (m->position[x + y * MAP_WIDTH].thing == ENEMY_BAD_ROBOT)
             {
-                t[m->num_things -1].bitmap = al_load_bitmap("data/orlo.png");
+                t[m->num_things -1].bitmap = al_load_bitmap("data/badrobot.png");
                 for (int i =0; i < 8; i++)
                 {
-                    t[m->num_things -1].frame[i] = al_create_sub_bitmap(t[m->num_things -1].bitmap, i * 32, 0, 32, 32);
+                    t[m->num_things -1].frame[i] = al_create_sub_bitmap(t[m->num_things -1].bitmap, i * 16, 0, 16, 16);
                 }
                 
-                t[m->num_things -1].type = THING_ORLO;
-                t[m->num_things -1].bb_height = 32;
-                t[m->num_things -1].bb_width = 12;
+                t[m->num_things -1].type = ENEMY_BAD_ROBOT;
+                t[m->num_things -1].bb_height = 16;
+                t[m->num_things -1].bb_width = 16;
                 t[m->num_things -1].bb_top = 0;
                 t[m->num_things -1].bb_left = 9;
-                t[m->num_things -1].width = 32;
-                t[m->num_things -1].height = 32;
+                t[m->num_things -1].width = 16;
+                t[m->num_things -1].height = 16;
             }
-             */
+            
         }
     }
 }

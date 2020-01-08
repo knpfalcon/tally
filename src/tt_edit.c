@@ -450,7 +450,7 @@ void update_screen()
       case ENEMY_SPIKES:
          al_draw_bitmap(b_enemy_spikes, 452, 188, 0);
          break;
-      case THING_ORLO:
+      case ENEMY_BAD_ROBOT:
          al_draw_bitmap_region(b_orlo, 0, 0, 32, 32, 452, 188, 0);
          break;
          
@@ -508,12 +508,12 @@ void check_map_for_things()
             thing[map->num_things -1].bb_height = 16;
             thing[map->num_things -1].bb_width = 16;
          }
-         if (map->position[x + y * MAP_WIDTH].thing == THING_ORLO)
+         if (map->position[x + y * MAP_WIDTH].thing == ENEMY_BAD_ROBOT)
          {
             thing[map->num_things -1].frame[0] = b_orlo_frame_0;
             
-            thing[map->num_things -1].bb_height = 32;
-            thing[map->num_things -1].bb_width = 32;
+            thing[map->num_things -1].bb_height = 16;
+            thing[map->num_things -1].bb_width = 16;
          }
       }
    }
