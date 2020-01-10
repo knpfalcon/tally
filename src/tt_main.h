@@ -63,6 +63,23 @@ typedef struct t_screen
    int height;
 } t_screen;
 
+typedef struct 
+{
+   ALLEGRO_BITMAP *bmp_loading;
+   ALLEGRO_BITMAP *bmp_border;
+   ALLEGRO_BITMAP *bmp_tile_sheet;
+   ALLEGRO_BITMAP *bmp_item_sheet;
+   ALLEGRO_BITMAP *bmp_bg;
+   ALLEGRO_BITMAP *bmp_stat_border;
+   ALLEGRO_BITMAP *bmp_item_fx_sheet;
+   ALLEGRO_BITMAP *bmp_health_bar;
+   ALLEGRO_BITMAP *bmp_bullet_blue;
+   ALLEGRO_BITMAP *bmp_muzzle_flash;
+   ALLEGRO_BITMAP *bmp_bullet_particle;
+   ALLEGRO_BITMAP *bmp_laser;
+   ALLEGRO_BITMAP *bmp_bad_robot_1;
+} t_graphics;
+
 enum STATE { QUIT, SPLASH, TITLE, MENU, LOAD_LEVEL, PLAY_LEVEL, QUIT_LEVEL };
 
 enum DEMO_MODE { NONE, PLAY, RECORD };

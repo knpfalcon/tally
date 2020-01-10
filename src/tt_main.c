@@ -2,14 +2,8 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
-#include <adlmidi.h>
-#include <allegro5/allegro.h>
-#include <allegro5/allegro_image.h>
-#include <allegro5/allegro_audio.h>
-#include <allegro5/allegro_acodec.h>
-#include <allegro5/allegro_font.h>
-#include <allegro5/allegro_ttf.h>
 
+#include "tt_init.h"
 #include "tt_main.h"
 #include "tt_thing.h"
 #include "tt_map.h"
@@ -88,19 +82,7 @@ ALLEGRO_FONT *font_status = NULL;
 ALLEGRO_FONT *font_message = NULL;
 
 //Bitmaps that get loaded from disk
-ALLEGRO_BITMAP *bmp_loading = NULL;
-ALLEGRO_BITMAP *bmp_border = NULL;
-ALLEGRO_BITMAP *bmp_tile_sheet = NULL;
-ALLEGRO_BITMAP *bmp_item_sheet = NULL;
-ALLEGRO_BITMAP *bmp_bg = NULL;
-ALLEGRO_BITMAP *bmp_stat_border = NULL;
-ALLEGRO_BITMAP *bmp_item_fx_sheet = NULL;
-ALLEGRO_BITMAP *bmp_health_bar = NULL;
-ALLEGRO_BITMAP *bmp_bullet_blue = NULL;
-ALLEGRO_BITMAP *bmp_muzzle_flash = NULL;
-ALLEGRO_BITMAP *bmp_bullet_particle = NULL;
-ALLEGRO_BITMAP *bmp_laser = NULL;
-ALLEGRO_BITMAP *bmp_bad_robot_1 = NULL;
+t_graphics graphics = { NULL };
 
 //Bitmaps that get drawn tom
 ALLEGRO_BITMAP *view_port = NULL;
@@ -127,184 +109,7 @@ struct ADL_MIDIPlayer *midi_player = NULL;
 short *opl_buffer = NULL;
 int samples_count = 0;
 
-/*
- * Initiate everything the game needs at startup 
- */
-int init_game()
-{
-   
-   //Initialize Allegro
-   if(!al_init())
-   {
-      jlog("Failed to initialize allegro!\n");
-      return -1;
-   }
-   uint32_t version = al_get_allegro_version();
-   int major = version >> 24;
-   int minor = (version >> 16) & 255;
-   int revision = (version >> 8) & 255;
-   int release = version & 255;
-   jlog("Allegro %d.%d.%d release %d", major, minor, revision, release);
 
-   if (!al_init_image_addon())
-   {
-      jlog("Failed to initialize image_addon!");
-      return -1;
-   }
-   jlog("Image add-on initialized.");
-   //al_set_new_display_adapter(1);
-   screen.width = 1280;
-   screen.height = 800;
-   //al_set_new_display_flags(ALLEGRO_NOFRAME);
-   al_set_new_display_option(ALLEGRO_VSYNC, 1, ALLEGRO_SUGGEST);
-   display = al_create_display(screen.width, screen.height);
-   if(!display)
-   {
-      jlog("Failed to create display!");
-      return -1;
-   }
-   //Special thanks to dthompson from the allegro.cc forums for the setup below
-   screen.factor_x = al_get_display_width(display) / screen.unscaled_w;
-   screen.factor_y = al_get_display_height(display) / screen.unscaled_h;
-   screen.factor = (screen.factor_y < screen.factor_x) ? screen.factor_y : screen.factor_x;
-   screen.width = screen.unscaled_w * screen.factor;
-   screen.height = screen.unscaled_h * screen.factor;
-   screen.x = (al_get_display_width(display) / 2) - (screen.width/2);
-   screen.y = (al_get_display_height(display) / 2) - (screen.height/2);
-   jlog("Display Created.");
-   
-   // Load/Draw the fill-in border
-   bmp_border = al_load_bitmap("data/bg_border.png");
-   if (bmp_border == NULL)
-   {
-      jlog("Couldn't load bg_border.png!");
-      return -1;
-   }
-   /* for (int y = 0; y < (al_get_display_height(display) / (32 * screen.factor)) + 1; y++)
-   {
-      for (int x = 0; x < (al_get_display_width(display) / (32 * screen.factor)) + 1; x++)
-      {
-         al_draw_scaled_bitmap(border, 0, 0, 32, 32, x * (32 * screen.factor), y * (32 * screen.factor), 32 * screen.factor, 32 * screen.factor, 0);
-      }
-   } */
-   //Load/Draw Loading bitmap and flip the display
-   bmp_loading = al_load_bitmap("data/loading.png");
-   if (bmp_loading == NULL)
-   {
-      jlog("Couldn't load loading.png!");
-   }
-   else
-   {
-      al_draw_scaled_bitmap(bmp_loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
-      al_flip_display();
-   }
-
-   event_queue = al_create_event_queue();
-   if (!event_queue)
-   {
-      jlog("Failed to create event queue!");
-      return -1;
-   }
-   jlog("Event queue created.");
-
-   FPS_TIMER = al_create_timer(ALLEGRO_BPS_TO_SECS(FPS));
-   if(!FPS_TIMER)
-   {
-      jlog("Failed to create FPS timer!");
-      return -1;
-   }
-   jlog("FPS timer created.");
-
-   if (!al_install_keyboard())
-   {
-      jlog("Failed to install keyboard!");
-      return -1;
-   }
-   jlog("Keyboard installed.");
-
-   //Font Add-ons
-   if(!al_init_font_addon())
-   {
-      jlog("Failed to install fonts addon!");
-      return -1;
-   }
-   //Font Add-ons
-   if(!al_init_ttf_addon())
-   {
-      jlog("Failed to install ttf addon!");
-      return -1;
-   }
-   jlog("Fonts add-on installed.");
-
-   //Primitives
-  /*  if (!al_init_primitives_addon())
-   {
-      jlog("Failed to install primitives addon!");
-      return -1;
-   }
-   jlog("Primitives add-on initialized."); */
-
-   //Audio
-   if (!al_install_audio())
-   {
-      jlog("Failed to install audio!");
-      return -1;
-   }
-   if (!al_init_acodec_addon())
-   {
-      jlog("Failed to initialize audio codec addon!");
-      return -1;
-   }
-   jlog("Audio initialized.");
-
-   #ifdef DEBUG
-   al_set_window_title(display, "Tally Trauma -- DEBUG");
-   #endif // DEBUG
-
-   #ifdef RELEASE
-   al_set_window_title(display, "Tally Trauma");
-   #endif // RELEASE
-
-   //Load font
-   font_status = al_load_bitmap_font("data/fonts/font.png");
-   font_message = al_load_bitmap_font("data/fonts/pixfont.png");
-
-   //ADLMIDI
-   midi_player = adl_init(STREAM_FREQ);
-   adl_setLoopEnabled(midi_player, 1);
-   adl_switchEmulator(midi_player, ADLMIDI_EMU_DOSBOX);
-   adl_openBankFile(midi_player, "data/gm.wopl");
-   if (adl_openFile(midi_player, "data/music/dsong.mid") < 0)
-   {
-      jlog("Couldn't open music file: %s", adl_errorInfo(midi_player));
-      adl_close(midi_player);
-      return 1;
-   }
-
-   music_stream = al_create_audio_stream(2, BUFFER_SAMPLES, STREAM_FREQ, ALLEGRO_AUDIO_DEPTH_INT16, ALLEGRO_CHANNEL_CONF_2);
-   
-   al_register_event_source(event_queue, al_get_display_event_source(display));
-   al_register_event_source(event_queue, al_get_timer_event_source(FPS_TIMER));
-   al_register_event_source(event_queue, al_get_keyboard_event_source());
-   al_register_event_source(event_queue, al_get_audio_stream_event_source(music_stream));
-
-   //Create the game bitmap that needs to be stretched to display
-   game_bmp = al_create_bitmap(320, 200);
-
-   al_reserve_samples(8);
-
-   jlog("Game initialized.");
-   jlog("Screen size factor: %d", screen.factor);
-
-   game.level = LEVEL_1;
-   /* game.music = MUSIC_1; */
-   al_set_mixer_gain(al_get_default_mixer(), 1.0f); //Turn down the volume during development
-   al_set_audio_stream_gain(music_stream, 0.0f);
-   al_attach_audio_stream_to_mixer(music_stream, al_get_default_mixer());
-   al_set_audio_stream_playing(music_stream, false);
-   jlog("DEPTH: %d\n", al_get_mixer_depth(al_get_default_mixer()));
-   return 0;
-}
 
 /************************************************
  * Makes sure the cam is within the map bounds  *
@@ -357,7 +162,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
  bool load_level(char *map_file, char *music_file)
  {
    //Display loading image
-   al_draw_scaled_bitmap(bmp_loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
+   al_draw_scaled_bitmap(graphics.bmp_loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
    al_flip_display();
    //al_rest(3);  //Enable this when screen recording for time to hit the record button!
    //Load map
@@ -395,29 +200,29 @@ void check_cam() //Check to make sure camera is not out of bounds.
    item_fx = create_item_after_fx(map);
 
    //Load the graphics for a level
-   bmp_stat_border = al_load_bitmap("data/stat_border.png");
-   if (bmp_stat_border == NULL)
+   graphics.bmp_stat_border = al_load_bitmap("data/stat_border.png");
+   if (graphics.bmp_stat_border == NULL)
    {
       jlog("Couldn't load stat_border.png!");
       return false;
    }
 
-   bmp_bg = al_load_bitmap("data/bg_1.png");
-   if (bmp_bg == NULL)
+   graphics.bmp_bg = al_load_bitmap("data/bg_1.png");
+   if (graphics.bmp_bg == NULL)
    {
       jlog("Couldn't load bg1.png!");
       return false;
    }
 
-   bmp_tile_sheet = al_load_bitmap("data/tile_sheet.png");
-   if (bmp_tile_sheet == NULL)
+   graphics.bmp_tile_sheet = al_load_bitmap("data/tile_sheet.png");
+   if (graphics.bmp_tile_sheet == NULL)
    {
       jlog("Couldn't load tile_sheet.png!");
       return false;
    }
 
-   bmp_item_sheet = al_load_bitmap("data/item_sheet.png");
-   if (bmp_tile_sheet == NULL)
+   graphics.bmp_item_sheet = al_load_bitmap("data/item_sheet.png");
+   if (graphics.bmp_tile_sheet == NULL)
    {
       jlog("Couldn't load item_sheet.png!");
       return false;
@@ -451,23 +256,23 @@ void check_cam() //Check to make sure camera is not out of bounds.
       jlog("Orlo frame %d created.", i);
    }
 
-   bmp_bad_robot_1 = al_load_bitmap("data/badrobot.png");
-   if (bmp_bad_robot_1 == NULL) { jlog("Couldn't load badrobot.png"); return false; }
+   graphics.bmp_bad_robot_1 = al_load_bitmap("data/badrobot.png");
+   if (graphics.bmp_bad_robot_1 == NULL) { jlog("Couldn't load badrobot.png"); return false; }
 
-   bmp_item_fx_sheet = al_load_bitmap("data/item_score.png");
-   if (bmp_item_fx_sheet == NULL) { jlog("Couldn't load item_score.png"); return false; }
+   graphics.bmp_item_fx_sheet = al_load_bitmap("data/item_score.png");
+   if (graphics.bmp_item_fx_sheet == NULL) { jlog("Couldn't load item_score.png"); return false; }
   
-   bmp_health_bar = al_load_bitmap("data/health_bar.png");
-   if (bmp_health_bar == NULL) { jlog("Couldn't load health_bar.png"); return false; }
+   graphics.bmp_health_bar = al_load_bitmap("data/health_bar.png");
+   if (graphics.bmp_health_bar == NULL) { jlog("Couldn't load health_bar.png"); return false; }
 
-   bmp_muzzle_flash = al_load_bitmap("data/muzzle_flash.png");
-   if (bmp_muzzle_flash == NULL) { jlog("Couldn't load muzzle_flash.png"); return false; }
+   graphics.bmp_muzzle_flash = al_load_bitmap("data/muzzle_flash.png");
+   if (graphics.bmp_muzzle_flash == NULL) { jlog("Couldn't load muzzle_flash.png"); return false; }
    
-   bmp_bullet_particle = al_load_bitmap("data/particle.png");
-   if (bmp_bullet_particle == NULL) { jlog("Couldn't load particle.png"); return false; }
+   graphics.bmp_bullet_particle = al_load_bitmap("data/particle.png");
+   if (graphics.bmp_bullet_particle == NULL) { jlog("Couldn't load particle.png"); return false; }
 
-   bmp_laser = al_load_bitmap("data/laser.png");
-   if (bmp_laser == NULL) { jlog("Couldn't load laser.png"); return false; }
+   graphics.bmp_laser = al_load_bitmap("data/laser.png");
+   if (graphics.bmp_laser == NULL) { jlog("Couldn't load laser.png"); return false; }
 
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 
@@ -490,7 +295,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
 
    //draw the status border
    al_set_target_bitmap(game_bmp);
-   al_draw_bitmap(bmp_stat_border, 0, 0, 0);
+   al_draw_bitmap(graphics.bmp_stat_border, 0, 0, 0);
 
    game.level_needs_unloaded = true;
 
@@ -513,40 +318,40 @@ bool unload_level()
    item_fx = NULL;
    if (item_fx == NULL) jlog("item_fx unloaded.");
 
-   al_destroy_bitmap(bmp_tile_sheet);
-   bmp_tile_sheet = NULL;
-   if (bmp_tile_sheet == NULL) jlog("tile_sheet unloaded.");
-   al_destroy_bitmap(bmp_item_sheet);
-   bmp_item_sheet = NULL;
-   if (bmp_item_sheet == NULL) jlog("item_sheet unloaded.");
+   al_destroy_bitmap(graphics.bmp_tile_sheet);
+   graphics.bmp_tile_sheet = NULL;
+   if (graphics.bmp_tile_sheet == NULL) jlog("tile_sheet unloaded.");
+   al_destroy_bitmap(graphics.bmp_item_sheet);
+   graphics.bmp_item_sheet = NULL;
+   if (graphics.bmp_item_sheet == NULL) jlog("item_sheet unloaded.");
 
-   al_destroy_bitmap(bmp_bg);
-   bmp_bg = NULL;
-   if (bmp_bg == NULL) jlog("bg unloaded.");
+   al_destroy_bitmap(graphics.bmp_bg);
+   graphics.bmp_bg = NULL;
+   if (graphics.bmp_bg == NULL) jlog("bg unloaded.");
 
-   al_destroy_bitmap(bmp_stat_border);
-   bmp_stat_border = NULL;
-   if (bmp_stat_border == NULL) jlog("stat_border unloaded.");
+   al_destroy_bitmap(graphics.bmp_stat_border);
+   graphics.bmp_stat_border = NULL;
+   if (graphics.bmp_stat_border == NULL) jlog("stat_border unloaded.");
 
-   al_destroy_bitmap(bmp_item_fx_sheet);
-   bmp_item_fx_sheet = NULL;
-   if (bmp_item_fx_sheet == NULL) jlog("item_fx_sheet unloaded.");
+   al_destroy_bitmap(graphics.bmp_item_fx_sheet);
+   graphics.bmp_item_fx_sheet = NULL;
+   if (graphics.bmp_item_fx_sheet == NULL) jlog("item_fx_sheet unloaded.");
 
-   al_destroy_bitmap(bmp_health_bar);
-   bmp_health_bar = NULL;
-   if (bmp_health_bar == NULL) jlog("health_bar unloaded.");
+   al_destroy_bitmap(graphics.bmp_health_bar);
+   graphics.bmp_health_bar = NULL;
+   if (graphics.bmp_health_bar == NULL) jlog("health_bar unloaded.");
 
-   al_destroy_bitmap(bmp_muzzle_flash);
-   bmp_muzzle_flash = NULL;
-   if (bmp_muzzle_flash == NULL) jlog("muzzle_flash unloaded.");
+   al_destroy_bitmap(graphics.bmp_muzzle_flash);
+   graphics.bmp_muzzle_flash = NULL;
+   if (graphics.bmp_muzzle_flash == NULL) jlog("muzzle_flash unloaded.");
 
-   al_destroy_bitmap(bmp_bullet_particle);
-   bmp_bullet_particle = NULL;
-   if (bmp_bullet_particle == NULL) jlog("bullet_particle unloaded.");
+   al_destroy_bitmap(graphics.bmp_bullet_particle);
+   graphics.bmp_bullet_particle = NULL;
+   if (graphics.bmp_bullet_particle == NULL) jlog("bullet_particle unloaded.");
 
-   al_destroy_bitmap(bmp_laser);
-   bmp_laser = NULL;
-   if (bmp_laser == NULL) jlog("laser unloaded.");
+   al_destroy_bitmap(graphics.bmp_laser);
+   graphics.bmp_laser = NULL;
+   if (graphics.bmp_laser == NULL) jlog("laser unloaded.");
 
    for (int j = 0; j < 8; ++j)
    {
@@ -608,7 +413,7 @@ void draw_laser()
    {
       for (int x = player_bullet.start_x; x < player_bullet.end_x; x++)
       {
-         al_draw_bitmap(bmp_laser, x - cam.x , player.muzzle_y - cam.y + 6, 0);
+         al_draw_bitmap(graphics.bmp_laser, x - cam.x , player.muzzle_y - cam.y + 6, 0);
       }
    }
 
@@ -616,7 +421,7 @@ void draw_laser()
    {
       for (int x = player_bullet.start_x; x > player_bullet.end_x; x--)
       {
-          al_draw_bitmap(bmp_laser, x - cam.x , player.muzzle_y - cam.y + 6, 0);
+          al_draw_bitmap(graphics.bmp_laser, x - cam.x , player.muzzle_y - cam.y + 6, 0);
       }
    }
 }
@@ -1388,7 +1193,7 @@ void draw_orlo()
  */
 void update_screen()
 {
-   draw_map(view_port, bmp_tile_sheet, bmp_item_sheet, bmp_bg, &cam, map, &item_frame);
+   draw_map(view_port, graphics.bmp_tile_sheet, graphics.bmp_item_sheet, graphics.bmp_bg, &cam, map, &item_frame);
    draw_things(map, thing, &cam, map->num_things);
    if (!orlo_gave_health) draw_orlo();
 
@@ -1399,25 +1204,25 @@ void update_screen()
    if (player.direction == RIGHT && player.muzzle_time) 
    {
       draw_laser();
-      al_draw_bitmap(bmp_muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
+      al_draw_bitmap(graphics.bmp_muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
    }
 
    if (player.direction == LEFT && player.muzzle_time) 
    {
        draw_laser();
-      al_draw_bitmap(bmp_muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
+      al_draw_bitmap(graphics.bmp_muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
    }
    if (player_bullet.draw)
    {
-      al_draw_bitmap_region(bmp_bullet_particle, (player.muzzle_time * 2) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
+      al_draw_bitmap_region(graphics.bmp_bullet_particle, (player.muzzle_time * 2) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
       //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
    }
    if (orlo_gave_health) draw_orlo();
-   draw_item_fx(view_port, bmp_item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
+   draw_item_fx(view_port, graphics.bmp_item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
    
    if (orlo_gave_health)
    {
-      al_draw_bitmap_region(bmp_item_fx_sheet, 96, item_frame * 16, 16, 16, orlo.x + 8 - cam.x , orlo.y - orlo_gave_health_life_span - cam.y, 0);
+      al_draw_bitmap_region(graphics.bmp_item_fx_sheet, 96, item_frame * 16, 16, 16, orlo.x + 8 - cam.x , orlo.y - orlo_gave_health_life_span - cam.y, 0);
    }
    if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GET_HEALTH)  al_draw_textf(font_message, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "0R10: %s", ORLO_TXT_GET_HEALTH);
    if (orlo_message_lifetime > 0 && orlo_message_to_show == MSG_GIVE_HEALTH) al_draw_textf(font_message, al_map_rgb(255,255,255), 1, 1, ALLEGRO_ALIGN_LEFT, "0R10: %s", ORLO_TXT_GIVE_HEALTH);
@@ -1444,7 +1249,7 @@ void update_screen()
    //al_draw_textf(font_status, al_map_rgb(255,255,255), 269, 102, ALLEGRO_ALIGN_CENTER, "%02d:%02d:%02d", minutes, seconds, centiseconds);
    al_draw_textf(font_status, al_map_rgb(255,255,255), 301, 18, ALLEGRO_ALIGN_RIGHT, "%09d", player.score);
    al_draw_textf(font_status, al_map_rgb(255,255,255), 18, 185, ALLEGRO_ALIGN_LEFT, map->name);
-   al_draw_bitmap_region(bmp_health_bar, 0, player.health * 16, 64, 16, 238, 42, 0);
+   al_draw_bitmap_region(graphics.bmp_health_bar, 0, player.health * 16, 64, 16, 238, 42, 0);
    al_set_target_backbuffer(display);
    
    al_draw_scaled_bitmap(game_bmp,
@@ -1594,7 +1399,7 @@ int main(int argc, char **argv)
       fread(key_buffer, filesize, 1, demo_file);
    }
    
-   if (init_game() != 0)
+   if (init_game(&display, &screen, &event_queue, &FPS_TIMER, FPS, &graphics, &font_status, &font_message, &midi_player, STREAM_FREQ, BUFFER_SAMPLES, &music_stream, &game, &game_bmp) == false)
    {
       jlog("Failed to init game!\n");
       return -1;

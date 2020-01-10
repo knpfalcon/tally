@@ -28,6 +28,7 @@ SRC = $(patsubst %,$(SRCDIR)/%,$(_SRC))
 
 #Headers.
 _DEPS = \
+tt_init.h \
 tt_main.h \
 tt_map.h \
 tt_items.h \
@@ -41,6 +42,7 @@ DEPS = $(patsubst %,$(SRCDIR)/%,$(_DEPS))
 
 #Object files
 _OBJ = \
+tt_init.o \
 tt_main.o \
 tt_map.o \
 tt_items.o \

@@ -20,6 +20,7 @@
         "tt_collision.h": "c",
         "tt_items.h": "c",
         "allegro_primitives.h": "c",
-        "adlmidi.hpp": "c"
+        "adlmidi.hpp": "c",
+        "allegro.h": "c"
     }
 }
