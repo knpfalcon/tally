@@ -50,8 +50,8 @@ bool init_game( ALLEGRO_DISPLAY **display, t_screen *screen, ALLEGRO_EVENT_QUEUE
    jlog("Display Created.");
    
    // Load/Draw the fill-in border
-   graphics->bmp_border = al_load_bitmap("data/bg_border.png");
-   if (graphics->bmp_border == NULL)
+   graphics->border = al_load_bitmap("data/bg_border.png");
+   if (graphics->border == NULL)
    {
       jlog("Couldn't load bg_border.png!");
       return false;
@@ -64,14 +64,14 @@ bool init_game( ALLEGRO_DISPLAY **display, t_screen *screen, ALLEGRO_EVENT_QUEUE
       }
    } */
    //Load/Draw Loading bitmap and flip the display
-   graphics->bmp_loading = al_load_bitmap("data/loading.png");
-   if (graphics->bmp_loading == NULL)
+   graphics->loading = al_load_bitmap("data/loading.png");
+   if (graphics->loading == NULL)
    {
       jlog("Couldn't load loading.png!");
    }
    else
    {
-      al_draw_scaled_bitmap(graphics->bmp_loading, 0, 0, screen->unscaled_w, screen->unscaled_h, screen->x, screen->y, screen->width, screen->height, 0);
+      al_draw_scaled_bitmap(graphics->loading, 0, 0, screen->unscaled_w, screen->unscaled_h, screen->x, screen->y, screen->width, screen->height, 0);
       al_flip_display();
    }
 

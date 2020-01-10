@@ -65,19 +65,19 @@ typedef struct t_screen
 
 typedef struct 
 {
-   ALLEGRO_BITMAP *bmp_loading;
-   ALLEGRO_BITMAP *bmp_border;
-   ALLEGRO_BITMAP *bmp_tile_sheet;
-   ALLEGRO_BITMAP *bmp_item_sheet;
-   ALLEGRO_BITMAP *bmp_bg;
-   ALLEGRO_BITMAP *bmp_stat_border;
-   ALLEGRO_BITMAP *bmp_item_fx_sheet;
-   ALLEGRO_BITMAP *bmp_health_bar;
-   ALLEGRO_BITMAP *bmp_bullet_blue;
-   ALLEGRO_BITMAP *bmp_muzzle_flash;
-   ALLEGRO_BITMAP *bmp_bullet_particle;
-   ALLEGRO_BITMAP *bmp_laser;
-   ALLEGRO_BITMAP *bmp_bad_robot_1;
+   ALLEGRO_BITMAP *loading;
+   ALLEGRO_BITMAP *border;
+   ALLEGRO_BITMAP *tile_sheet;
+   ALLEGRO_BITMAP *item_sheet;
+   ALLEGRO_BITMAP *bg;
+   ALLEGRO_BITMAP *stat_border;
+   ALLEGRO_BITMAP *item_fx_sheet;
+   ALLEGRO_BITMAP *health_bar;
+   ALLEGRO_BITMAP *bullet_blue;
+   ALLEGRO_BITMAP *muzzle_flash;
+   ALLEGRO_BITMAP *bullet_particle;
+   ALLEGRO_BITMAP *laser;
+   ALLEGRO_BITMAP *bad_robot_1;
 } t_graphics;
 
 enum STATE { QUIT, SPLASH, TITLE, MENU, LOAD_LEVEL, PLAY_LEVEL, QUIT_LEVEL };
