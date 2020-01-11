@@ -35,6 +35,7 @@ typedef struct
    int height;
    bool draw;
    bool on_ground;
+   unsigned char health;
    unsigned char type;
    bool active;
    bool touched;

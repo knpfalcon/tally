@@ -7,6 +7,7 @@
 #include "tt_thing.h"
 
 bool is_ground(t_map *m, int x, int y);
+bool check_collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
 //NOTE: Only use this between player and things, or things and things (Use with caution!)
 bool collision_check(void *a, void *b);
 

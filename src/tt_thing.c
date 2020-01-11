@@ -97,6 +97,7 @@ void load_things(t_thing *t, t_map *m)
                 t[m->num_things -1].bb_left = 0;
                 t[m->num_things -1].width = 16;
                 t[m->num_things -1].height = 16;
+                t[m->num_things -1].health = 3;
             }
             
         }

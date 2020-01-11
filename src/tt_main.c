@@ -540,6 +540,23 @@ bool check_bullet_collision()
             player_bullet.draw = true;
             return true;
          }
+         //Check bullet collision against things
+         for (int i = 0; i < map->num_things; i++)
+         {
+            if (thing[i].type < 10 && thing[i].type != ENEMY_SPIKES && thing[i].active == true)
+            {
+               if (check_collision(x, player_bullet.start_y, 1, 1,thing[i].x, thing[i].y, thing[i].bb_width, thing[i].bb_height) )
+               {
+                  player_bullet.end_x = x;
+                  player_bullet.end_y = player_bullet.start_y;
+                  jlog("Bullet hit at %d, %d", player_bullet.end_x, player_bullet.end_y);
+                  player_bullet.draw = true;
+                  thing[i].health -= 1;
+                  return true;
+               }
+            }
+         }
+         
       }
    }
 
@@ -556,6 +573,22 @@ bool check_bullet_collision()
             jlog("Bullet hit at %d, %d", player_bullet.end_x, player_bullet.end_y);
             player_bullet.draw = true;
             return true;
+         }
+         //Check bullet collision against things
+         for (int i = 0; i < map->num_things; i++)
+         {
+            if (thing[i].type < 10 && thing[i].type != ENEMY_SPIKES && thing[i].active == true)
+            {
+               if (check_collision(x, player_bullet.start_y, 1, 1,thing[i].x, thing[i].y, thing[i].bb_width, thing[i].bb_height) )
+               {
+                  player_bullet.end_x = x;
+                  player_bullet.end_y = player_bullet.start_y;
+                  jlog("Bullet hit at %d, %d", player_bullet.end_x, player_bullet.end_y);
+                  player_bullet.draw = true;
+                  thing[i].health -= 1;
+                  return true;
+               }
+            }
          }
       }
    }
@@ -879,7 +912,7 @@ void update_player()
    {
       if (collision_check(&player, &thing[i]))
       {
-         if (!player.hurt && thing[i].type < 10 && player.health) //If thing can hurt player (The first 10 types can)
+         if (!player.hurt && thing[i].type < 10 && player.health && thing[i].active == true) //If thing can hurt player (The first 10 types can)
          {
             play_sound(sounds.hurt, false);
             player.hurt = PLAYER_HURT_TIME;
@@ -1206,78 +1239,83 @@ void update_enemies()
 {
    for (int i = 0; i < map->num_things; i++)
    {
-      if (thing[i].type == ENEMY_TOY_ROBOT)
+      if (thing[i].active == true)
       {
-         int x1 = 15;
-         int x2 = 0;
-         int speed = 1;
+         if (thing[i].type == ENEMY_TOY_ROBOT)
+         {
+            int x1 = 15;
+            int x2 = 0;
+            int speed = 1;
 
-         if (thing[i].on_ground) 
-         {
-            thing[i].cur_frame = item_frame;
-            speed = 1;
-         }
-         if (!thing[i].on_ground) 
-         {
-            if (thing[i].vel_y > 0) thing[i].cur_frame = 2;
-            if (thing[i].vel_y < 0) thing[i].cur_frame = 3;
-            speed = 2;
-         }
-
-         if (thing[i].direction == RIGHT) thing[i].x += speed;
-         if (thing[i].direction == LEFT) thing[i].x -= speed;
-
-         if (thing[i].direction == RIGHT && return_horizontal_tile_collision(map, &thing[i], x1, x2))
-         {
-            thing[i].x -= speed;
-            thing[i].direction = LEFT;
-         }
-         if (thing[i].direction == LEFT && return_horizontal_tile_collision(map, &thing[i], x1, x2))
-         {
-            thing[i].x += speed;
-            thing[i].direction = RIGHT;
-         }
-
-         if ( !is_ground(map, thing[i].x + x1, thing[i].y + 16) && !is_ground(map, thing[i].x +x2, thing[i].y + 16) ) 
-         {
-            thing[i].on_ground = false;
-            thing[i].vel_y += 4;
-            if (thing[i].vel_y >= 0) thing[i].state = FALLING;
-            if (thing[i].vel_y < 0) thing[i].state = JUMPING;
-         }
-         else
-         {
-            thing[i].on_ground = true;
-            thing[i].vel_y = 0;
-         }
-         
-         if (thing[i].on_ground)
-         {
-            if (!is_ground(map, thing[i].x + x2 , thing[i].y + 16) && thing[i].direction == LEFT)
+            if (thing[i].on_ground) 
             {
-               if ( !is_ground(map, thing[i].x + x2  - TILE_SIZE, thing[i].y + 16) )
-               {
-                  thing[i].direction = RIGHT;
-                  return;
-               }
-               jump(&thing[i], 32);
-               thing[i].on_ground = false;
-            } 
-            if (!is_ground(map, thing[i].x + x1  , thing[i].y + 16) && thing[i].direction == RIGHT) 
-            {
-               if ( !is_ground(map, thing[i].x + x1  + TILE_SIZE, thing[i].y + 16) )
-               {
-                  thing[i].direction = LEFT;
-                  return;
-               }
-               jump(&thing[i], 32);
-               thing[i].on_ground = false;
+               thing[i].cur_frame = item_frame;
+               speed = 1;
             }
+            if (!thing[i].on_ground) 
+            {
+               if (thing[i].vel_y > 0) thing[i].cur_frame = 2;
+               if (thing[i].vel_y < 0) thing[i].cur_frame = 3;
+               speed = 2;
+            }
+
+            if (thing[i].direction == RIGHT) thing[i].x += speed;
+            if (thing[i].direction == LEFT) thing[i].x -= speed;
+
+            if (thing[i].direction == RIGHT && return_horizontal_tile_collision(map, &thing[i], x1, x2))
+            {
+               thing[i].x -= speed;
+               thing[i].direction = LEFT;
+            }
+            if (thing[i].direction == LEFT && return_horizontal_tile_collision(map, &thing[i], x1, x2))
+            {
+               thing[i].x += speed;
+               thing[i].direction = RIGHT;
+            }
+
+            if ( !is_ground(map, thing[i].x + x1, thing[i].y + 16) && !is_ground(map, thing[i].x +x2, thing[i].y + 16) ) 
+            {
+               thing[i].on_ground = false;
+               thing[i].vel_y += 4;
+               if (thing[i].vel_y >= 0) thing[i].state = FALLING;
+               if (thing[i].vel_y < 0) thing[i].state = JUMPING;
+            }
+            else
+            {
+               thing[i].on_ground = true;
+               thing[i].vel_y = 0;
+            }
+            
+            if (thing[i].on_ground)
+            {
+               if (!is_ground(map, thing[i].x + x2 , thing[i].y + 16) && thing[i].direction == LEFT)
+               {
+                  if ( !is_ground(map, thing[i].x + x2  - TILE_SIZE, thing[i].y + 16) )
+                  {
+                     thing[i].direction = RIGHT;
+                     return;
+                  }
+                  jump(&thing[i], 32);
+                  thing[i].on_ground = false;
+               } 
+               if (!is_ground(map, thing[i].x + x1  , thing[i].y + 16) && thing[i].direction == RIGHT) 
+               {
+                  if ( !is_ground(map, thing[i].x + x1  + TILE_SIZE, thing[i].y + 16) )
+                  {
+                     thing[i].direction = LEFT;
+                     return;
+                  }
+                  jump(&thing[i], 32);
+                  thing[i].on_ground = false;
+               }
+            }
+            check_floor(map, &thing[i], x1, x2, 15);
+            check_ceiling(map, &thing[i], x1, x2);
+            apply_gravity(&thing[i], 32);
          }
-         check_floor(map, &thing[i], x1, x2, 15);
-         check_ceiling(map, &thing[i], x1, x2);
-         apply_gravity(&thing[i], 32);
       }
+      
+      if ( thing[i].health == 0 ) thing[i].active = false;
    }
 }
 
