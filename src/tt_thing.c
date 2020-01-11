@@ -15,7 +15,7 @@ void draw_things(t_map *m, t_thing *t, t_cam *c, int count)
              t[i].y > c->y - t[i].height &&
              t[i].y < c->y + VIEWPORT_HEIGHT)
             {
-                if (t[i].type == ENEMY_BAD_ROBOT)
+                if (t[i].type == ENEMY_TOY_ROBOT)
                 {
                     al_draw_bitmap(t[i].frame[t[i].cur_frame], t[i].x - c->x, t[i].y - c->y, 0);
                 }
@@ -82,15 +82,15 @@ void load_things(t_thing *t, t_map *m)
                 t[m->num_things -1].height = 16;
             }
 
-            if (m->position[x + y * MAP_WIDTH].thing == ENEMY_BAD_ROBOT)
+            if (m->position[x + y * MAP_WIDTH].thing == ENEMY_TOY_ROBOT)
             {
-                t[m->num_things -1].bitmap = al_load_bitmap("data/badrobot.png");
+                t[m->num_things -1].bitmap = al_load_bitmap("data/toyrobot.png");
                 for (int i =0; i < 8; i++)
                 {
                     t[m->num_things -1].frame[i] = al_create_sub_bitmap(t[m->num_things -1].bitmap, i * 16, 0, 16, 16);
                 }
                 
-                t[m->num_things -1].type = ENEMY_BAD_ROBOT;
+                t[m->num_things -1].type = ENEMY_TOY_ROBOT;
                 t[m->num_things -1].bb_height = 16;
                 t[m->num_things -1].bb_width = 16;
                 t[m->num_things -1].bb_top = 0;

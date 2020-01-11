@@ -247,8 +247,8 @@ void check_cam() //Check to make sure camera is not out of bounds.
       jlog("Orlo frame %d created.", i);
    }
 
-   graphics.bad_robot_1 = al_load_bitmap("data/badrobot.png");
-   if (graphics.bad_robot_1 == NULL) { jlog("Couldn't load badrobot.png"); return false; }
+   graphics.bad_robot_1 = al_load_bitmap("data/toyrobot.png");
+   if (graphics.bad_robot_1 == NULL) { jlog("Couldn't load toyrobot.png"); return false; }
 
    graphics.item_fx_sheet = al_load_bitmap("data/item_score.png");
    if (graphics.item_fx_sheet == NULL) { jlog("Couldn't load item_score.png"); return false; }
@@ -886,7 +886,7 @@ void update_player()
             if(player.health) player.health--;
             screen_flash = 2;
          }
-         if (thing[i].type == ENEMY_BAD_ROBOT)
+         if (thing[i].type == ENEMY_TOY_ROBOT)
          {
             if (thing[i].touched == false) //play_sound(orlo_give_health, false);
             thing[i].touched = true;
@@ -998,7 +998,7 @@ void reset_out_of_view_things()
 {
    for (int i = 0; i < map->num_things; i++)
    {
-      if (thing[i].type == ENEMY_BAD_ROBOT)
+      if (thing[i].type == ENEMY_TOY_ROBOT)
       {
          if (thing[i].x > cam.x + VIEWPORT_WIDTH || thing[i].y > cam.y + VIEWPORT_HEIGHT || thing[i].x + thing[i].width < cam.x || thing[i].y + thing[i].height < cam.y)
          {   
@@ -1206,7 +1206,7 @@ void update_enemies()
 {
    for (int i = 0; i < map->num_things; i++)
    {
-      if (thing[i].type == ENEMY_BAD_ROBOT)
+      if (thing[i].type == ENEMY_TOY_ROBOT)
       {
          int x1 = 15;
          int x2 = 0;
