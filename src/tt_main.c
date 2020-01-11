@@ -90,16 +90,7 @@ ALLEGRO_BITMAP *game_bmp = NULL;
 
 //Sounds
 float sfx_volume = 1.0;
-ALLEGRO_SAMPLE *snd_pickup = NULL;
-ALLEGRO_SAMPLE *snd_hurt = NULL;
-ALLEGRO_SAMPLE *snd_health = NULL;
-ALLEGRO_SAMPLE *snd_fall = NULL;
-ALLEGRO_SAMPLE *snd_jump = NULL;
-ALLEGRO_SAMPLE *snd_land = NULL;
-ALLEGRO_SAMPLE *snd_hithead = NULL;
-ALLEGRO_SAMPLE *snd_shoot = NULL;
-ALLEGRO_SAMPLE *snd_orlo_give_health = NULL;
-ALLEGRO_SAMPLE *snd_orlo_get_health = NULL;
+t_sounds sounds = { NULL };
 
 ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
 
@@ -108,8 +99,6 @@ struct ADL_MIDIPlayer *midi_player = NULL;
 
 short *opl_buffer = NULL;
 int samples_count = 0;
-
-
 
 /************************************************
  * Makes sure the cam is within the map bounds  *
@@ -277,16 +266,16 @@ void check_cam() //Check to make sure camera is not out of bounds.
    view_port = al_create_bitmap(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 
    //Load sounds
-   snd_fall = al_load_sample("data/sound/fall.wav");
-   snd_jump = al_load_sample("data/sound/jump.wav");
-   snd_land = al_load_sample("data/sound/land.wav");
-   snd_hithead = al_load_sample("data/sound/hithead.wav");
-   snd_pickup = al_load_sample("data/sound/pickup.wav");
-   snd_health = al_load_sample("data/sound/health.wav");
-   snd_hurt = al_load_sample("data/sound/hurt.wav");
-   snd_shoot = al_load_sample("data/sound/shoot.wav");
-   snd_orlo_give_health = al_load_sample("data/sound/orlogivehealth.wav");
-   snd_orlo_get_health = al_load_sample("data/sound/orloacquiredhealth.wav");
+   sounds.fall = al_load_sample("data/sound/fall.wav");
+   sounds.jump = al_load_sample("data/sound/jump.wav");
+   sounds.land = al_load_sample("data/sound/land.wav");
+   sounds.hithead = al_load_sample("data/sound/hithead.wav");
+   sounds.pickup = al_load_sample("data/sound/pickup.wav");
+   sounds.health = al_load_sample("data/sound/health.wav");
+   sounds.hurt = al_load_sample("data/sound/hurt.wav");
+   sounds.shoot = al_load_sample("data/sound/shoot.wav");
+   sounds.orlo_give_health = al_load_sample("data/sound/orlogivehealth.wav");
+   sounds.orlo_get_health = al_load_sample("data/sound/orloacquiredhealth.wav");
 
    al_set_audio_stream_playing(music_stream, true);
 
@@ -369,26 +358,26 @@ bool unload_level()
    view_port = NULL;
    if (view_port == NULL) jlog("view_port unloaded.");
 
-   al_destroy_sample(snd_jump);
-   snd_jump = NULL;
+   al_destroy_sample(sounds.jump);
+   sounds.jump = NULL;
 
-   al_destroy_sample(snd_land);
-   snd_land = NULL;
+   al_destroy_sample(sounds.land);
+   sounds.land = NULL;
 
-   al_destroy_sample(snd_hithead);
-   snd_hithead = NULL;
+   al_destroy_sample(sounds.hithead);
+   sounds.hithead = NULL;
 
-   al_destroy_sample(snd_pickup);
-   snd_pickup = NULL;
+   al_destroy_sample(sounds.pickup);
+   sounds.pickup = NULL;
 
-   al_destroy_sample(snd_health);
-   snd_health = NULL;
+   al_destroy_sample(sounds.health);
+   sounds.health = NULL;
 
-   al_destroy_sample(snd_hurt);
-   snd_hurt = NULL;
+   al_destroy_sample(sounds.hurt);
+   sounds.hurt = NULL;
 
-   al_destroy_sample(snd_shoot);
-   snd_shoot = NULL;
+   al_destroy_sample(sounds.shoot);
+   sounds.shoot = NULL;
 
    game.level_needs_unloaded = false;
    return true; //Returns true on success
@@ -707,7 +696,7 @@ void update_player()
       if (is_ground(map, player.x + x1, player.y + 32))
       {
          landed = false;
-         play_sound(snd_land, false);
+         play_sound(sounds.land, false);
       }
    }
 
@@ -722,7 +711,7 @@ void update_player()
       if (player.direction == RIGHT) player.x += 4;
       if (player.direction == LEFT) player.x -= 4;
       player.vel_y += 24;
-      play_sound(snd_fall, false);
+      play_sound(sounds.fall, false);
    }
    else if(player.on_ground == true && !is_ground(map, player.x + x1, player.y + 32) && !is_ground(map, player.x +x3, player.y + 32) && key[KEY_JUMP] && player.y + 31 > 0)
    {
@@ -750,7 +739,7 @@ void update_player()
          {
             if (!is_ground(map, player.x + x1, player.y-1) && !is_ground(map, player.x + x2, player.y-1) && player.y + 31 > 0)
             {
-               play_sound(snd_jump, false);
+               play_sound(sounds.jump, false);
             }
             player.vel_y = -46;
             player.jump_pressed = true;
@@ -760,7 +749,7 @@ void update_player()
          {
             if (is_ground(map, player.x + x1, player.y-1) && is_ground(map, player.x + x2, player.y-1) && player.y + 31 > 0)
             {
-               play_sound(snd_jump, false);
+               play_sound(sounds.jump, false);
             }
             player.vel_y = -46;
             player.jump_pressed = true;
@@ -811,7 +800,7 @@ void update_player()
          player.vel_y = 0;
          if(player.state == JUMPING)
          {
-            play_sound(snd_hithead, false);
+            play_sound(sounds.hithead, false);
          }
          player.state = FALLING;
 
@@ -822,7 +811,7 @@ void update_player()
          player.vel_y = 0;
          if(player.state == JUMPING)
          {
-            play_sound(snd_hithead, false);
+            play_sound(sounds.hithead, false);
          }
          player.state = FALLING;
       }
@@ -903,7 +892,7 @@ void update_player()
             mp->item = 0;
             activate_item_fx(mp, item_fx);
             jlog("Health: %d", player.health);
-            play_sound(snd_health, false);
+            play_sound(sounds.health, false);
             player.score += 100;
          }
          else if (mp2->item == ITEM_HEALTH && player.health < 8)
@@ -912,7 +901,7 @@ void update_player()
             mp2->item = 0;
             activate_item_fx(mp2, item_fx);
             jlog("Health: %d", player.health);
-            play_sound(snd_health, false);
+            play_sound(sounds.health, false);
             player.score += 100;
          }
          else if (mp3->item == ITEM_HEALTH && player.health < 8)
@@ -921,13 +910,13 @@ void update_player()
             mp3->item = 0;
             activate_item_fx(mp3, item_fx);
             jlog("Health: %d", player.health);
-            play_sound(snd_health, false);
+            play_sound(sounds.health, false);
             player.score += 100;
          }
          // Not-Health sound
          else if (mp->item != ITEM_HEALTH && mp2->item != ITEM_HEALTH && mp3->item != ITEM_HEALTH)
          {
-            play_sound(snd_pickup, false);
+            play_sound(sounds.pickup, false);
             jlog("Score: %d", player.score);
          }
       }
@@ -941,7 +930,7 @@ void update_player()
       {
          if (!player.hurt && thing[i].type < 10 && player.health) //If thing can hurt player (The first 10 types can)
          {
-            play_sound(snd_hurt, false);
+            play_sound(sounds.hurt, false);
             player.hurt = PLAYER_HURT_TIME;
             if(player.health) player.health--;
             screen_flash = 2;
@@ -961,7 +950,7 @@ void update_player()
    //Shooting time
    if (key[KEY_FIRE] && !player.shoot_time)
    {
-      play_sound(snd_shoot, false);
+      play_sound(sounds.shoot, false);
       player.shoot_time = 5;
       player.muzzle_time = 3;
    }
@@ -1123,7 +1112,7 @@ void update_orlo()
             mp->item = 0;
             orlo.state = ORLO_STATE_W_HEALTH;
             activate_item_fx(mp, item_fx);
-            play_sound(snd_orlo_get_health, false);
+            play_sound(sounds.orlo_get_health, false);
             orlo_message_lifetime = 32;
             orlo_message_to_show = MSG_GET_HEALTH;
          }
@@ -1132,7 +1121,7 @@ void update_orlo()
             mp2->item = 0;
             orlo.state = ORLO_STATE_W_HEALTH;
             activate_item_fx(mp2, item_fx);
-            play_sound(snd_orlo_get_health, false);
+            play_sound(sounds.orlo_get_health, false);
             orlo_message_lifetime = 32;
             orlo_message_to_show = MSG_GET_HEALTH;
          }
@@ -1141,7 +1130,7 @@ void update_orlo()
             mp3->item = 0;
             orlo.state = ORLO_STATE_W_HEALTH;
             activate_item_fx(mp3, item_fx);
-            play_sound(snd_orlo_get_health, false);
+            play_sound(sounds.orlo_get_health, false);
             orlo_message_lifetime = 32;
             orlo_message_to_show = MSG_GET_HEALTH;
          } 
@@ -1149,7 +1138,7 @@ void update_orlo()
 
    if (player.health < 8 && collision_check(&player, &orlo) && key[KEY_UP] && orlo.state == ORLO_STATE_W_HEALTH)
    {
-      play_sound(snd_orlo_give_health, false);
+      play_sound(sounds.orlo_give_health, false);
       orlo.state = ORLO_STATE_NORMAL;
       player.health = 8;
       orlo_gave_health = true;

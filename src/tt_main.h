@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 #include "jt_util.h"
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_audio.h>
 
 #ifdef EDITOR
 #define VIEWPORT_WIDTH 416
@@ -79,6 +81,21 @@ typedef struct
    ALLEGRO_BITMAP *laser;
    ALLEGRO_BITMAP *bad_robot_1;
 } t_graphics;
+
+typedef struct
+{
+   ALLEGRO_SAMPLE *pickup;
+   ALLEGRO_SAMPLE *hurt;
+   ALLEGRO_SAMPLE *health;
+   ALLEGRO_SAMPLE *fall;
+   ALLEGRO_SAMPLE *jump;
+   ALLEGRO_SAMPLE *land;
+   ALLEGRO_SAMPLE *hithead;
+   ALLEGRO_SAMPLE *shoot;
+   ALLEGRO_SAMPLE *orlo_give_health;
+   ALLEGRO_SAMPLE *orlo_get_health;
+}t_sounds;
+
 
 enum STATE { QUIT, SPLASH, TITLE, MENU, LOAD_LEVEL, PLAY_LEVEL, QUIT_LEVEL };
 
