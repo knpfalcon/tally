@@ -760,7 +760,7 @@ void update_player()
       here, we don't actually see what is happening. */
    if (player.y + 31 < MAP_HEIGHT * TILE_SIZE)
    {
-      check_floor(map, &player, x1, x2);
+      check_floor(map, &player, x1, x2, 31);
    }
 
    /* Check Ceiling
@@ -1208,47 +1208,54 @@ void update_enemies()
    {
       if (thing[i].type == ENEMY_BAD_ROBOT)
       {
-         int x1 = 17;
-         int x2 = -1;
-
-         if (thing[i].direction == RIGHT) thing[i].x += 1;
-         if (thing[i].direction == LEFT) thing[i].x -= 1;
+         int x1 = 15;
+         int x2 = 1;
+         int speed = 2;
+         if (thing[i].direction == RIGHT) thing[i].x += speed;
+         if (thing[i].direction == LEFT) thing[i].x -= speed;
 
          if (thing[i].direction == RIGHT && return_horizontal_tile_collision(map, &thing[i], x1, x2))
          {
-            thing[i].x --;
+            thing[i].x -= speed;
             thing[i].direction = LEFT;
          }
          if (thing[i].direction == LEFT && return_horizontal_tile_collision(map, &thing[i], x1, x2))
          {
-            thing[i].x ++;
+            thing[i].x += speed;
             thing[i].direction = RIGHT;
          }
 
-         if ( (!is_ground(map, thing[i].x + x1, player.y + 16) && !is_ground(map, thing[i].x +x2, player.y + 16)) )
+         if ( !is_ground(map, thing[i].x + x1, thing[i].y + 16) && !is_ground(map, thing[i].x +x2, thing[i].y + 16) ) 
          {
+            thing[i].on_ground = false;
             thing[i].vel_y += 4;
+            if (thing[i].vel_y >= 0) thing[i].state = FALLING;
+            if (thing[i].vel_y < 0) thing[i].state = JUMPING;
          }
-         else 
+         else
          {
             thing[i].on_ground = true;
             thing[i].vel_y = 0;
          }
-
-         if ( thing[i].on_ground == true && !is_ground(map, thing[i].x + 17, thing[i].y + 16) && thing[i].direction == RIGHT)
+         
+         if (thing[i].on_ground)
          {
-            thing[i].on_ground = false;
-            jump(&thing[i], 12);
-         } 
-         if ( thing[i].on_ground == true && !is_ground(map, thing[i].x -1 , thing[i].y + 16) && thing[i].direction == LEFT) 
-         {
-            thing[i].on_ground = false;
-            jump(&thing[i], 12);
+            if (!is_ground(map, thing[i].x + x2, thing[i].y + 16) && thing[i].direction == LEFT)
+            {
+               jump(&thing[i], 36);
+               thing[i].on_ground = false;
+            } 
+            if (!is_ground(map, thing[i].x + x1, thing[i].y + 16) && thing[i].direction == RIGHT) 
+            {
+               jump(&thing[i], 36);
+               thing[i].on_ground = false;
+            }
          }
-         check_floor(map, &thing[i], x1, x2);
+
+         check_floor(map, &thing[i], x1, x2, 15);
          check_ceiling(map, &thing[i], x1, x2);
          apply_gravity(&thing[i], 48);
-         
+         jlog("%d", thing[i].on_ground);
       }
    }
 }

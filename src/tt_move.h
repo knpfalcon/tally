@@ -9,7 +9,7 @@
 void check_horizontal_tile_collision(t_map *map, void *thing, int x1, int x2, int old_x);
 bool return_horizontal_tile_collision(t_map *map, void *thing, int x1, int x2);
 void check_ceiling(t_map *map, void *thing, int x1, int x2);
-void check_floor(t_map *map, void *thing, int x1, int x2);
+void check_floor(t_map *map, void *thing, int x1, int x2, int height);
 void apply_gravity(void *thing, int force);
 void jump(void *thing, int strength);
 
