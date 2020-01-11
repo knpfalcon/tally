@@ -11,6 +11,8 @@
 #include "tt_collision.h"
 #include "tt_items.h"
 #include "tt_bullet.h"
+#include "tt_sound.h"
+#include "tt_move.h"
 
 #define BUFFER_SAMPLES 2048
 #define STREAM_FREQ 44100
@@ -89,7 +91,7 @@ ALLEGRO_BITMAP *view_port = NULL;
 ALLEGRO_BITMAP *game_bmp = NULL;
 
 //Sounds
-float sfx_volume = 1.0;
+float sfx_volume = 1.0f;
 t_sounds sounds = { NULL };
 
 ALLEGRO_SAMPLE_ID *snd_jump_id = NULL;
@@ -383,16 +385,6 @@ bool unload_level()
    return true; //Returns true on success
 }
 
-
-/*
- * Plays a sound without all the boilerplate
- */
-void play_sound(ALLEGRO_SAMPLE *s, bool interupt)
-{
-   if (interupt) al_stop_samples();
-   al_play_sample(s, sfx_volume, 0, 1, ALLEGRO_PLAYMODE_ONCE, NULL);
-}
-
 /*
  * Draw laser
  */
@@ -658,17 +650,7 @@ void update_player()
       jerkiness of the process. */
    if (player.y + 31 < MAP_HEIGHT * TILE_SIZE)
    {
-      if (player.y + 32 > 0)
-      {
-         if (is_ground(map, player.x + x1, player.y + 2 )) player.x = old_x; //top
-         if (is_ground(map, player.x + x2, player.y + 2 )) player.x = old_x;
-
-         if (is_ground(map, player.x + x1, player.y + 16 )) player.x = old_x; //center
-         if (is_ground(map, player.x + x2, player.y + 16 )) player.x = old_x;
-
-         if (is_ground(map, player.x + x1, player.y + 31 )) player.x = old_x; //bottom
-         if (is_ground(map, player.x + x2, player.y + 31 )) player.x = old_x;
-      }
+      check_horizontal_tile_collision(map, &player, x1, x2, old_x);
    }
    /* Vertical movement
       Checks the two points below the player's feet
@@ -688,7 +670,6 @@ void update_player()
       player.on_ground = true;
       //player.jump_pressed = false;
       player.vel_y = 0;
-
    }
 
    if (landed == true)
@@ -741,7 +722,7 @@ void update_player()
             {
                play_sound(sounds.jump, false);
             }
-            player.vel_y = -46;
+            jump(&player, 46);
             player.jump_pressed = true;
             player.on_ground = false;
          }
@@ -751,7 +732,7 @@ void update_player()
             {
                play_sound(sounds.jump, false);
             }
-            player.vel_y = -46;
+            jump(&player, 46);
             player.jump_pressed = true;
             player.on_ground = false;
          }
@@ -760,16 +741,17 @@ void update_player()
    if (!key[KEY_JUMP])
    {
       player.jump_pressed = false;
-      if (player.vel_y < 0) player.vel_y /= 2;
+      if (player.vel_y < 0) player.vel_y /= 2; //If jump isn't press let player fall (stop jumping)
    }
 
-   /* Apply vertical force
+   /* Apply vertical force (gravity)
       This is where the player's Y position is changed
       based on it's Y velocity divided by 4. Effectively
       pulling the player back down if it's in the air.
       But it's capped so it doesn't get infinitely faster. */
-   player.y += player.vel_y / 4;
-   if (player.vel_y > 48) player.vel_y = 48;
+   /* player.y += player.vel_y / 4;
+   if (player.vel_y > 48) player.vel_y = 48; */
+   apply_gravity(&player, 48);
 
    /* Check floor
       If the player is literally inside a tile, this
@@ -778,46 +760,16 @@ void update_player()
       here, we don't actually see what is happening. */
    if (player.y + 31 < MAP_HEIGHT * TILE_SIZE)
    {
-      while (is_ground(map, player.x + x1, player.y + 31) && player.y + 31 > 0)
-      {
-         player.y--;
-         player.on_ground = true;
-      }
-      while (is_ground(map, player.x + x2, player.y + 31) && player.y + 31 > 0)
-      {
-         player.y--;
-         player.on_ground = true;
-      }
+      check_floor(map, &player, x1, x2);
    }
 
    /* Check Ceiling
       Same as above except at the players top. */
    if (player.y > 0)
    {
-      while (is_ground(map, player.x + x1, player.y))
-      {
-         player.y++;
-         player.vel_y = 0;
-         if(player.state == JUMPING)
-         {
-            play_sound(sounds.hithead, false);
-         }
-         player.state = FALLING;
-
-      }
-      while (is_ground(map, player.x + x2, player.y))
-      {
-         player.y++;
-         player.vel_y = 0;
-         if(player.state == JUMPING)
-         {
-            play_sound(sounds.hithead, false);
-         }
-         player.state = FALLING;
-      }
+      check_ceiling(map, &player, x1, x2);
    }
-   
-   
+    
    /* Check for items
       Here we check if the player is over an item
       This get a little redundant. */
@@ -921,7 +873,6 @@ void update_player()
          }
       }
    }
-
 
    //Collisions against things
    for (int i = 0; i < map->num_things; i++)
@@ -1257,10 +1208,47 @@ void update_enemies()
    {
       if (thing[i].type == ENEMY_BAD_ROBOT)
       {
+         int x1 = 17;
+         int x2 = -1;
+
          if (thing[i].direction == RIGHT) thing[i].x += 1;
          if (thing[i].direction == LEFT) thing[i].x -= 1;
-         if ( !is_ground(map, thing[i].x + 15, thing[i].y + 16) && thing[i].direction == RIGHT) thing[i].direction = LEFT;
-         if ( !is_ground(map, thing[i].x + 1, thing[i].y + 16) && thing[i].direction == LEFT) thing[i].direction = RIGHT;
+
+         if (thing[i].direction == RIGHT && return_horizontal_tile_collision(map, &thing[i], x1, x2))
+         {
+            thing[i].x --;
+            thing[i].direction = LEFT;
+         }
+         if (thing[i].direction == LEFT && return_horizontal_tile_collision(map, &thing[i], x1, x2))
+         {
+            thing[i].x ++;
+            thing[i].direction = RIGHT;
+         }
+
+         if ( (!is_ground(map, thing[i].x + x1, player.y + 16) && !is_ground(map, thing[i].x +x2, player.y + 16)) )
+         {
+            thing[i].vel_y += 4;
+         }
+         else 
+         {
+            thing[i].on_ground = true;
+            thing[i].vel_y = 0;
+         }
+
+         if ( thing[i].on_ground == true && !is_ground(map, thing[i].x + 17, thing[i].y + 16) && thing[i].direction == RIGHT)
+         {
+            thing[i].on_ground = false;
+            jump(&thing[i], 12);
+         } 
+         if ( thing[i].on_ground == true && !is_ground(map, thing[i].x -1 , thing[i].y + 16) && thing[i].direction == LEFT) 
+         {
+            thing[i].on_ground = false;
+            jump(&thing[i], 12);
+         }
+         check_floor(map, &thing[i], x1, x2);
+         check_ceiling(map, &thing[i], x1, x2);
+         apply_gravity(&thing[i], 48);
+         
       }
    }
 }

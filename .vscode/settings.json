@@ -21,6 +21,8 @@
         "tt_items.h": "c",
         "allegro_primitives.h": "c",
         "adlmidi.hpp": "c",
-        "allegro.h": "c"
+        "allegro.h": "c",
+        "tt_move.h": "c",
+        "tt_sound.h": "c"
     }
 }

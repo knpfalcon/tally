@@ -5,7 +5,6 @@
 
 #include "tt_items.h"
 
-
 /*************************************************
  * Allocates memory for the item after effects   *
  *************************************************/

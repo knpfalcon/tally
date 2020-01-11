@@ -36,7 +36,9 @@ tt_player.h \
 jt_util.h \
 tt_bullet.h \
 tt_collision.h \
-tt_thing.h
+tt_thing.h \
+tt_move.h \
+tt_sound.h \
 ########
 DEPS = $(patsubst %,$(SRCDIR)/%,$(_DEPS))
 
@@ -51,7 +53,8 @@ jt_util.o \
 tt_bullet.o \
 tt_collision.o \
 tt_thing.o \
-
+tt_move.o \
+tt_sound.o 
 
 ########
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
