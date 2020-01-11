@@ -26,7 +26,7 @@
 
 #define ANIMATION_SPEED 3
 
-#define LEVEL_1 "data/maps/map3.spl"
+#define LEVEL_1 "data/maps/map.spl"
 
 #define MUSIC_0 "data/music/music0.ogg"
 #define MUSIC_1 "data/music/music1.ogg"
