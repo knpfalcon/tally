@@ -155,7 +155,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
    //Display loading image
    al_draw_scaled_bitmap(graphics.loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
    al_flip_display();
-   //al_rest(3);  //Enable this when screen recording for time to hit the record button!
+   al_rest(3);  //Enable this when screen recording for time to hit the record button!
    //Load map
    map = load_map(map_file); //Create an empty map
    if (map == NULL)
@@ -1242,16 +1242,19 @@ void update_enemies()
          {
             if (!is_ground(map, thing[i].x + x2, thing[i].y + 16) && thing[i].direction == LEFT)
             {
-               jump(&thing[i], 36);
+               jump(&thing[i], 32);
                thing[i].on_ground = false;
             } 
             if (!is_ground(map, thing[i].x + x1, thing[i].y + 16) && thing[i].direction == RIGHT) 
             {
-               jump(&thing[i], 36);
+               jump(&thing[i], 32);
                thing[i].on_ground = false;
             }
          }
-
+         if (thing[i].on_ground) 
+         {
+            jump(&thing[i], 8);
+         }
          check_floor(map, &thing[i], x1, x2, 15);
          check_ceiling(map, &thing[i], x1, x2);
          apply_gravity(&thing[i], 48);
