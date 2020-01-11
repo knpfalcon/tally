@@ -15,10 +15,17 @@ void draw_things(t_map *m, t_thing *t, t_cam *c, int count)
              t[i].y > c->y - t[i].height &&
              t[i].y < c->y + VIEWPORT_HEIGHT)
             {
-               if (t[i].direction == RIGHT)
-                   al_draw_bitmap(t[i].frame[t[i].cur_frame], t[i].x - c->x, t[i].y - c->y, 0);
-               if (t[i].direction == LEFT)
-                   al_draw_bitmap(t[i].frame[t[i].cur_frame], t[i].x - c->x, t[i].y - c->y, ALLEGRO_FLIP_HORIZONTAL);
+                if (t[i].type == ENEMY_BAD_ROBOT)
+                {
+                    al_draw_bitmap(t[i].frame[t[i].cur_frame], t[i].x - c->x, t[i].y - c->y, 0);
+                }
+                else
+                {
+                    if (t[i].direction == RIGHT)
+                        al_draw_bitmap(t[i].frame[t[i].cur_frame], t[i].x - c->x, t[i].y - c->y, 0);
+                    if (t[i].direction == LEFT)
+                        al_draw_bitmap(t[i].frame[t[i].cur_frame], t[i].x - c->x, t[i].y - c->y, ALLEGRO_FLIP_HORIZONTAL);                    
+                }
             }
         }
     }

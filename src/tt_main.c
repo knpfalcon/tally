@@ -155,7 +155,7 @@ void check_cam() //Check to make sure camera is not out of bounds.
    //Display loading image
    al_draw_scaled_bitmap(graphics.loading, 0, 0, screen.unscaled_w, screen.unscaled_h, screen.x, screen.y, screen.width, screen.height, 0);
    al_flip_display();
-   al_rest(3);  //Enable this when screen recording for time to hit the record button!
+   //al_rest(3);  //Enable this when screen recording for time to hit the record button!
    //Load map
    map = load_map(map_file); //Create an empty map
    if (map == NULL)
@@ -1209,8 +1209,21 @@ void update_enemies()
       if (thing[i].type == ENEMY_BAD_ROBOT)
       {
          int x1 = 15;
-         int x2 = 1;
-         int speed = 2;
+         int x2 = 0;
+         int speed = 1;
+
+         if (thing[i].on_ground) 
+         {
+            thing[i].cur_frame = item_frame;
+            speed = 1;
+         }
+         if (!thing[i].on_ground) 
+         {
+            if (thing[i].vel_y > 0) thing[i].cur_frame = 2;
+            if (thing[i].vel_y < 0) thing[i].cur_frame = 3;
+            speed = 2;
+         }
+
          if (thing[i].direction == RIGHT) thing[i].x += speed;
          if (thing[i].direction == LEFT) thing[i].x -= speed;
 
@@ -1240,25 +1253,30 @@ void update_enemies()
          
          if (thing[i].on_ground)
          {
-            if (!is_ground(map, thing[i].x + x2, thing[i].y + 16) && thing[i].direction == LEFT)
+            if (!is_ground(map, thing[i].x + x2 , thing[i].y + 16) && thing[i].direction == LEFT)
             {
+               if ( !is_ground(map, thing[i].x + x2  - TILE_SIZE, thing[i].y + 16) )
+               {
+                  thing[i].direction = RIGHT;
+                  return;
+               }
                jump(&thing[i], 32);
                thing[i].on_ground = false;
             } 
-            if (!is_ground(map, thing[i].x + x1, thing[i].y + 16) && thing[i].direction == RIGHT) 
+            if (!is_ground(map, thing[i].x + x1  , thing[i].y + 16) && thing[i].direction == RIGHT) 
             {
+               if ( !is_ground(map, thing[i].x + x1  + TILE_SIZE, thing[i].y + 16) )
+               {
+                  thing[i].direction = LEFT;
+                  return;
+               }
                jump(&thing[i], 32);
                thing[i].on_ground = false;
             }
          }
-         if (thing[i].on_ground) 
-         {
-            jump(&thing[i], 8);
-         }
          check_floor(map, &thing[i], x1, x2, 15);
          check_ceiling(map, &thing[i], x1, x2);
-         apply_gravity(&thing[i], 48);
-         jlog("%d", thing[i].on_ground);
+         apply_gravity(&thing[i], 32);
       }
    }
 }
