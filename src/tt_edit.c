@@ -58,8 +58,8 @@ ALLEGRO_BITMAP *stat_border = NULL;
 
 //Bitmaps for enemies
 ALLEGRO_BITMAP *b_enemy_spikes = NULL;
-ALLEGRO_BITMAP *b_orlo = NULL;
-ALLEGRO_BITMAP *b_orlo_frame_0 = NULL;
+ALLEGRO_BITMAP *b_toy_robot = NULL;
+ALLEGRO_BITMAP *b_toy_robot_frame_0 = NULL;
 //ALLEGRO_BITMAP *player_start = NULL;
 
 //Bitmaps that get drawn to
@@ -211,8 +211,8 @@ int init_game()
 
    //Load enemy graphics (Skipping error checking)
    b_enemy_spikes = al_load_bitmap("data/spikes.png");
-   b_orlo = al_load_bitmap("data/orlo.png");
-   b_orlo_frame_0 = al_create_sub_bitmap(b_orlo, 0, 0, 32, 32);
+   b_toy_robot = al_load_bitmap("data/toyrobot.png");
+   b_toy_robot_frame_0 = al_create_sub_bitmap(b_toy_robot, 0, 0, 16, 16);
 
 
    player.bitmap = al_load_bitmap("data/player.png");
@@ -450,7 +450,7 @@ void update_screen()
          al_draw_bitmap(b_enemy_spikes, 452, 188, 0);
          break;
       case ENEMY_TOY_ROBOT:
-         al_draw_bitmap_region(b_orlo, 0, 0, 32, 32, 452, 188, 0);
+         al_draw_bitmap_region(b_toy_robot, 0, 0, 16, 16, 452, 188, 0);
          break;
          
       default:
@@ -509,7 +509,7 @@ void check_map_for_things()
          }
          if (map->position[x + y * MAP_WIDTH].thing == ENEMY_TOY_ROBOT)
          {
-            thing[map->num_things -1].frame[0] = b_orlo_frame_0;
+            thing[map->num_things -1].frame[0] = b_toy_robot_frame_0;
             
             thing[map->num_things -1].bb_height = 16;
             thing[map->num_things -1].bb_width = 16;
