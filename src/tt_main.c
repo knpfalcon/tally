@@ -32,6 +32,7 @@ int frame_speed = ANIMATION_SPEED;
 int halftime_frame_speed = ANIMATION_SPEED * 2;
 
 t_bullet player_bullet;
+t_bullet_sparks bullet_sparks[MAX_SPARKS] = { 0 };
 
 t_screen screen = { .unscaled_w = 320, .unscaled_h = 200 };
 
@@ -107,7 +108,6 @@ int samples_count = 0;
  ************************************************/
 void check_cam() //Check to make sure camera is not out of bounds.
 {
-
    //Check player position and scroll
    if ( (player.x > (VIEWPORT_WIDTH / 2) -24) && (player.x < (MAP_WIDTH * TILE_SIZE) - (VIEWPORT_WIDTH / 2))  )
    {
@@ -537,7 +537,7 @@ bool check_bullet_collision()
             player_bullet.end_x = x;
             player_bullet.end_y = player_bullet.start_y;
             jlog("Bullet hit at %d, %d", player_bullet.end_x, player_bullet.end_y);
-            player_bullet.draw = true;
+            activate_bullet_spark(bullet_sparks, player_bullet.end_x, player_bullet.end_y);
             return true;
          }
          //Check bullet collision against things
@@ -550,7 +550,7 @@ bool check_bullet_collision()
                   player_bullet.end_x = x;
                   player_bullet.end_y = player_bullet.start_y;
                   jlog("Bullet hit at %d, %d", player_bullet.end_x, player_bullet.end_y);
-                  player_bullet.draw = true;
+                  activate_bullet_spark(bullet_sparks, player_bullet.end_x, player_bullet.end_y);
                   thing[i].health -= 1;
                   return true;
                }
@@ -571,7 +571,7 @@ bool check_bullet_collision()
             player_bullet.end_x = x;
             player_bullet.end_y = player_bullet.start_y;
             jlog("Bullet hit at %d, %d", player_bullet.end_x, player_bullet.end_y);
-            player_bullet.draw = true;
+            activate_bullet_spark(bullet_sparks, player_bullet.end_x, player_bullet.end_y);
             return true;
          }
          //Check bullet collision against things
@@ -584,7 +584,7 @@ bool check_bullet_collision()
                   player_bullet.end_x = x;
                   player_bullet.end_y = player_bullet.start_y;
                   jlog("Bullet hit at %d, %d", player_bullet.end_x, player_bullet.end_y);
-                  player_bullet.draw = true;
+                  activate_bullet_spark(bullet_sparks, player_bullet.end_x, player_bullet.end_y);
                   thing[i].health -= 1;
                   return true;
                }
@@ -609,7 +609,6 @@ bool check_bullet_collision()
       player_bullet.end_y = player_bullet.start_y;
    }
 
-   player_bullet.draw = false;
    return false;
 }
 
@@ -939,7 +938,6 @@ void update_player()
       player.muzzle_time = 3;
    }
    if (player.muzzle_time) player.muzzle_time--;
-   else player_bullet.draw = false;
 
    if (player.shoot_time == 5) check_bullet_collision();
    if (player.shoot_time) player.shoot_time--;
@@ -967,12 +965,13 @@ void check_timer_logic()
 
       halftime_frame_speed = ANIMATION_SPEED * 2;
    }
-   if (halftime_frame_speed % 3 == 0) { item_afterfx_frame^= 1; }
+   if (halftime_frame_speed % 3 == 0) { item_afterfx_frame^= 1;}
 
    if (frame_speed % 2 == 0)
    {
       if (player.hurt) player.draw ^= 1;
       if (!player.hurt) player.draw = true;
+      animate_bullet_sparks(bullet_sparks);
    }
 
    //Camera Look-ahead
@@ -1167,6 +1166,7 @@ void draw_orlo()
 void update_screen()
 {
    draw_map(view_port, graphics.tile_sheet, graphics.item_sheet, graphics.bg, &cam, map, &item_frame);
+   draw_bullet_spark(bullet_sparks, graphics.bullet_particle, &cam);
    draw_things(map, thing, &cam, map->num_things);
    if (!orlo_gave_health) draw_orlo();
 
@@ -1176,20 +1176,16 @@ void update_screen()
 
    if (player.direction == RIGHT && player.muzzle_time) 
    {
-      draw_laser();
+      //draw_laser();
       al_draw_bitmap(graphics.muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, 0);
    }
 
    if (player.direction == LEFT && player.muzzle_time) 
    {
-       draw_laser();
+       //draw_laser();
       al_draw_bitmap(graphics.muzzle_flash, player.muzzle_x - cam.x, player.muzzle_y - cam.y, ALLEGRO_FLIP_HORIZONTAL);
    }
-   if (player_bullet.draw)
-   {
-      al_draw_bitmap_region(graphics.bullet_particle, (player.muzzle_time * 2) * 16, 0, 16, 16, player_bullet.end_x - cam.x - 8, player_bullet.end_y - cam.y - 8, 0);
-      //al_draw_filled_circle(player_bullet.end_x - cam.x, player_bullet.end_y - cam.y, player.shoot_time /2, al_map_rgb(170, 0 ,0));
-   }
+
    if (orlo_gave_health) draw_orlo();
    draw_item_fx(view_port, graphics.item_fx_sheet, &cam, item_fx, &item_afterfx_frame, &player);
    
@@ -1250,17 +1246,20 @@ void update_enemies()
             if (thing[i].on_ground) 
             {
                thing[i].cur_frame = item_frame;
-               speed = 1;
+               speed = 4;
+               if (item_frame == 1 && thing[i].direction == RIGHT) thing[i].x += speed;
+               if (item_frame == 1 && thing[i].direction == LEFT) thing[i].x -= speed;
             }
             if (!thing[i].on_ground) 
             {
                if (thing[i].vel_y > 0) thing[i].cur_frame = 2;
                if (thing[i].vel_y < 0) thing[i].cur_frame = 3;
                speed = 2;
+               if (thing[i].direction == RIGHT) thing[i].x += speed;
+               if (thing[i].direction == LEFT) thing[i].x -= speed;
             }
 
-            if (thing[i].direction == RIGHT) thing[i].x += speed;
-            if (thing[i].direction == LEFT) thing[i].x -= speed;
+            
 
             if (thing[i].direction == RIGHT && return_horizontal_tile_collision(map, &thing[i], x1, x2))
             {
