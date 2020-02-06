@@ -23,6 +23,7 @@
         "adlmidi.hpp": "c",
         "allegro.h": "c",
         "tt_move.h": "c",
-        "tt_sound.h": "c"
+        "tt_sound.h": "c",
+        "allegro_image.h": "c"
     }
 }

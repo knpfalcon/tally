@@ -1,8 +1,8 @@
 THINGS TO DO NEXT
 =================
 Prune Global Variables / Cut down main source file
-
 Redesign Border / Find good places for alerts, etc.
+Change bullet/shooting
 Add elevator
 Add switches
 Add keys / doors
@@ -11,5 +11,6 @@ Death Capability / Death animation
 Redo/Redesign items
 Rework map struct
 Add ability for different map sizes
+Redo how score indicators work when picking up items
 Update level editor readme
 Rewrite editor

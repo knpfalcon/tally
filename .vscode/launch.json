@@ -5,24 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "gdb",
-            "request": "launch",
-            "name": "Launch Program",
-            "target": "${workspaceFolder}/bin/tedit",
-            "cwd": "${workspaceRoot}/bin",
-            "valuesFormatting": "parseText"
-        },
-        {
-            "name": "(gdb) Tedit",
+            "name": "Tally",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/tedit",
+            "program": "${workspaceFolder}/bin/tally.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
+            "miDebuggerPath": "C:/mingw32/bin/gdb.exe",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
@@ -32,16 +25,17 @@
             ]
         },
         {
-            "name": "(gdb) Tally",
+            "name": "Tedit",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/tally",
+            "program": "${workspaceFolder}/bin/tedit.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
+            "miDebuggerPath": "C:/mingw32/bin/gdb.exe",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
@@ -49,6 +43,6 @@
                     "ignoreFailures": true
                 }
             ]
-        }
+        },
     ]
 }

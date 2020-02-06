@@ -1,0 +1,57 @@
+#Fairly Universal Makefile
+#
+
+CC = gcc
+CFLAGS = -m32 -O3 -Wall -g -DDEBUG -DEDITOR -static
+LIBDIR = -LC:\libs\lib
+
+LIBS = -lallegro_monolith-debug-static -ldumb -lFLAC -ldsound -lvorbisfile -lvorbis -lfreetype -logg -lpng16 -lzlibstatic \
+-lphysfs -lgdiplus -luuid -lkernel32 -lwinmm -lpsapi -lopengl32 -lglu32 -luser32 -lcomdlg32 \
+-lgdi32 -lshell32 -lole32 -ladvapi32 -lws2_32 -lshlwapi -lwebp -l:libADLMIDI.a -static-libgcc -static-libstdc++ -lstdc++
+
+INC = -IC:\libs\allegro5\include -IC:\libs\allegro5\include\allegro5 -IC:\libs\include
+
+ODIR = obj
+SRCDIR = src
+
+BINDIR = bin
+OUTFILE = tedit.exe
+
+#Source files.
+_SRC = \
+%.c
+########
+SRC = $(patsubst %,$(SRCDIR)/%,$(_SRC))
+
+#Headers.
+_DEPS = \
+tt_map.h \
+tt_edit.h \
+tt_thing.h \
+jt_util.h
+########
+#DEPS = $(patsubst %,$(SRCDIR)/%,$(_DEPS))
+
+#Object files
+_OBJ = \
+tt_edit.o \
+tt_map.o \
+tt_thing.o \
+jt_util.o
+
+########
+OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
+
+#Compile Objects from Source files
+$(ODIR)/%.o: $(SRC) $(DEPS)
+	$(CC) $(INC) -c -o $@ $< $(CFLAGS) $(LIBDIR)$(LIBS)
+
+#Link Objects and output to executable
+$(BINDIR)/$(OUTFILE): $(OBJ)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBDIR) $(LIBS) 
+
+.PHONY: clean
+
+clean:
+	del /Q /S $(ODIR)\*.o
+	del /Q /S $(BINDIR)\$(OUTFILE)

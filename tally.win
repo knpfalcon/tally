@@ -1,13 +1,13 @@
 #Fairly Universal Makefile
 #
 
-CC = g++
-CFLAGS = -m32 -O3 -Wall -fpermissive -g  -static -static-libgcc -static-libstdc++
-LIBDIR = -LC:\libs\lib 
+CC = gcc
+CFLAGS = -m32 -O3 -Wall -g  -static
+LIBDIR = -LC:\libs\lib
 
 LIBS = -lallegro_monolith-debug-static -ldumb -lFLAC -ldsound -lvorbisfile -lvorbis -lfreetype -logg -lpng16 -lzlibstatic \
 -lphysfs -lgdiplus -luuid -lkernel32 -lwinmm -lpsapi -lopengl32 -lglu32 -luser32 -lcomdlg32 \
--lgdi32 -lshell32 -lole32 -ladvapi32 -lws2_32 -lshlwapi -lwebp -lADLMIDI-static
+-lgdi32 -lshell32 -lole32 -ladvapi32 -lws2_32 -lshlwapi -lwebp -l:libADLMIDI.a -static-libgcc -static-libstdc++ -lstdc++
 
 INC = -IC:\libs\allegro5\include -IC:\libs\allegro5\include\allegro5 -IC:\libs\include
 
@@ -25,12 +25,23 @@ SRC = $(patsubst %,$(SRCDIR)/%,$(_SRC))
 
 #Headers.
 _DEPS = \
-%.h
+tt_init.h \
+tt_main.h \
+tt_map.h \
+tt_items.h \
+tt_player.h \
+jt_util.h \
+tt_bullet.h \
+tt_collision.h \
+tt_thing.h \
+tt_move.h \
+tt_sound.h \
 ########
 DEPS = $(patsubst %,$(SRCDIR)/%,$(_DEPS))
 
 #Object files
 _OBJ = \
+tt_init.o \
 tt_main.o \
 tt_map.o \
 tt_items.o \
@@ -38,7 +49,9 @@ tt_player.o \
 jt_util.o \
 tt_bullet.o \
 tt_collision.o \
-tt_thing.o
+tt_thing.o \
+tt_move.o \
+tt_sound.o 
 
 
 ########
