@@ -5,7 +5,7 @@ Redesign Border / Find good places for alerts, etc.
 Change bullet/shooting
 Add elevator
 Add switches
-Add keys / doors
+Add keys / doors (*Started/Currently working on)
 Add level exit
 Death Capability / Death animation
 Redo/Redesign items

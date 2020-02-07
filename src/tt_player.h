@@ -32,6 +32,7 @@ typedef struct t_player
    bool jump_pressed;
    unsigned char health;
    unsigned int score;
+   bool has_green_key;
 } t_player;
 
 enum player_state {STOPPED = 0, WALKING = 1, JUMPING = 2, FALLING = 3};

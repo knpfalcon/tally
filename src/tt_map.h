@@ -17,6 +17,7 @@
 #define ITEM_MONEY        9
 #define ITEM_DIAMOND     10
 #define ITEM_HEALTH      11
+#define ITEM_GREEN_KEY      12
 
 // This is a position on the map
 typedef struct t_map_pos
@@ -45,5 +46,6 @@ bool save_map(t_map *m, ALLEGRO_DISPLAY *display);
 t_map *load_map(const char *filename);
 void draw_map(ALLEGRO_BITMAP *d_bmp, ALLEGRO_BITMAP *tile_sheet, ALLEGRO_BITMAP *item_sheet, ALLEGRO_BITMAP *background, t_cam *c, t_map *m, unsigned char *item_frame);
 t_map_pos *get_map_position(t_map *m, int x, int y);
+void check_doors(t_player *player, t_map *m);
 
 #endif // SP_MAP_H

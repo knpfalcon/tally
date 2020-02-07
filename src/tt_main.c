@@ -868,6 +868,11 @@ void update_player()
          if (mp->item == ITEM_DIAMOND) { mp->item = 0; activate_item_fx(mp, item_fx); player.score += 5000; }
          if (mp2->item == ITEM_DIAMOND) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.score += 5000; }
          if (mp3->item == ITEM_DIAMOND) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.score += 5000; }
+         
+         //Green Key
+         if (mp->item == ITEM_GREEN_KEY) { mp->item = 0; activate_item_fx(mp, item_fx); player.has_green_key = true; }
+         if (mp2->item == ITEM_GREEN_KEY) { mp2->item = 0; activate_item_fx(mp2, item_fx); player.has_green_key = true; }
+         if (mp3->item == ITEM_GREEN_KEY) { mp3->item = 0; activate_item_fx(mp3, item_fx); player.has_green_key = true; }
 
          // Health
          if (mp->item == ITEM_HEALTH && player.health < 8)
@@ -943,6 +948,12 @@ void update_player()
    if (player.shoot_time) player.shoot_time--;
 
    if (screen_flash > -1) screen_flash--;
+
+   if (player.has_green_key) 
+   {
+      check_doors(&player, map);
+      player.has_green_key = false;
+   }
 }
 
 /*
@@ -1258,8 +1269,6 @@ void update_enemies()
                if (thing[i].direction == RIGHT) thing[i].x += speed;
                if (thing[i].direction == LEFT) thing[i].x -= speed;
             }
-
-            
 
             if (thing[i].direction == RIGHT && return_horizontal_tile_collision(map, &thing[i], x1, x2))
             {

@@ -266,3 +266,17 @@ t_map_pos *get_map_position(t_map *m, int x, int y)
 
    return &m->position[x + y * MAP_WIDTH];
 }
+
+void check_doors(t_player *player, t_map *m)
+{
+   for (int y = 0; y < MAP_HEIGHT; y++)
+   {
+      for (int x = 0; x < MAP_WIDTH; x++)
+      {
+         if (m->position[ x + y * MAP_WIDTH].tile == 127)
+         {
+            m->position[ x + y * MAP_WIDTH].empty_tile = true;
+         }
+      }
+   }
+}
