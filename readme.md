@@ -89,6 +89,3 @@ Excuse the mess
 ---------------
 Sorry for all the mess... I'm working on maintaining this a little better.
 I'm not a very organized person, and I work too fast for my own good.
-
-
-Copyright © 2019 Joshua Daniel Taylor
